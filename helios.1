@@ -1,0 +1,529 @@
+.TH helios 1 2014-oct "linux" "heatherly custom tools manual"
+
+.SH NAME
+helios-phaeton (radiant) \- file indexing and search services
+
+.SH IMAGERY (see HERITAGE at bottom for more)
+shinning greek titan of the sun, giving daylight to both gods and men alike
+
+.SH SYNOPSIS
+
+.B helios [ARGUMENTS] [PATTERN]
+.nf
+which is the primary production version
+
+.B helios_debug [URGENTS] [ARGUMENTS] [PATTERN]
+.nf
+which can perform all helios actions, but with debugging and tracing
+
+.B helios_update [ARGUMENTS]
+.nf
+which is a hard-link to "helios --updatedb"
+
+.B locate [ARGUMENTS] [PATTERN]
+.nf
+which is a hard-link to provide the traditional locate interface
+
+.B updatedb [ARGUMENTS]
+.nf
+which is a hard-link to provide the traditional updatedb interface
+
+.SH SUMMARY
+helios is a fast, simplified, modernized, and technical version of the classic
+posix-defined locate, file search and indexing command.  helios will combine
+both locate and updatedb capability with deeper information, more downstream
+integration options, plus enhanced debugging, verbosity, and traceabilty.
+
+.SH PROBLEM and REWARDS (PR)
+files and directories within filesystems often go unmanaged, are misused,
+and atrophy badly over time.  the result is conflicting versions, confusing
+duplication, unfindable files, and excess storage waste.  given this, finding
+a specific file, particularly if not frequently used, in any filing system,
+whether physical or virtual, is a chore in the best of times.  directories can
+help organize files, but once multiple users, systems, and/or applications
+are introduced there are a number of alternate organization methods that
+can be used, each with strengths and weaknesses, but only one can ultimately
+be implemented.
+
+introduction of a solution should help...
+   -- better filing by enabling powerful global search (better org)
+   -- quickly find files by numerous methods (more productivity)
+   -- take pressure off drives by using file database (reduce wear)
+   -- drive organization improvements by seeing big picture (better org)
+   -- more quickly find unused and duplicate files (save space)
+
+.SH BACKSTORY
+locate is a well-worn, familiar, time-tested, and posix-defined application that
+provides dependable, basic, usable file indexing.  while there are many other
+theories on file organization and meta-data usage, locate is still the most
+pervasive, responsive, and commonly used by technical users.  many attempts
+have been made to replace it with real-time and glitzy interfaces required
+by modern desktop-only users, but locate is still here.
+
+the early developers of locate nailed it in the original by focusing on real
+and definate needs of folks that use the system frequently as well as the
+realities of low power systems.  they built the architecture around a batch
+update to the master index in order to keep system pressure down, request
+speed up, and wear on hard drives low.
+
+but, there are now many file search implementations available that add
+new features, additional capabilities, and integration with desktop tools.
+some of the new features are worthwhile, some are creaping featurism, and
+others are just to satisfy relatively ignorant desktop users.  i don't care
+if its easy for an idiot to use -- they don't use it anyway ;)
+
+the purpose of helios is to bring some updates to the architecture, give me
+a chance to learn some great skills by following in locate's footprints,
+and add some cool stuff to the search options.  additionally, i want it to
+integrate with visualization tools which can give me graphical analysis
+and navigation of the file system without needing glue-scripts.
+
+given the focus on technical users and the proven success of the locate
+interface, i will focus on the command line interface and keeping the
+backward compatability mostly in place.  this last part is so i can move
+between systems without too much distress ;)
+
+.SH OBJECTIVES and ALTERNATIVES (OA)
+objectives and ideas have been collected by reviewing tools that normally
+fit into the same functional area, including, locate, mlocate, slocate,
+baobab, filesight, kdirstat, windows explorer, and xdiskusage.  while all
+these tools do some very cool things, they are locked down and therefore i
+can't get a superset without glue-scripts and craziness.  this area is
+technically interesting enough that building my own version will be fun.
+
+helios will accept the following traditional locate requirements...
+   -- search a database rather than the file system itself (speed/wear)
+   -- update the database in batch as most almost never change (efficiency)
+   -- provide regular expression matching (always and skip other types)
+   -- allow for multiple potential databases for flexibility (--database)
+   -- provide ability to simply get count of matches (--count)
+   -- allow case-insensitive matching (--ignore-case)
+   -- provide ability to stop after a certain number of matches (--limit)
+   -- automatically focus on just the file names (--basename)
+   -- able to produce simple database statistics (--statistics)
+
+helios will NOT accept the following traditional locate requirements...
+   -- will not provide literal or gobbing searches (regex can do more)
+   -- will not allow for multiple simultaneous regex searches
+   -- will not allow check that file still exists at runtime (--existing)
+   -- will not search concatenated dir and file names (--wholename)
+   -- will not follow symlinks as its duplicate anyway (--follow)
+   -- will not provide an option for various list delimiters (--null)
+   -- will not update database with only new enteries (runs fast anyway)
+
+helios will also add several other requirements to enhance locate...
+   -- allow search depth to be limited to avoid run away detail (--depth)
+   -- can focus on a specific branch of the dir structure (--start)
+   -- add the ability to dump the entire database (--dump)
+   -- add the ability to reproduce the dir structure (--dirtree)
+   -- add ability to report on badly named files and directories
+   -- add ability to spot potentially duplicate files
+   -- ability to limit search to certain mime-like types and extensions
+   -- search for files below, near, or above a certain size
+   -- search for files updated before, during, or after certain times
+   -- automatically report on file and dir changes between updates
+   -- add ability to generate mime-type summary statistics
+
+helios will also add several enhancements to target database building...
+   -- ability to ignore specific directories altogether (dir_ignore)
+   -- ability to gather sizes, but not the dir itself (dir_stop)
+   -- ability to gather sizes below, but not entries below (dir_over)
+   -- ability to skip certain dir name where ever found (dir_never)
+   -- ability to merge databases across machines and networks
+
+helios will also keep some options only in one version of locate...
+   -- only allow a user to see dirs and files to which they have access
+
+finally, helios will not...
+   -- get involved in meta-data or tag searching (way too spotty)
+   -- provide any scripting to process files specially
+   -- call any external programs directly (use pipes and xargs)
+   -- provide any graphical viewing directly (use external tools)
+
+as always, applications running on my systems must...
+   -- stay focused, small, tight, reliable, and secure
+   -- forgo sloppy, kitchen-sink languages, like python, java, or perl
+   -- stay away from dependency on external code libraries, like boost
+   -- only use human maintainable, 7-bit safe, ascii streams (not database)
+   -- have dedicated, maintained, automated unit testing
+   -- provide either detailed reporting or logging for debugging
+   -- use secure communications between systems where required
+   -- clean, clean code so i can maintain after long absences
+   -- no international, multi-language, multi-byte support (freaking ever)
+
+.SH PATTERN
+the traditional locate application takes a literal search argument and searches
+for that text anywhere within each filename.  to search for a regular expression
+you used the "--regex" or "--regexp" option.  finally, traditionally locate
+would allow multiple patterns to be searched for simultaneously.  sometimes
+options were included to allow and/or links between patterns, but not a mix
+of both.
+
+helios interprets all patterns as extended regular expressions.  end of story.
+regular expressions are the real power of searches and making them the default
+is appropriate for technical users.  i can understand keeping it literal for
+novice users, but helios is not written for them.
+
+helios accepts only a single search pattern.  until i have a consistent and
+common use case for multiple patterns, i will consider this one creeping
+featurism.  for the few times this is necessary, use multiple runs and "uniq"
+to get a final list.  keep it as simple as possible.
+
+but, in order to search for categories of data, the regular expression will
+default to all records.  in this case, the user can also explicitly call
+helios with the --all option.
+
+.SH SEARCH OUTPUT
+the results of a search are presented as a list of filenames with absolute
+paths to make accessing the files as easy as possible.  these filenames can
+be also piped into another shell command, substituted into a command argument
+using $(locate ...), or sent to an application as desired.
+
+.SH SEARCH OUTPUT OPTIONS
+searches can be limited in scope by using the following two options...
+
+.B --start <path>
+.RS 8
+sets the start point for searching to better target results.
+.RE
+
+.B --depth <n>
+.RS 8
+sets the maximum search depth for searches to <n> levels.
+.RE
+
+results can be filtered by using the following options...
+
+.B --cat <c>
+.RS 8
+only shows files in the mime-like category <c>.
+.RE
+
+.B --mime <s>
+.RS 8
+only shows files with the mime-like type of <s>.
+.RE
+
+.B --just
+.RS 8
+only shows files updated in the last two days.
+.RE
+
+.B --week
+.RS 8
+only shows files updated in the last week (7 days).
+.RE
+
+.B --month
+.RS 8
+only shows files updated in the last month (30 days).
+.RE
+
+.B --year
+.RS 8
+only shows files updated in the last year (365 days).
+.RE
+
+.B --old
+.RS 8
+only shows files NOT updated in the last year (more than 365 days).
+.RE
+
+.B --sb
+.RS 8
+only shows files with 0 to 999 bytes.
+.RE
+
+.B --kb
+.RS 8
+only shows files with 1k to 999kb.
+.RE
+
+.B --mb
+.RS 8
+only shows files with 1m to 999mb.
+.RE
+
+.B --gb
+.RS 8
+only shows files over 1gb.
+.RE
+
+.B --badname
+.RS 8
+shows files whose name includes non-standard characters.
+.RE
+
+.B --punct
+.RS 8
+shows files whose name includes extra punctuation, but not worse.
+.RE
+
+.B --extend
+.RS 8
+shows files whose name includes extended punctuation, but not worse.
+.RE
+
+.B --space
+.RS 8
+shows files whose name includes spaces, but not worse.
+.RE
+
+.B --junk
+.RS 8
+shows files whose name includes unprintable characters.
+.RE
+
+search results can be supplemented using the following options...
+
+.B --show-cat
+.RS 8
+prepends the mime-like file category to help organization.
+.RE
+
+.B --show-mime
+.RS 8
+prepends the mime-like file type to help organization.
+.RE
+
+.B --show-days
+.RS 8
+prepends the number of days since last update before file name.
+.RE
+
+.B --show-size
+.RS 8
+prepends the number of digits in the byte size.
+.RE
+
+.B --show-bytes
+.RS 8
+prepends the actual size in bytes.
+.RE
+
+.B --show-level
+.RS 8
+prepends the search depth at which the file was found.
+.RE
+
+.B --show-ascii
+.RS 8
+prepends the name quality rating.
+.RE
+
+results can also be altered using the following options...
+
+.B -c, --count
+.RS 8
+shows the count of the results rather than the detailed results.
+.RE
+
+.B -n, --limit <n>
+.RS 8
+only shows the first <n> matching items rather than the whole list.
+.RE
+
+.B --first
+.RS 8
+only shows the very first matching item (same as --limit 1).
+.RE
+
+.B --number <n>
+.RS 8
+only shows the <n>'th matching item rather than the whole list.
+.RE
+
+.B -i, --ignore-case
+.RS 8
+causes the regular expression to be case-insensitive.
+.RE
+
+.SH ALTERNATIVE OUTPUT
+in some cases helios can be asked to produce something other than search
+results.  the alternative output options are as follows.
+
+.B --dirtree
+.RS 8
+outputs an outline view of the directory structure with sizes.
+.RE
+
+.B --dump
+.RS 8
+outputs a list of all database contents including all fields.
+.RE
+
+.B -S, --statistics
+.RS 8
+outputs information about the database itself.
+.RE
+
+.B --mime-table
+.RS 8
+outputs a summary of database contents by mime-type.
+.RE
+
+.B -v, --verbose
+.RS 8
+outputs each directory as searched before the results.
+.RE
+
+.SH CREATING THE DATABASE
+helios creates a database of directories and files which is then used for
+off line searching.
+
+.B --updatedb
+.RS 8
+search the drive partion indicated in the --mpoint argument.
+.RE
+
+.B --mpoint <s>
+.RS 8
+partition mount point for processing.
+.RE
+
+.B --depth <n>
+.RS 8
+sets the maximum processing level for database creation.
+.RE
+
+.SH CONFIGURATION
+helios' configuration information comes primarily from a single file.
+.nf
+.B /etc/helios.conf
+
+.B --conf, --noconf
+.RS 8
+read (default) or not read its configuration file which lists
+directories for special handling
+.RE
+
+this configuration file contains several types of records.  within this file
+the colon (:) delimiter show must be replaced with an ascii field separator.
+
+.B dir_ignore  : <dir> : <desc>
+.RS 8
+usage____ : temporary or artificial directories.
+recursion : do not recurse into this directory.
+naming___ : no naming information is captured within or below it.
+sizing___ : no sizing is captured for it or below it.
+examples_ : /proc, /sys, /media
+.RE
+
+.B dir_stop    : <dir> : <desc>
+.RS 8
+usage____ : interesting directories with repetitive content.
+recursion : recurse into and below this directory.
+naming___ : keep naming information within it, but not below it.
+sizing___ : capture all cumulative sizing within and below it.
+examples_ : /usr/src
+.RE
+
+.B dir_over    : <dir> : <desc>
+.RS 8
+usage____ : directories with contents that aren't typically searched.
+recursion : recurse into and below this directory.
+naming___ : no naming information is captured within or below it.
+sizing___ : capture all cumulative sizing within and below it.
+examples_ : /dev, /tmp, /usr/portage, /var/cache
+.RE
+
+.B dir_never   : <dir> : <desc>
+.RS 8
+usage____ : recurring sub-directories with no value to searching.
+recursion : recurse into and below this directory.
+naming___ : no naming information is captured within or below it.
+sizing___ : capture all cumulative sizing within and below it.
+examples_ : .git, cache
+.RE
+
+.B dir_last    : <dir> : <desc>
+.RS 8
+usage____ : recurring sub-directories with no value to searching.
+recursion : recurse into, but not below this directory.
+naming___ : naming is captured within, but not below it.
+sizing___ : capture all cumulative sizing within, but not below it.
+examples_ : /mnt
+.RE
+
+.B dir_append  : <dir> : <desc>
+.RS 8
+usage____ : separate filesystems with consistent mounting points.
+recursion : recurse into and below this directory.
+naming___ : keep naming information within or below it.
+sizing___ : capture all cumulative sizing within and below it.
+examples_ : /boot, /home/music, /home/archive, /mnt/previous
+.RE
+
+.SH MIME-LIKE TYPES
+adding file characterizations based on content can improve search results
+dramatically.  the standard mime types are very interesting, but very
+detailed and a little insane ;)  i have chosen to use a simplified
+version.
+
+the chosen categories which can be used for searching with the --cat option
+are...
+   a : audio
+   i : image
+   v : video
+   t : text
+   s : source code
+   x : executable
+   p : proprietary
+   ? : other
+
+helios' mime information comes primarily from a single file.
+.nf
+.B /var/lib/helios/helios.mime
+
+all file types are listed in the text file and are used to categorize
+files as they are found.  the file layout is eight fields separated
+by ascii field separator characters.
+
+   1 : file extension, such as, conf, txt, pdf, ...
+   2 : category, which groups extensions audio, video, ...
+   3 : group, which ties groups of extensions together
+   4 : description, which elaborates on the file format
+   5 : importance, to show which formats are desired
+   6 : seen, the number of files of this extension reviewed
+   7 : kept, the number of files of this extension kept in the database
+   8 : found, the number of files of this extension found in last search
+
+this file is read and rewritten each time helios builds the database in
+order to update the seen and kept field.
+
+.SH EXAMPLE USAGE
+
+to create a database of the root partition and see progress...
+.nf
+.B ## helios --updatedb --mpoint / --verbose
+
+to search for a basic pattern...
+.nf
+.B $$ helios test
+
+to find all audio files...
+.nf
+.B $$ helios --cat a
+
+to find all files updated in the last two days...
+.nf
+.B $$ helios --just
+
+.SH AUTHOR
+heatherlyrobert at gmail dot com
+
+.SH HERITAGE
+helios-phaeton (radiant) is the greek titan of the sun, giving daylight to
+both gods and men alike.  everyday, he drives his tethrippon, chariot with four
+horses abreast, from his palace in the east (india) to the gates of helios in
+the west (spain).  from his vantage in the sky, he sees everything that
+transpires on land and sea.
+
+both white horses and the rooster are sacred to helios.
+
+he is the son of theia (shining blue sky) and hyperion (light), and sibling
+to selene (moon) and eos (rosy-fingered dawn).
+
+.SH COLOPHON
+this page is part of a documentation package mean to make the use of the
+heatherly tools easier and faster

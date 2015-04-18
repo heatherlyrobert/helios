@@ -1,0 +1,23 @@
+#!/usr/local/bin/helios
+#   helios file database used for file location, change, and search services
+
+
+#
+# mime categories...
+#    t = text         (text/)
+#    a = audio        (audio/)
+#    i = image        (image/)
+#    v = video        (video/)
+#    x = executable   (application/)
+#    p = proprietary  (application/, model/)
+#    c = comp/encrypt (application/, multipart/)
+#    - = other        (chemical/, message/)
+#    ? = unknown
+#
+
+
+# -perm -uid -gid -inode -dnode ----update -----bytes --mime ---- ---name--+---------+---------+---------+---------+---------#
+a d.755    0    0 262145      0 1406077723 9.12345e7  a.mp3       metallica.black_album.01.enter_sandman.mp3
+
+
+#---(end-of-file)------------------------------------------------------------------------------------------------------------#
