@@ -204,8 +204,8 @@ typedef long long        llong;
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define     VER_NUM     "01.0a"
-#define     VER_TXT     "helios initial working state for git"
+#define     VER_NUM     "01.0b"
+#define     VER_TXT     "add default mountpoint for updatedb in helios.conf"
 
 
 #define     FILE_CONF   "/etc/helios.conf"

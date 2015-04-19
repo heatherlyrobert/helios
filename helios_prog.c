@@ -589,7 +589,7 @@ PROG_conf          (void)
    char       *q           = "\x1F";
    char       *r           = NULL;
    char        x_temp      [20];
-   char        x_verbs     [1000] = " dir_ignore dir_stop dir_over dir_never dir_last dir_append ";
+   char        x_verbs     [1000] = " dir_ignore dir_stop dir_over dir_never dir_last dir_append mountpoint ";
    char        x_verb      [20];
    int         i           = 0;
    char        x_field     [ 20][100];
@@ -685,6 +685,15 @@ PROG_conf          (void)
          default  : break;
          }
          DEBUG_CONF   yLOG_value   ("n_nodir"   , n_nodir);
+      } else if (strcmp (x_verb, "mountpoint") == 0) {
+         DEBUG_CONF   yLOG_note    ("mountpoint default found in conf");
+         if (my.mpoint [0] != '\0') {
+            DEBUG_CONF   yLOG_note    ("but, mountpoint already set by arg");
+         } else {
+            DEBUG_CONF   yLOG_note    ("mpoint currently null");
+            strcpy (my.mpoint, x_field [0]);
+         }
+         DEBUG_CONF   yLOG_info    ("mpoint"    , my.mpoint);
       }
       /*---(done)------------------------*/
    }
