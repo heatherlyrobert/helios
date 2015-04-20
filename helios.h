@@ -204,8 +204,8 @@ typedef long long        llong;
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define     VER_NUM     "01.0e"
-#define     VER_TXT     "hardlink helios.conf to source code directory"
+#define     VER_NUM     "01.0f"
+#define     VER_TXT     "hardlink helios.mime to source code directory"
 
 
 #define     FILE_CONF   "/etc/helios.conf"
