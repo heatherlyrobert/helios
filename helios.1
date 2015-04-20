@@ -387,7 +387,9 @@ sets the maximum processing level for database creation.
 .RE
 
 .SH CONFIGURATION
-helios' configuration information comes primarily from a single file.
+helios' configuration information comes primarily from a single file and
+is only used in the case of an --updatedb execution.
+
 .nf
 .B /etc/helios.conf
 
@@ -398,7 +400,8 @@ directories for special handling
 .RE
 
 this configuration file contains several types of records.  within this file
-the colon (:) delimiter show must be replaced with an ascii field separator.
+the colon (:) delimiter shown in the examples must be replaced with an ascii
+field separator.
 
 .B dir_ignore  : <dir> : <desc>
 .RS 8
@@ -452,6 +455,11 @@ recursion : recurse into and below this directory.
 naming___ : keep naming information within or below it.
 sizing___ : capture all cumulative sizing within and below it.
 examples_ : /boot, /home/music, /home/archive, /mnt/previous
+.RE
+
+.B mountpoint  : <dir> : <desc>
+.RS 8
+usage____ : sets the default mountpoint for --updatedb
 .RE
 
 .SH MIME-LIKE TYPES
@@ -508,6 +516,161 @@ to find all audio files...
 to find all files updated in the last two days...
 .nf
 .B $$ helios --just
+
+.SH DEBUGGING and LOGGING
+helios_debug uses the heatherly standard debugging model and options.  calling
+the program through any other executable name, such as helios or updatedb, will
+result in all logging requests through urgents being ignored.
+
+debugging urgents are processed at one time and before normal argument
+processing and therefore the order of urgents and arguments is almost never
+significant.  logging output is sent to a standard system logging directory.
+the use of any urgent will turn on logging output and set the @@tops urgent.
+
+.nf
+.B /var/yLOG/
+
+and, the file name follows the standard heatherly logging format.  any number
+of debugging output files may be kept as the name is always unique.
+
+.nf
+.B yy.mm.dd.hh.mm.ss.helios__________.ww.ulog
+   -- yy   last two digits of year
+   -- mm   month number 01-12
+   -- dd   day number 01-31
+   -- hh   hour number 00-23
+   -- mm   minute number 00-59
+   -- ss   second number 00-59
+   -- ww   week of the year number 00-53
+
+.B --- mass urgent setting -------------------------------
+
+.B @f, @@full
+.RS 8
+turn on all standard urgents
+.RE
+
+.B @k, @@kitchen
+.RS 8
+turn on all standard and custom urgents
+.RE
+
+.B @q, @@quiet
+.RS 8
+turn off all standard and custom urgents
+.RE
+
+.B @t, @@tops
+.RS 8
+log the general flow of the program
+.RE
+
+.B @s, @@summ
+.RS 8
+provide summary statistics and analytical output
+.RE
+
+.B --- startup and shutdown urgents ----------------------
+
+.B @a, @@args
+.RS 8
+log details of urgent and argument processing
+.RE
+
+.B @c, @@conf
+.RS 8
+log details of configuration file processing
+.RE
+
+.B @p, @@prog
+.RS 8
+log details of program setup and teardown
+.RE
+
+.B --- file processing urgents ---------------------------
+
+.B @i, @@inpt, @I, @@INPT
+.RS 8
+log details of input text file reading/parsing (caps means deeper)
+.RE
+
+.B @o, @@outp, @O, @@OUTP
+.RS 8
+log details of output text file writing (caps means deeper)
+.RE
+
+.B --- event handling urgents ----------------------------
+
+.B @l, @@loop
+.RS 8
+log details of main program loop
+.RE
+
+.B @u, @@user
+.RS 8
+log details of interactive user input processing
+.RE
+
+.B @z, @@apis
+.RS 8
+log details of interprocess communication channels
+.RE
+
+.B @x, @@sign
+.RS 8
+log details of operating system signal processing
+.RE
+
+.B @b, @@scrp
+.RS 8
+log details of batch script processing
+.RE
+
+.B @h, @@hist
+.RS 8
+log details of history, undo, and redo processing
+.RE
+
+.B --- processing urgents --------------------------------
+
+.B @g, @@graf
+.RS 8
+log details of graphics, drawing, and display
+.RE
+
+.B @d, @@data
+.RS 8
+log details of complex data structure handling
+.RE
+
+.B @e, @@envi, @E, @@ENVI
+.RS 8
+log details of environmental processing (caps means deeper)
+.RE
+
+.B --- helios-specific urgents ---------------------------
+
+.B @@sort
+.RS 8
+log details of directory and file sort operations
+.RE
+
+.B @@mine
+.RS 8
+log details of mimi type assignment
+.RE
+
+.B @@perms
+.RS 8
+log details of file permission and access
+.RE
+
+.B @@drive
+.RS 8
+log details of drive processing
+.RE
+
+
 
 .SH AUTHOR
 heatherlyrobert at gmail dot com
