@@ -204,8 +204,8 @@ typedef long long        llong;
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define     VER_NUM     "01.0c"
-#define     VER_TXT     "add urgent explanation and options to man page"
+#define     VER_NUM     "01.0d"
+#define     VER_TXT     "further man page clean-up to make it more complete"
 
 
 #define     FILE_CONF   "/etc/helios.conf"

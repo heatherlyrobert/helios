@@ -1,7 +1,7 @@
 .TH helios 1 2014-oct "linux" "heatherly custom tools manual"
 
 .SH NAME
-helios-phaeton (radiant) \- file indexing and search services
+helios-phaeton (radiant) \- filesystem indexing and search services
 
 .SH IMAGERY (see HERITAGE at bottom for more)
 shinning greek titan of the sun, giving daylight to both gods and men alike
@@ -51,6 +51,10 @@ introduction of a solution should help...
    -- take pressure off drives by using file database (reduce wear)
    -- drive organization improvements by seeing big picture (better org)
    -- more quickly find unused and duplicate files (save space)
+   -- make me a smarter programmer by walking in the footsteps of giants
+   -- give much greater control and flexibility than packaged solutions
+   -- allow the program to better fit the traditional unix pipeline role
+   -- focus on low-power systems by offloading to batch processing
 
 .SH BACKSTORY
 locate is a well-worn, familiar, time-tested, and posix-defined application that
@@ -78,7 +82,7 @@ and add some cool stuff to the search options.  additionally, i want it to
 integrate with visualization tools which can give me graphical analysis
 and navigation of the file system without needing glue-scripts.
 
-given the focus on technical users and the proven success of the locate
+given my focus on technical users and the proven success of the locate
 interface, i will focus on the command line interface and keeping the
 backward compatability mostly in place.  this last part is so i can move
 between systems without too much distress ;)
@@ -93,7 +97,7 @@ technically interesting enough that building my own version will be fun.
 
 helios will accept the following traditional locate requirements...
    -- search a database rather than the file system itself (speed/wear)
-   -- update the database in batch as most almost never change (efficiency)
+   -- update the database in batch as files almost never change (efficiency)
    -- provide regular expression matching (always and skip other types)
    -- allow for multiple potential databases for flexibility (--database)
    -- provide ability to simply get count of matches (--count)
