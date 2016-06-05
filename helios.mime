@@ -6,7 +6,7 @@
 #=== GRAND TOTALS =======================================================================================================================================================================================================#
 #-ext-----  t  ---desc---------------------------------  l  seen------  pct  seen-bytes--------  pct  kept------  pct  kept-bytes--------  pct  found-----  pct  found-bytes-------  pct  
 
-TOTAL       -  grand total values                        -     489,761  100      42,189,536,262  100     223,202  100      40,234,895,671  100           -    -                   -    -  
+TOTAL       -  grand total values                        -     643,284  100      92,899,500,276  100     239,300  100      88,769,948,075  100           -    -                   -    -  
 
 
 
@@ -16,35 +16,35 @@ TOTAL       -  grand total values                        -     489,761  100
 aiff        a  apple standard audio format               -          14    -             201,972    -          14    -             201,972    -           -    -                   -    -  
 aac         a  advanced audio coding based on mpeg       -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 au          a  sun standard audio format                 -         633    -          44,192,826    -         633    -          44,192,826    -           -    -                   -    -  
-m4a         a  apple unproteced advanced audio coding    -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
+m4a         a  apple unproteced advanced audio coding    -           8    -         434,974,379    -           8    -         434,974,379    -           -    -                   -    -  
 m4p         a  apple proteced advanced audio coding      -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
-mp3         a  mpeg layer 3 audio format                 @       8,715    2      24,044,925,839   57       8,715    4      24,044,925,839   60           -    -                   -    -  
+mp3         a  mpeg layer 3 audio format                 @       9,288    1      48,867,587,016   53       9,288    4      48,867,587,016   55           -    -                   -    -  
 ogg         a  open source container format for vorbis   -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 ra          a  realnetworks real audio format            -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-raw         a  raw audio format for testing              -           9    -           6,706,405    -           7    -           6,661,120    -           -    -                   -    -  
-wav         a  microsoft standard audio file format      -         144    -          54,503,592    -         144    -          54,503,592    -           -    -                   -    -  
+raw         a  raw audio format for testing              -          10    -           6,751,817    -           7    -           6,661,120    -           -    -                   -    -  
+wav         a  microsoft standard audio file format      -         145    -          78,168,342    -         145    -          78,168,342    -           -    -                   -    -  
 
 wma         a  microsoft protected audio file format     -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 mid         a  midi sound                                -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-midi        a  midi sound                                -           4    -             104,210    -           -    -                   -    -           -    -                   -    -  
-uni         a  unimod/mikmod music module                -          64    -             226,245    -          63    -             221,819    -           -    -                   -    -  
+midi        a  midi sound                                -           8    -             209,909    -           -    -                   -    -           -    -                   -    -  
+uni         a  unimod/mikmod music module                -          66    -             235,097    -          63    -             221,819    -           -    -                   -    -  
 
-#                                            sub-totals          9,583    2      24,150,861,089   57       9,576    4      24,150,707,168   60           -    -                   -    -  
+#                                            sub-totals         10,172    2      49,432,321,358   53      10,158    4      49,432,007,474   56           -    -                   -    -  
 
 
 #=== video formats ======================================================================================================================================================================================================#
 #-ext-----  t  ---desc---------------------------------  l  seen------  pct  seen-bytes--------  pct  kept------  pct  kept-bytes--------  pct  found-----  pct  found-bytes-------  pct  
 
-flv         v  adobe flash video format                  -          49    -         615,830,411    1          49    -         615,830,411    2           -    -                   -    -  
+flv         v  adobe flash video format                  -          73    -         863,797,721    1          73    -         863,797,721    1           -    -                   -    -  
 f4v         v  adobe flash video format (updated)        -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-avi         v  standard video format                     -           1    -             423,614    -           1    -             423,614    -           -    -                   -    -  
+avi         v  standard video format                     -           2    -         258,091,268    -           2    -         258,091,268    -           -    -                   -    -  
 mov         v  quicktime video format                    -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 qt          v  quicktime video format                    -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
-wmv         v  windows media video                       -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
+wmv         v  windows media video                       -           4    -         199,865,718    -           4    -         199,865,718    -           -    -                   -    -  
 rm          v  realnetworks real video format            -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-mp4         v  mpeg layer 4 video format                 @           2    -          22,926,276    -           2    -          22,926,276    -           -    -                   -    -  
+mp4         v  mpeg layer 4 video format                 @          27    -       2,961,555,681    3          27    -       2,961,555,681    3           -    -                   -    -  
 m4p         v  mpeg layer 4 protected video format       -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 m4v         v  mpeg layer 4 video format                 -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
@@ -52,34 +52,35 @@ mpg         v  mpeg layer 1 video format                 -           -    -
 mpeg        v  mpeg layer 1 video format                 -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 mpe         v  mpeg layer 1 video format                 -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 mpv         v  mpeg layer 1 video format                 -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
+swf         v  flash small web format                    -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
-#                                            sub-totals             52    -         639,180,301    2          52    -         639,180,301    2           -    -                   -    -  
+#                                            sub-totals            106    -       4,283,310,388    5         106    -       4,283,310,388    5           -    -                   -    -  
 
 
 #=== image formats ======================================================================================================================================================================================================#
 #-ext-----  t  ---desc---------------------------------  l  seen------  pct  seen-bytes--------  pct  kept------  pct  kept-bytes--------  pct  found-----  pct  found-bytes-------  pct  
 
-jpg         i  jpeg compressed image format              @     117,785   24      10,351,047,643   25     117,785   53      10,351,047,643   26           -    -                   -    -  
+jpg         i  jpeg compressed image format              @     125,012   19      23,195,935,346   25     125,006   52      23,195,722,860   26           -    -                   -    -  
 jpeg        i  jpeg compressed image format              -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 tif         i  tagged image file format                  -           5    -               6,868    -           5    -               6,868    -           -    -                   -    -  
 tiff        i  tagged image file format                  -           3    -               3,978    -           3    -               3,978    -           -    -                   -    -  
 rif         i  raw image format                          -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
-gif         i  graphics interchange format               -         200    -           1,047,525    -         191    -             925,914    -           -    -                   -    -  
-bmp         i  microsoft file format                     -         353    -         261,771,508    -         353    -         261,771,508    -           -    -                   -    -  
-png         i  portable network graphics                 -       2,481    -       1,123,141,485    3       2,476    1       1,123,061,042    3           -    -                   -    -  
-ppm         i  portable pixmap format                    -          17    -             896,941    -           3    -               2,343    -           -    -                   -    -  
+gif         i  graphics interchange format               -         322    -           2,197,747    -         295    -           1,832,914    -           -    -                   -    -  
+bmp         i  microsoft file format                     -         426    -         352,477,598    -         426    -         352,477,598    -           -    -                   -    -  
+png         i  portable network graphics                 -       2,652    -       1,136,386,166    1       2,602    1       1,130,199,372    1           -    -                   -    -  
+ppm         i  portable pixmap format                    -          45    -           2,686,137    -           3    -               2,343    -           -    -                   -    -  
 pgm         i  portable pixmap format                    -           3    -                 807    -           3    -                 807    -           -    -                   -    -  
 
-pbm         i  portable pixmap format                    -           5    -              25,815    -           3    -                 123    -           -    -                   -    -  
-pnm         i  portable pixmap format                    -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
+pbm         i  portable pixmap format                    -           9    -              77,199    -           3    -                 123    -           -    -                   -    -  
+pnm         i  portable pixmap format                    -           1    -               9,673    -           1    -               9,673    -           -    -                   -    -  
 psd         i  photoshop drawing                         -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-xpm         i  x-windows pixmap                          -         400    -           2,922,930    -         381    -           2,854,353    -           -    -                   -    -  
+xpm         i  x-windows pixmap                          -         400    -           2,924,336    -         382    -           2,866,343    -           -    -                   -    -  
 xbm         i  x-windows pixmap                          -           5    -              55,137    -           5    -              55,137    -           -    -                   -    -  
 
 xpm2        i  x-windows pixmap                          -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 xpm3        i  x-windows pixmap                          -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-svg         i  xml vector graphics                       -         104    -             716,881    -          95    -             628,897    -           -    -                   -    -  
+svg         i  xml vector graphics                       -         118    -             863,696    -          97    -             636,809    -           -    -                   -    -  
 svgz        i  xml vector graphics compressed            -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 svgb        i  xml vector graphics binary encoded        -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
@@ -92,16 +93,18 @@ pic         i  picture file                              -           1    -
 rgb         i  silicongraphics bitmap                    -          13    -           1,906,442    -          13    -           1,906,442    -           -    -                   -    -  
 rgba        i  silicongraphics image                     -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 sgi         i  silicongraphics bitmap                    -          15    -              10,556    -          15    -              10,556    -           -    -                   -    -  
+aae         i  apple metadata and adjustment file        -          15    -              10,556    -          15    -              10,556    -           -    -                   -    -  
+ithmb       i  apple thumbnail image file                -          15    -              10,556    -          15    -              10,556    -           -    -                   -    -  
 
-#                                            sub-totals        121,413   25      11,748,286,244   28     121,355   54      11,747,007,339   29           -    -                   -    -  
+#                                            sub-totals        129,053   20      24,700,273,414   27     128,883   54      24,690,463,551   28           -    -                   -    -  
 
 
 #=== source code formats ================================================================================================================================================================================================#
 #-ext-----  t  ---desc---------------------------------  l  seen------  pct  seen-bytes--------  pct  kept------  pct  kept-bytes--------  pct  found-----  pct  found-bytes-------  pct  
 
 ada         s  ada source code                           -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-asm         s  assembly language source code             -          54    -             320,623    -          51    -             316,639    -           -    -                   -    -  
-s           s  assembly language source code             -       1,431    -          10,640,118    -          44    -             487,951    -           -    -                   -    -  
+asm         s  assembly language source code             @          60    -             328,591    -          51    -             316,639    -           -    -                   -    -  
+s           s  assembly language source code             -       6,231    1          40,238,100    -          38    -             485,834    -           -    -                   -    -  
 bas         s  basic language source code                -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 bat         s  windows batch file                        -           8    -               3,137    -           8    -               3,137    -           -    -                   -    -  
 
@@ -111,177 +114,199 @@ cls         s  visual basic language source code         -           -    -
 cob         s  cobol language source code                -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 cbl         s  cobol language source code                -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
-cpp         s  c++ language source code                  -         193    -           2,014,982    -         193    -           2,014,982    -           -    -                   -    -  
+cpp         s  c++ language source code                  -         195    -           2,068,450    -         193    -           2,046,210    -           -    -                   -    -  
 c++         s  c++ language source code                  -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-cc          s  c++ language source code                  -          20    -             231,268    -          19    -             186,784    -           -    -                   -    -  
+cc          s  c++ language source code                  -          37    -             332,417    -          19    -             186,784    -           -    -                   -    -  
 cxx         s  c++ language source code                  -          40    -             643,530    -          40    -             643,530    -           -    -                   -    -  
 cbp         s  c++ language source code                  -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
-hpp         s  c++ language header code                  -         564    -           3,098,300    -         564    -           3,098,300    -           -    -                   -    -  
-hxx         s  c++ language header code                  -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
+hpp         s  c++ language header code                  -         563    -           3,091,559    -         563    -           3,091,559    -           -    -                   -    -  
+hxx         s  c++ language header code                  -           1    -               1,702    -           1    -               1,702    -           -    -                   -    -  
 h++         s  c++ language header code                  -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 hh          s  c++ language header code                  -          27    -             526,229    -          27    -             526,229    -           -    -                   -    -  
-c           s  ansi-c source code                        -      23,145    5         430,141,582    1       2,660    1          53,601,275    -           -    -                   -    -  
+c           s  ansi-c source code                        @      73,544   11       1,240,543,077    1       2,673    1          53,915,123    -           -    -                   -    -  
 
-h           s  ansi-c header                             -      25,441    5         183,286,377    -       7,826    4          76,432,503    -           -    -                   -    -  
+h           s  ansi-c header                             @      62,909   10         421,718,118    -       8,403    4          80,024,638    -           -    -                   -    -  
 for         s  fortran language source code              -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 ftn         s  fortran language source code              -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 f           s  fortran language source code              -           7    -               1,683    -           7    -               1,683    -           -    -                   -    -  
 f77         s  fortran language source code              -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
 f90         s  fortran language source code              -           4    -              10,638    -           4    -              10,638    -           -    -                   -    -  
-cs          s  c-sharp program                           -          99    -           1,154,982    -          98    -           1,118,421    -           -    -                   -    -  
-java        s  java language source code                 -          63    -             510,070    -          56    -             472,579    -           -    -                   -    -  
-class       s  java language source code                 -           3    -              59,815    -           1    -                 510    -           -    -                   -    -  
-lisp        s  lisp language source code                 -           8    -               5,523    -           -    -                   -    -           -    -                   -    -  
+cs          s  c-sharp program                           -         100    -           1,235,693    -          98    -           1,161,894    -           -    -                   -    -  
+java        s  java language source code                 -          64    -             495,428    -          58    -             475,026    -           -    -                   -    -  
+class       s  java language source code                 -           7    -             122,825    -           3    -               3,775    -           -    -                   -    -  
+jsm         s  javascript code module                    -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
+lisp        s  lisp language source code                 -           7    -               3,774    -           -    -                   -    -           -    -                   -    -  
 
-m4          s  m4 language source code                   -         690    -           4,928,694    -         670    -           4,824,636    -           -    -                   -    -  
+m4          s  m4 language source code                   -         772    -           5,505,890    -         738    -           4,975,667    -           -    -                   -    -  
 pas         s  pascal language source code               -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 p           s  pascal language source code               -           1    -               1,603    -           1    -               1,603    -           -    -                   -    -  
 pp          s  pascal language source code               -           1    -             134,494    -           1    -             134,494    -           -    -                   -    -  
-php         s  php language source code                  -           4    -              20,917    -           -    -                   -    -           -    -                   -    -  
+php         s  php language source code                  -           4    -              11,970    -           -    -                   -    -           -    -                   -    -  
 
 php3        s  php language source code                  -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 php4        s  php language source code                  -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 php5        s  php language source code                  -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 phps        s  php language source code                  -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-pl          s  perl language source code                 -       1,055    -           5,071,381    -       1,013    -           4,443,530    -           -    -                   -    -  
+pl          s  perl language source code                 -         655    -           6,555,670    -         536    -           4,480,618    -           -    -                   -    -  
+ph          s  perl language header file                 -         655    -           6,555,670    -         536    -           4,480,618    -           -    -                   -    -  
 
-pm          s  perl language source code                 -         806    -          14,541,840    -         802    -          14,529,041    -           -    -                   -    -  
-py          s  python language source code               -       5,431    1          71,018,504    -       5,393    2          70,742,288    -           -    -                   -    -  
+pm          s  perl language source code                 -         806    -          14,471,131    -         794    -          14,435,772    -           -    -                   -    -  
+py          s  python language source code               -       5,495    -          71,250,256    -       5,388    2          70,376,747    -           -    -                   -    -  
 rpy         s  python language source code               -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 ptl         s  python template language file             -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 pyt         s  python declaration file                   -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
 pyw         s  python gui source script                  -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 p           s  python pickle file                        -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-rb          s  ruby language source code                 -       1,538    -          10,336,258    -       1,528    -          10,318,811    -           -    -                   -    -  
+rb          s  ruby language source code                 -       1,540    -          10,369,795    -       1,528    -          10,318,811    -           -    -                   -    -  
 rbx         s  ruby language source code                 -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 rjs         s  ruby language source code                 -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
-scm         s  scheme language source code               -         135    -             995,814    -         133    -             948,235    -           -    -                   -    -  
-sh          s  bash shell language source code           -         663    -           3,377,933    -         395    -           2,930,339    -           -    -                   -    -  
+scm         s  scheme language source code               -         136    -           1,040,986    -         133    -             948,235    -           -    -                   -    -  
+sh          s  bash shell language source code           @         907    -           4,265,141    -         397    -           3,000,454    -           -    -                   -    -  
 shh         s  bash shell language source code           -         113    -           1,796,424    -         113    -           1,796,424    -           -    -                   -    -  
 bat         s  windows batch language                    -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 ws          s  windows scripting language                -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
 wsf         s  windows scripting language                -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-bash        s  bash shell language source code           -         100    -             335,486    -          95    -             306,534    -           -    -                   -    -  
-vim         s  vim script                                -       1,361    -           9,984,279    -       1,351    -           9,981,740    -           -    -                   -    -  
-awk         s  awk script file                           -          94    -             253,045    -          85    -             213,836    -           -    -                   -    -  
-in          s  automake/autoconf file                    -         414    -           6,346,238    -         351    -           6,268,176    -           -    -                   -    -  
+bash        s  bash shell language source code           -          99    -             328,917    -          95    -             306,608    -           -    -                   -    -  
+vim         s  vim script                                -       1,367    -          10,105,547    -       1,355    -          10,100,346    -           -    -                   -    -  
+awk         s  awk script file                           -         137    -             341,316    -          80    -             193,911    -           -    -                   -    -  
+in          s  automake/autoconf file                    -         485    -           7,414,574    -         352    -           6,261,425    -           -    -                   -    -  
 
-am          s  automake/autoconf definitions             -         286    -             696,075    -         281    -             693,649    -           -    -                   -    -  
-vcproj      s  microsoft visual project                  -          10    -              54,792    -          10    -              54,792    -           -    -                   -    -  
+am          s  automake/autoconf definitions             -         410    -           1,078,190    -         359    -           1,031,113    -           -    -                   -    -  
+vcproj      s  microsoft visual project                  -          11    -              58,792    -          11    -              58,792    -           -    -                   -    -  
 csproj      s  microsoft visual project                  -           3    -              24,052    -           3    -              24,052    -           -    -                   -    -  
 vcp         s  microsoft visual project                  -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-dsp         s  microsoft developer project               -          19    -             117,045    -          18    -              73,673    -           -    -                   -    -  
+dsp         s  microsoft developer project               -          21    -             203,789    -          18    -              73,673    -           -    -                   -    -  
 
 dsw         s  microsoft developer workspace             -           8    -               4,359    -           8    -               4,359    -           -    -                   -    -  
-js          s  microsoft studio javascript               -          82    -           1,847,734    -          76    -           1,845,156    -           -    -                   -    -  
+js          s  microsoft studio javascript               -          84    -           1,885,053    -          77    -           1,881,972    -           -    -                   -    -  
 vbs         s  microsoft studio vbscript                 -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 wsf         s  microsoft studio script host              -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 cd          s  microsoft studio class diagram            -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
-config      s  microsoft studio configuration            -          11    -             143,336    -           5    -               4,902    -           -    -                   -    -  
+config      s  microsoft studio configuration            -          18    -             272,898    -           4    -               2,123    -           -    -                   -    -  
 jsl         s  microsoft studio javascript assembly      -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 resx        s  microsoft studio resources file           -          22    -             198,977    -          22    -             198,977    -           -    -                   -    -  
 res         s  microsoft studio resources compiled       -           9    -               2,275    -           9    -               2,275    -           -    -                   -    -  
-ico         s  microsoft studio icon file                -           7    -              24,962    -           7    -              24,962    -           -    -                   -    -  
+ico         s  microsoft studio icon file                -          11    -             351,969    -          10    -             342,259    -           -    -                   -    -  
 
 cur         s  microsoft studio cursor file              -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 rpt         s  microsoft studio crystal report           -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 mdf         s  microsoft studio sql database             -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-lua         s  lua script file                           -          49    -             148,898    -          47    -             147,840    -           -    -                   -    -  
+lua         s  lua script file                           -         169    -           3,166,270    -         167    -           3,165,212    -           -    -                   -    -  
 tmac        s  groff macro                               -          66    -             929,316    -          66    -             929,316    -           -    -                   -    -  
 
-wbt         s  wilson window ware batch script           -          69    -           1,378,576    -          69    -           1,378,576    -           -    -                   -    -  
-script      s  apple/newton script file                  -          12    -             682,466    -          11    -             681,639    -           -    -                   -    -  
+wbt         s  wilson window ware batch script           -          70    -           1,379,108    -          70    -           1,379,108    -           -    -                   -    -  
+script      s  apple/newton script file                  -          14    -             684,120    -          11    -             681,639    -           -    -                   -    -  
+htc         s  microsoft html component scripts          -          14    -             684,120    -          11    -             681,639    -           -    -                   -    -  
+xul         s  xml user interface language               -      23,004    4          53,911,900    -       1,728    -          33,743,477    -           -    -                   -    -  
+gcode       s  control language                          -      23,004    4          53,911,900    -       1,728    -          33,743,477    -           -    -                   -    -  
+pc          s  developer program creation file           -      23,004    4          53,911,900    -       1,728    -          33,743,477    -           -    -                   -    -  
 
-#                                            sub-totals         64,172   13         768,046,073    2      24,167   11         272,420,459    -           -    -                   -    -  
+#                                            sub-totals        157,244   24       1,855,199,276    2      24,538   10         280,001,829    -           -    -                   -    -  
 
 
 #=== text/doc formats ===================================================================================================================================================================================================#
 #-ext-----  t  ---desc---------------------------------  l  seen------  pct  seen-bytes--------  pct  kept------  pct  kept-bytes--------  pct  found-----  pct  found-bytes-------  pct  
 
-txt         t  normal text file                          -       3,490    -          56,190,365    -         901    -          43,508,469    -           -    -                   -    -  
+txt         t  normal text file                          @       9,161    1          95,061,820    -         955    -          55,009,079    -           -    -                   -    -  
 csv         t  comma seperated values                    -           4    -              49,304    -           4    -              49,304    -           -    -                   -    -  
 tsv         t  tab seperated values                      -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-howto       t  custom howto file                         -         199    -           1,731,640    -         199    -           1,731,640    -           -    -                   -    -  
-conf        t  configuration file                        -       1,017    -          24,618,088    -         522    -          23,902,482    -           -    -                   -    -  
+howto       t  custom howto file                         @         203    -           1,752,800    -         203    -           1,752,800    -           -    -                   -    -  
+conf        t  configuration file                        @       1,094    -          24,935,025    -         546    -          23,975,117    -           -    -                   -    -  
 
-use         t  portage use flags                         -         208    -             294,610    -           1    -               1,671    -           -    -                   -    -  
-ini         t  windows configuration file                -          44    -           9,116,192    -          31    -           9,104,266    -           -    -                   -    -  
-defs        t  alternate configuration file              -           3    -              31,524    -           3    -              31,524    -           -    -                   -    -  
-cfg         t  alternate configuration file              -          81    -             441,565    -          56    -             333,142    -           -    -                   -    -  
-xml         t  extended markup language                  -      22,344    5          29,433,745    -       1,690    -          14,076,884    -           -    -                   -    -  
+use         t  portage use flags                         -         214    -             256,151    -           1    -               1,679    -           -    -                   -    -  
+ini         t  windows configuration file                -          45    -           9,115,702    -          33    -           9,106,469    -           -    -                   -    -  
+defs        t  alternate configuration file              -           5    -              32,697    -           3    -              31,524    -           -    -                   -    -  
+cfg         t  alternate configuration file              -          85    -             488,633    -          56    -             333,142    -           -    -                   -    -  
+xml         t  extended markup language                  -      23,004    4          53,911,900    -       1,728    -          33,743,477    -           -    -                   -    -  
+rules       t  custom build xml rules file               -      23,004    4          53,911,900    -       1,728    -          33,743,477    -           -    -                   -    -  
+tmpl        t  unix template file                        -      23,004    4          53,911,900    -       1,728    -          33,743,477    -           -    -                   -    -  
+def         t  unix definition file                      -      23,004    4          53,911,900    -       1,728    -          33,743,477    -           -    -                   -    -  
+rdf         t  firefox and database xml-like file        -      23,004    4          53,911,900    -       1,728    -          33,743,477    -           -    -                   -    -  
+json        t  javascript object notation format         -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
-htm         t  hypertext markup language                 -          65    -             650,145    -          65    -             650,145    -           -    -                   -    -  
-html        t  hypertext markup language                 -      16,444    3         153,327,649    -      16,439    7         153,310,061    -           -    -                   -    -  
+htm         t  hypertext markup language                 -          91    -           8,406,536    -          91    -           8,406,536    -           -    -                   -    -  
+html        t  hypertext markup language                 @      17,458    3         162,718,773    -      17,433    7         162,021,906    -           -    -                   -    -  
 xhtml       t  hypertext markup language                 -           1    -              30,551    -           1    -              30,551    -           -    -                   -    -  
 rhtml       t  ruby hypertext markup language file       -          42    -              33,048    -          42    -              33,048    -           -    -                   -    -  
-css         t  cascading style sheets                    -         132    -             586,379    -         132    -             586,379    -           -    -                   -    -  
+css         t  cascading style sheets                    -         146    -             776,085    -         144    -             760,953    -           -    -                   -    -  
 
-epub        t  open book standard                        -         134    -          31,318,180    -         134    -          31,318,180    -           -    -                   -    -  
-pdf         t  adobe portable document format            -         102    -         314,155,373    -          94    -         314,094,529    -           -    -                   -    -  
+epub        t  open book standard                        @         671    -         211,694,483    -         671    -         211,694,483    -           -    -                   -    -  
+pdf         t  adobe portable document format            @         179    -         400,798,515    -         155    -         400,615,983    -           -    -                   -    -  
 rtf         t  rich text format                          -           1    -                 949    -           1    -                 949    -           -    -                   -    -  
 eps         t  encapsulated postscript                   -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 ps          t  postscript                                -          49    -           7,606,986    -          46    -           7,588,869    -           -    -                   -    -  
 
-log         t  unix log file                             -          13    -           8,269,063    -          13    -           8,269,063    -           -    -                   -    -  
-ulog        t  heatherly log file                        -           7    -          45,737,937    -           7    -          45,737,937    -           -    -                   -    -  
-theme       t  application theming file                  -          53    -             103,061    -          52    -             102,860    -           -    -                   -    -  
+log         t  unix log file                             -          24    -           8,571,858    -          15    -           8,474,910    -           -    -                   -    -  
+ulog        t  heatherly log file                        -           4    -             571,303    -           4    -             571,303    -           -    -                   -    -  
+theme       t  application theming file                  -          54    -             130,251    -          53    -             130,050    -           -    -                   -    -  
 ent         t  bittorrent information file               -         106    -             435,241    -         103    -             422,012    -           -    -                   -    -  
-dtd         t  document type definition file             -          54    -             427,135    -          35    -             376,672    -           -    -                   -    -  
+dtd         t  document type definition file             -          55    -             437,681    -          36    -             387,218    -           -    -                   -    -  
 
-xsl         t  xml style sheet                           -         356    -           7,828,813    -         344    -           7,816,160    -           -    -                   -    -  
+xsl         t  xml style sheet                           -         369    -           7,868,622    -         345    -           7,848,095    -           -    -                   -    -  
 dsl         t  dsssl style sheet                         -           1    -              10,981    -           1    -              10,981    -           -    -                   -    -  
-xsd         t  xml schema description file               -          44    -             687,082    -          44    -             687,082    -           -    -                   -    -  
+xsd         t  xml schema description file               -          44    -             688,234    -          44    -             688,234    -           -    -                   -    -  
 torrent     t  bittorrent information file               -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 nanorc      t  nano editor configuration                 -          34    -              35,822    -          30    -              31,135    -           -    -                   -    -  
 
 vimrc       t  vim editor configuration                  -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-mo          t  gnu gettext file                          -       1,191    -          58,225,873    -       1,191    -          58,225,873    -           -    -                   -    -  
+mo          t  gnu gettext file                          -         679    -          27,393,051    -         679    -          27,393,051    -           -    -                   -    -  
 gmo         t  gnu gettext file                          -          63    -           7,919,768    -          63    -           7,919,768    -           -    -                   -    -  
 gyges       t  gyges spreadsheet file                    -          31    -           1,230,344    -          31    -           1,230,344    -           -    -                   -    -  
-texi        t  texinfo documentation file                -          46    -             950,132    -          46    -             950,132    -           -    -                   -    -  
+texi        t  texinfo documentation file                -          99    -           3,773,108    -          46    -             950,132    -           -    -                   -    -  
 
-sgml        t  sgml document file                        -          26    -           4,668,026    -          26    -           4,668,026    -           -    -                   -    -  
-inc         t  include file                              -          34    -             121,234    -          27    -             109,655    -           -    -                   -    -  
-info        t  gnu info reader file                      -          25    -          14,108,178    -          23    -          14,073,332    -           -    -                   -    -  
-rst         t  python restructured text doc file         -         933    -             671,255    -         933    -             671,255    -           -    -                   -    -  
-rest        t  python restructured text doc file         -           1    -                 291    -           -    -                   -    -           -    -                   -    -  
+sgml        t  sgml document file                        -          26    -           4,802,196    -          26    -           4,802,196    -           -    -                   -    -  
+inc         t  include file                              -          45    -             907,614    -          27    -             109,655    -           -    -                   -    -  
+info        t  gnu info reader file                      -          26    -          14,218,540    -          23    -          14,148,622    -           -    -                   -    -  
+rst         t  python restructured text doc file         -       1,089    -             878,679    -       1,089    -             878,679    -           -    -                   -    -  
+rest        t  python restructured text doc file         -           3    -                 873    -           -    -                   -    -           -    -                   -    -  
 
 howto       t  heatherly howto/notes                     -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-daily       t  heatherly time tracking                   -           3    -               4,490    -           1    -               3,916    -           -    -                   -    -  
+daily       t  heatherly time tracking                   -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
+url         t  internet url                              -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
+1           t  man file, section one                     -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
+2           t  man file, section two                     -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
+3           t  man file, section three                   -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
+4           t  man file, section four                    -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
+5           t  man file, section five                    -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
+6           t  man file, section six                     -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
+7           t  man file, section seven                   -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
+8           t  man file, section eight                   -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
+x           t  man file                                  -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
+pod         t  perl documentation file                   -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
 
-#                                            sub-totals         47,381   10         781,051,019    2      23,331   10         751,658,296    2           -    -                   -    -  
+#                                            sub-totals         55,209    9       1,057,561,236    1      24,730   10         991,168,792    1           -    -                   -    -  
 
 
 #=== compressed/encrypted formats =======================================================================================================================================================================================#
 #-ext-----  t  ---desc---------------------------------  l  seen------  pct  seen-bytes--------  pct  kept------  pct  kept-bytes--------  pct  found-----  pct  found-bytes-------  pct  
 
-gz          c  gzip compressed file                      -       1,616    -         277,939,998    -       1,537    -         192,308,528    -           -    -                   -    -  
-tgz         c  gzip compressed tar archive               -          13    -          32,833,566    -           8    -             471,606    -           -    -                   -    -  
-bz2         c  bzip2 compressed file                     -      10,683    2         485,723,640    1       2,229    1         240,009,937    -           -    -                   -    -  
+gz          c  gzip compressed file                      -       1,451    -         401,906,042    -       1,322    -         191,944,585    -           -    -                   -    -  
+tgz         c  gzip compressed tar archive               -          17    -          34,311,997    -           9    -             486,688    -           -    -                   -    -  
+bz2         c  bzip2 compressed file                     -      11,429    2         687,388,620    -       2,639    1         243,720,372    -           -    -                   -    -  
 tbz         c  bzip2 compressed tar archive              -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-tbz2        c  bzip2 compressed tar archive              -           1    -              19,188    -           1    -              19,188    -           -    -                   -    -  
+tbz2        c  bzip2 compressed tar archive              -           2    -             255,354    -           1    -              19,188    -           -    -                   -    -  
 
 hqx         c  mac binhex compressed file                -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-zip         c  zipped compressed file                    -          63    -         561,163,395    1          61    -         560,988,860    1           -    -                   -    -  
+zip         c  zipped compressed file                    -          94    -       5,331,999,188    6          91    -       5,330,537,430    6           -    -                   -    -  
 zipx        c  zipped compressed file                    -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-sit         c  stuffit compressed archive                -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
+sit         c  stuffit compressed archive                -           8    -             680,157    -           8    -             680,157    -           -    -                   -    -  
 sitx        c  stuffit compressed archive                -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
 pit         c  packit compressed archive                 -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 cpio        c  unix cpio archive                         -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 tar         c  unix tar archive                          -          18    -         126,000,640    -          18    -         126,000,640    -           -    -                   -    -  
-iso         c  unix distribution archive                 -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
+iso         c  unix distribution archive                 -           1    -         113,000,448    -           1    -         113,000,448    -           -    -                   -    -  
 lz          c  lzma compressed file                      -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
 lzma        c  lzma compressed file                      -           1    -             694,672    -           -    -                   -    -           -    -                   -    -  
-xz          c  lzma compressed file                      -          54    -         223,979,792    -           1    -             357,480    -           -    -                   -    -  
-lzo         c  lzo compressed file                       -           1    -              27,197    -           -    -                   -    -           -    -                   -    -  
+xz          c  lzma compressed file                      -         100    -         384,787,432    -           3    -             409,564    -           -    -                   -    -  
+lzo         c  lzo compressed file                       -           2    -              54,833    -           -    -                   -    -           -    -                   -    -  
 z           c  huffman compressed file                   -           1    -              12,344    -           -    -                   -    -           -    -                   -    -  
 Z           c  lzw compressed file                       -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
@@ -290,26 +315,28 @@ s7z         c  7-zip compressed archive                  -           -    -
 cab         c  windows compressed file                   -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 rar         c  rar compressed file                       -           1    -              17,465    -           1    -              17,465    -           -    -                   -    -  
 
-#                                            sub-totals         12,452    3       1,708,411,897    4       3,856    2       1,120,173,704    3           -    -                   -    -  
+#                                            sub-totals         13,125    2       7,081,109,192    8       4,093    2       6,006,816,537    7           -    -                   -    -  
 
 
 #=== proprietary formats ================================================================================================================================================================================================#
 #-ext-----  t  ---desc---------------------------------  l  seen------  pct  seen-bytes--------  pct  kept------  pct  kept-bytes--------  pct  found-----  pct  found-bytes-------  pct  
 
-ebuild      p  gentoo ebuild for portage                 -      36,890    8          56,591,330    -           -    -                   -    -           -    -                   -    -  
-xls         p  microsoft excel                           -          18    -           9,233,920    -          18    -           9,233,920    -           -    -                   -    -  
-xlsx        p  microsoft excel 2007                      -           2    -              20,470    -           2    -              20,470    -           -    -                   -    -  
+ebuild      p  gentoo ebuild for portage                 -      38,070    6          52,907,625    -           -    -                   -    -           -    -                   -    -  
+xls         p  microsoft excel                           -         130    -         194,779,833    -         130    -         194,779,833    -           -    -                   -    -  
+xlsx        p  microsoft excel 2007                      -          10    -           1,993,893    -          10    -           1,993,893    -           -    -                   -    -  
+xlsm        p  microsoft excel                           -          10    -           1,993,893    -          10    -           1,993,893    -           -    -                   -    -  
 xlw         p  microsoft excel workbook                  -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 wk3         p  lotus 1-2-3 worksheet                     -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
-doc         p  microsoft word document                   -          14    -             383,143    -           9    -             342,141    -           -    -                   -    -  
-docx        p  microsoft word document 2007              -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-dot         p  microsoft word template                   -           7    -              45,443    -           1    -              38,912    -           -    -                   -    -  
-ppt         p  microsoft powerpoint                      -          36    -          15,257,600    -          36    -          15,257,600    -           -    -                   -    -  
-pptx        p  microsoft powerpoint 2007                 -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
+doc         p  microsoft word document                   -          38    -           6,473,979    -          23    -           6,350,973    -           -    -                   -    -  
+docx        p  microsoft word document 2007              -           2    -           1,015,200    -           2    -           1,015,200    -           -    -                   -    -  
+dot         p  microsoft word template                   -          17    -              57,791    -           1    -              38,912    -           -    -                   -    -  
+ppt         p  microsoft powerpoint                      -         258    -         210,842,112    -         258    -         210,842,112    -           -    -                   -    -  
+pptx        p  microsoft powerpoint 2007                 -           9    -           2,068,776    -           9    -           2,068,776    -           -    -                   -    -  
+mpp         p  microsoft project file                    -           9    -           2,068,776    -           9    -           2,068,776    -           -    -                   -    -  
 
 dbf         p  dbase file                                -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-db          p  unix database                             -          78    -          44,527,072    -          76    -          44,508,828    -           -    -                   -    -  
+db          p  unix database                             -          87    -          50,700,257    -          85    -          50,681,802    -           -    -                   -    -  
 mdb         p  microsoft access database                 -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 acad        p  autocad database                          -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 odb         p  openoffice database                       -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
@@ -317,14 +344,14 @@ odb         p  openoffice database                       -           -    -
 odc         p  openoffice file                           -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 odi         p  openoffice image                          -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 oti         p  openoffice image template                 -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-odp         p  openoffice presentation                   -          24    -           1,132,346    -          24    -           1,132,346    -           -    -                   -    -  
+odp         p  openoffice presentation                   -          34    -           1,362,394    -          34    -           1,362,394    -           -    -                   -    -  
 otp         p  openoffice presentation template          -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 
-opf         p  openoffice document interchange           -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
+opf         p  openoffice document interchange           -         450    -           1,185,469    -         450    -           1,185,469    -           -    -                   -    -  
 opg         p  openoffice drawing file                   -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 sda         p  openoffice drawing file                   -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 ops         p  openoffice spreadsheet                    -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-ods         p  openoffice spreadsheet                    -           4    -             372,571    -           4    -             372,571    -           -    -                   -    -  
+ods         p  openoffice spreadsheet                    -           5    -             391,147    -           5    -             391,147    -           -    -                   -    -  
 
 sdc         p  openoffice spreadsheet                    -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 sxc         p  openoffice spreadsheet                    -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
@@ -335,71 +362,80 @@ oot         p  openoffice text document                  -           -    -
 sxw         p  openoffice text document                  -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 jar         p  java archive file                         -           6    -           1,689,725    -           6    -           1,689,725    -           -    -                   -    -  
 gbr         p  gimp brush file                           -          20    -             120,632    -          20    -             120,632    -           -    -                   -    -  
-slk         p  silk spreadsheet file                     -          30    -             140,212    -          30    -             140,212    -           -    -                   -    -  
+slk         p  silk spreadsheet file                     -          33    -             297,677    -          33    -             297,677    -           -    -                   -    -  
 oleo        p  oleo spreadsheet file                     -          16    -               6,322    -          16    -               6,322    -           -    -                   -    -  
 
-font        p  font file                                 -           2    -               4,422    -           1    -               4,096    -           -    -                   -    -  
-afm         p  adobe font metrics                        -          44    -             805,676    -          44    -             805,676    -           -    -                   -    -  
-ttf         p  truetype font                             -         154    -          14,426,352    -         154    -          14,426,352    -           -    -                   -    -  
+font        p  font file                                 -           3    -               4,748    -           1    -               4,096    -           -    -                   -    -  
+afm         p  adobe font metrics                        -          79    -           2,229,365    -          79    -           2,229,365    -           -    -                   -    -  
+ttf         p  truetype font                             -         328    -          78,818,790    -         328    -          78,818,790    -           -    -                   -    -  
 dict        p  dictionary file                           -           3    -              46,394    -           3    -              46,394    -           -    -                   -    -  
-cmake       p  cmake module file                         -         548    -           2,043,717    -         542    -           2,038,732    -           -    -                   -    -  
+cmake       p  cmake module file                         -         638    -           2,402,783    -         634    -           2,400,154    -           -    -                   -    -  
 
-txf         p  opengl font                               -          84    -          17,048,616    -          84    -          17,048,616    -           -    -                   -    -  
+txf         p  opengl font                               -          94    -          18,432,536    -          94    -          18,432,536    -           -    -                   -    -  
+sqlite      p  sqlite database file                      -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
+lnk         p  microsoft symbolic link                   -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
+xpt         p  firefox component                         -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
+dip         p  diptrace electronics design file          -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
+xpi         p  firefox extension installation file       -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
+mf          p  java manifest file for archives           -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
+crt         p  firefox certificate                       -           4    -              17,112    -           2    -              16,538    -           -    -                   -    -  
 
-#                                            sub-totals         37,981    8         163,896,056    -       1,071    -         107,233,638    -           -    -                   -    -  
+#                                            sub-totals         40,331    6         627,827,541    -       2,222    1         574,756,295    -           -    -                   -    -  
 
 
 #=== executable formats =================================================================================================================================================================================================#
 #-ext-----  t  ---desc---------------------------------  l  seen------  pct  seen-bytes--------  pct  kept------  pct  kept-bytes--------  pct  found-----  pct  found-bytes-------  pct  
 
-a           x  unix static library                       -         148    -         102,320,393    -         146    -         101,976,599    -           -    -                   -    -  
+a           x  unix static library                       -         179    -         119,266,245    -         155    -         102,075,711    -           -    -                   -    -  
 ar          x  unix static library                       -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-so          x  dynamic library                           -       1,710    -         213,032,727    -       1,698    -         212,980,716    -           -    -                   -    -  
+so          x  dynamic library                           -       1,903    -         234,944,730    -       1,868    -         233,558,813    -           -    -                   -    -  
 dll         x  dynamic library                           -           5    -             735,497    -           5    -             735,497    -           -    -                   -    -  
-o           x  object file                               -       3,272    -         169,171,602    -         414    -          19,712,510    -           -    -                   -    -  
+o           x  object file                               -       6,221    1         324,098,223    -         411    -          19,738,998    -           -    -                   -    -  
+os          x  heatherly stripped object file            -       6,221    1         324,098,223    -         411    -          19,738,998    -           -    -                   -    -  
 
 obj         x  microsoft object file                     -          31    -           6,746,920    -          31    -           6,746,920    -           -    -                   -    -  
-bfd         x  gnu binary file descriptor file           -           1    -             859,056    -           1    -             859,056    -           -    -                   -    -  
-po          x  object file portable                      -          70    -          16,862,586    -          64    -          16,718,277    -           -    -                   -    -  
-exe         x  executable file                           -       4,289    -         711,086,197    2       3,969    2         604,035,104    2           -    -                   -    -  
-com         x  executable file                           -           3    -               4,996    -           3    -               4,996    -           -    -                   -    -  
+bfd         x  gnu binary file descriptor file           -           1    -             871,768    -           1    -             871,768    -           -    -                   -    -  
+po          x  object file portable                      -         126    -          25,414,487    -          64    -          16,718,277    -           -    -                   -    -  
+exe         x  executable file                           -       4,558    -         897,423,250    1       4,323    2         679,999,426    -           -    -                   -    -  
+com         x  executable file                           -           6    -             140,021    -           6    -             140,021    -           -    -                   -    -  
 
-pyc         x  compiled python script                    -       5,251    1          70,907,458    -       5,251    2          70,907,458    -           -    -                   -    -  
-pyo         x  compiled python file                      -       5,251    1          69,444,688    -       5,251    2          69,444,688    -           -    -                   -    -  
+pyc         x  compiled python script                    -       5,245    -          69,658,439    -       5,245    2          69,658,439    -           -    -                   -    -  
+pyo         x  compiled python file                      -       5,245    -          68,196,865    -       5,245    2          68,196,865    -           -    -                   -    -  
 rake        x  compiled ruby script                      -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
 pyd         x  python dynamic module                     -           -    -                   -    -           -    -                   -    -           -    -                   -    -  
-debug       x  gnu program debugging information         -       1,246    -          79,572,796    -       1,214    -          79,312,240    -           -    -                   -    -  
+debug       x  gnu program debugging information         -       2,030    -          95,598,843    -       1,934    -          94,839,884    -           -    -                   -    -  
 
-#                                            sub-totals         21,277    4       1,440,744,916    3      18,047    8       1,183,434,061    3           -    -                   -    -  
+#                                            sub-totals         25,550    4       1,843,095,288    2      19,288    8       1,293,280,619    1           -    -                   -    -  
 
 
 #=== transient formats ==================================================================================================================================================================================================#
 #-ext-----  t  ---desc---------------------------------  l  seen------  pct  seen-bytes--------  pct  kept------  pct  kept-bytes--------  pct  found-----  pct  found-bytes-------  pct  
 
-swp         z  swap file                                 -          60    -           4,182,016    -          60    -           4,182,016    -           -    -                   -    -  
-backup      z  backup file                               -         566    -          21,405,643    -         566    -          21,405,643    -           -    -                   -    -  
-old         z  backup file                               -           5    -              48,261    -           4    -              47,809    -           -    -                   -    -  
-cache       z  temporary storage                         -          12    -             311,937    -           7    -             206,946    -           -    -                   -    -  
-symlink     z  link to another file                      -       5,092    1             331,918    -       2,719    1              56,667    -           -    -                   -    -  
+swp         z  swap file                                 -          60    -           7,471,104    -          60    -           7,471,104    -           -    -                   -    -  
+backup      z  backup file                               -         586    -          25,918,136    -         585    -          25,913,750    -           -    -                   -    -  
+old         z  backup file                               -           8    -             665,112    -           4    -              47,905    -           -    -                   -    -  
+cache       z  temporary storage                         -          18    -             424,929    -           8    -             212,572    -           -    -                   -    -  
+symlink     z  link to another file                      -       5,193    -             566,032    -       2,769    1              56,647    -           -    -                   -    -  
+tmp         z  temporary file                            -       5,193    -             566,032    -       2,769    1              56,647    -           -    -                   -    -  
 
-#                                            sub-totals          5,735    1          26,279,775    -       3,356    2          25,899,081    -           -    -                   -    -  
+#                                            sub-totals          5,865    1          35,045,313    -       3,426    1          33,701,978    -           -    -                   -    -  
 
 
 #=== directories ========================================================================================================================================================================================================#
 #-ext-----  t  ---desc---------------------------------  l  seen------  pct  seen-bytes--------  pct  kept------  pct  kept-bytes--------  pct  found-----  pct  found-bytes-------  pct  
 
-dir         d  directory                                 -      41,029    8         172,606,689    -      10,183    5          43,408,014    -           -    -                   -    -  
+dir         d  directory                                 -      50,559    8         213,129,344    -      11,396    5          48,665,477    -           -    -                   -    -  
 
-#                                            sub-totals         41,029    8         172,606,689    -      10,183    5          43,408,014    -           -    -                   -    -  
+#                                            sub-totals         50,559    8         213,129,344    -      11,396    5          48,665,477    -           -    -                   -    -  
 
 
 #=== unknown formats ====================================================================================================================================================================================================#
 #-ext-----  t  ---desc---------------------------------  l  seen------  pct  seen-bytes--------  pct  kept------  pct  kept-bytes--------  pct  found-----  pct  found-bytes-------  pct  
 
----         u  uncategorized (has suffix)                -      65,526   13         255,482,513    -       4,971    2          39,343,004    -           -    -                   -    -  
-ooo         u  unlabeled (no suffix)                     -      63,160   13         334,689,690    -       3,237    1         154,430,606    -           -    -                   -    -  
+---         u  uncategorized (has suffix)                -      81,399   13         393,689,566    -       5,648    2          85,687,706    -           -    -                   -    -  
+ooo         u  unlabeled (no suffix)                     -      74,671   12       1,376,938,360    1       4,812    2       1,050,087,429    1           -    -                   -    -  
 
-#                                            sub-totals        128,686   26         590,172,203    1       8,208    4         193,773,610    -           -    -                   -    -  
+#                                            sub-totals        156,070   24       1,770,627,926    2      10,460    4       1,135,775,135    1           -    -                   -    -  
 
 #-ext-----  t  ---desc---------------------------------  l  seen------  pct  seen-bytes--------  pct  kept------  pct  kept-bytes--------  pct  found-----  pct  found-bytes-------  pct  
 

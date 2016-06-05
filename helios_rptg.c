@@ -260,6 +260,7 @@ RPTG_summ          (void)
    char        x_comma     [20] = "";
    int         i           = 0;
    struct      tm         *curr  = NULL;;
+   time_t      x_written   = 0;
    char        x_time      [100] = "";
    tDRIVE     *x_drive     = NULL;
    /*---(process all)--------------------*/
@@ -278,8 +279,10 @@ RPTG_summ          (void)
    printf ("ref-   ---host--- --serial-- ---device------ ---mount-point------ --type-- ---bytes------------   ---written----------\n");
    x_drive = h_drive;
    while (x_drive != NULL) {
-      curr = localtime (&(x_drive->written));
-      strftime (x_time, 100, "%y.%m.%d %H:%M:%S %U", curr);
+      x_written = x_drive->written;
+      curr = localtime (&x_written);
+      if (curr == NULL) printf ("local time failed\n");
+      else              strftime (x_time, 100, "%y.%m.%d %H:%M:%S %U", curr);
       FILE_commas (x_drive->size , x_comma);
       printf ("[%02d]   %-10.10s %-10.10s %-15.15s %-20.20s %-8.8s %20.20s   %s\n",
             x_drive->ref   , x_drive->host  ,

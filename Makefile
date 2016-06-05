@@ -11,8 +11,8 @@ DEBUG   = helios_debug
 COMP    = gcc -c -std=gnu89 -x c -g -pg -Wall -Wextra
 INCS    = -I/usr/local/include 
 LINK    = gcc 
-LIBS    = -L/usr/local/libs -lm
-LIBD    = -L/usr/local/libs -lm -lyLOG
+LIBS    = -L/usr/local/libs -lySTR  -lm
+LIBD    = -L/usr/local/libs -lySTR  -lm -lyLOG
 OBJS    = ${BASE}_main.os ${BASE}_prog.os ${BASE}_entry.os ${BASE}_rptg.os ${BASE}_sort.os ${BASE}_file.os ${BASE}_drive.os
 OBJD    = ${BASE}_main.o  ${BASE}_prog.o  ${BASE}_entry.o  ${BASE}_rptg.o  ${BASE}_sort.o  ${BASE}_file.o  ${BASE}_drive.o
 

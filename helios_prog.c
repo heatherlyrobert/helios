@@ -364,6 +364,7 @@ PROG_init          (void)
    n_nodir         =    0;
    my.dump         =  '-';
    my.dirtree      =  '-';
+   my.mimetree     =  '-';
    my.mime_table   =  '-';
    my.statistics   =  '-';
    /*---(output prepending)--------------*/
@@ -461,6 +462,7 @@ PROG_args          (int argc, char *argv[])
       else if (strcmp (a, "--verbose"      ) == 0 || strcmp (a, "-v") == 0)  my.verbose        = 'y';
       else if (strcmp (a, "--dump"         ) == 0)                           my.dump           = 'y';
       else if (strcmp (a, "--dirtree"      ) == 0)                           my.dirtree        = 'y';
+      else if (strcmp (a, "--mimetree"     ) == 0)                           my.mimetree       = 'y';
       else if (strcmp (a, "--count"        ) == 0 || strcmp (a, "-c") == 0)  my.count          = 'y';
       else if (strcmp (a, "--mime-table"   ) == 0)                           my.mime_table     = 'y';
       else if (strcmp (a, "--statistics"   ) == 0 || strcmp (a, "-S") == 0)  my.statistics     = 'y';
@@ -568,6 +570,7 @@ PROG_args          (int argc, char *argv[])
    DEBUG_ARGS  yLOG_char    ("statistics", my.statistics);
    DEBUG_ARGS  yLOG_info    ("path"      , my.path);
    DEBUG_ARGS  yLOG_char    ("dirtree"   , my.dirtree);
+   DEBUG_ARGS  yLOG_char    ("mimetree"  , my.mimetree);
    DEBUG_ARGS  yLOG_info    ("mpoint"    , my.mpoint);
    DEBUG_ARGS  yLOG_info    ("regex"     , my.regex);
    DEBUG_ARGS  yLOG_char    ("regex_case", my.regex_case);

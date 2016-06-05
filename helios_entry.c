@@ -5,10 +5,10 @@
 tNODIR      nodir [MAX_NODIR];
 int         n_nodir;
 
-tPTRS      *dir_stack  [MAX_DEPTH];
-tPTRS      *root_stack [MAX_DEPTH];
+tPTRS      *dir_stack   [MAX_DEPTH];
+tPTRS      *root_stack  [MAX_DEPTH];
 
-tMIME       mime [500];
+tMIME       mime        [MAX_MIME];
 int         n_mime      = 0;
 
 /*====================------------------------------------====================*/

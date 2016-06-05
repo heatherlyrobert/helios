@@ -49,6 +49,9 @@ main               (int argc, char *argv[])
             MIME_write ('m' , '');
          }
       }
+   } else if (my.mimetree == 'y') {
+      FREAD_all  ();
+      MIME_tree    ();
    } else if (my.dirtree == 'y') {
       FREAD_all  ();
       if (my.path != NULL)  DATA_start (my.path);

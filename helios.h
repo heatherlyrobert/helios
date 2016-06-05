@@ -9,11 +9,12 @@
  *   base_system   : gnu/linux   (powerful, ubiquitous, technical, and hackable)
  *   lang_name     : ansi-c      (wicked, limitless, universal, and everlasting)
  *   dependencies  : none
- *   size          : small       (approximately 1,000 slocL)
+ *   size          : small       (approximately 2,000 slocL)
  * 
  *   author        : rsheatherly
  *   created       : 2014-10
  *   priorities    : direct, simple, brief, vigorous, and lucid (h.w. fowler)
+ *   end goal      : loosely coupled, strict interface, maintainable, traceable
  */
 
 /*===[[ GREEK HERITAGE ]]=====================================================*/
@@ -111,6 +112,7 @@
  *      -- can focus on a specific branch of the dir structure (--start)
  *      -- add the ability to dump the entire database (--dump)
  *      -- add the ability to reproduce the dir structure (--dirtree)
+ *      -- add the ability to show size of files by mime type (--mimetree)
  *      -- add ability to report on badly named files and directories
  *      -- add ability to spot potentially duplicate files
  *      -- ability to limit search to certain mime-like types and extensions
@@ -188,6 +190,7 @@
 
 /*===[[ CUSTOM LIBRARIES ]]===================================================*/
 #include    <yLOG.h>         /* CUSTOM (35) heatherly program logging/tracing */
+#include    <ySTR.h>         /* CUSTOM (--) heatherly string handling         */
 
 
 
@@ -204,8 +207,8 @@ typedef long long        llong;
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define     VER_NUM     "01.0f"
-#define     VER_TXT     "hardlink helios.mime to source code directory"
+#define     VER_NUM     "01.0g"
+#define     VER_TXT     "little cleanup for github"
 
 
 #define     FILE_CONF   "/etc/helios.conf"
@@ -391,6 +394,7 @@ struct cBUCKET {
 #define     SEVENBIT      128
 
 
+#define     MAX_MIME      500
 typedef     struct      cMIME       tMIME;
 struct cMIME {
    char        ext         [10];
@@ -404,8 +408,16 @@ struct cMIME {
    int         found;
    llong       fbytes;
 };
-extern      tMIME       mime [500];
+extern      tMIME       mime [MAX_MIME];
 extern      int         n_mime;
+
+#define     MAX_CAT         50
+typedef     struct      cCAT        tCAT;
+struct cCAT {
+   char        cat;
+   char        desc        [50];
+};
+extern      tCAT        cats [MAX_CAT];
 
 
 struct cGLOBAL {
@@ -439,12 +451,12 @@ struct cGLOBAL {
    /*---(summary stats)------------------*/
    char        mime_table;             /* show summary mime statistics        */
    char        statistics;             /* show summary database statistics    */
-
    char        dump;                   /* dump all recorts as read            */
    char        path        [MAX_NAME]; /* begin search using this path        */
    tPTRS      *start;                  /* begin search from this location     */
    int         level;                  /* begin search at this level          */
    char        dirtree;                /* display directory tree              */
+   char        mimetree;               /* display mime-based tree             */
    char        mpoint      [MAX_STR];  /* mountpoint to inventory             */
    short       drive;                  /* currently processed drive           */
    char        database    [MAX_NAME]; /* alternative database                */
@@ -514,6 +526,7 @@ char        FREAD_all          (void);
 char        MIME_read          (void);
 char        MIME_write         (char a_dest, char a_space);
 char        FILE_commas        (long long a_number, char *a_string);
+char        MIME_tree          (void);
 
 
 /*===[[ HELIOS_ENTRY.C ]]=====================================================*/
