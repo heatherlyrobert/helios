@@ -207,8 +207,8 @@ typedef long long        llong;
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define     VER_NUM     "01.0g"
-#define     VER_TXT     "little cleanup for github"
+#define     VER_NUM     "01.0h"
+#define     VER_TXT     "ready for github push"
 
 
 #define     FILE_CONF   "/etc/helios.conf"
