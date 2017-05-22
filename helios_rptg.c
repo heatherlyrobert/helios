@@ -208,6 +208,20 @@ RPTG_dirtree       (
       return rce;
    }
    DEBUG_GRAF   yLOG_info    ("dir_name"  , x_dir->name);
+   /*---(header)-------------------------*/
+   if (a_level == 1) {
+      printf ("#!/usr/local/bin/hyleoroi\n");
+      printf ("#   hyleoroi -- tree visualization input file\n");
+      printf ("\n\n\n");
+      printf ("SIMPLE\n");
+      printf ("\n\n\n");
+      printf ("#--context  ---values------------------------------- \n");
+      printf ("source      heilos-phaeton                           \n");
+      printf ("label       full directory tree for 2017-05-21       \n");
+      printf ("display     radial                                   \n");
+      printf ("rings       3                                        \n");
+      printf ("\n\n\n");
+   }
    /*---(prefix)-------------------------*/
    for (i = 1; i < a_level; ++i)  strcat (x_prefix, "   ");
    /*---(name directory)--------------*/
