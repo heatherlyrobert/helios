@@ -754,6 +754,12 @@ MIME_tree          (void)
    printf ("\n\n\n");
    printf ("SIMPLE-FORMAT\n");
    printf ("\n\n\n");
+   printf ("#--context  ---values------------------------------- \n");
+   printf ("source      helios-phaeton                           \n");
+   printf ("label       all files sizes by mime categories       \n");
+   printf ("display     radial                                   \n");
+   printf ("rings       3                                        \n");
+   printf ("\n\n\n");
    /*---(root)---------------------------*/
    MIME_treehead ();
    printf ("%-44.44s        %15lld  %15lld  %-50.50s \n"   , h_drive->device, h_drive->size, mime [0].seen, h_drive->device);
