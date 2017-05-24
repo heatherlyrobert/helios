@@ -8,8 +8,8 @@ tCAT        cats [MAX_CAT] = {
    {  'i',  "image"                                  },
    {  's',  "source"                                 },
    {  't',  "text"                                   },
-   {  'c',  "zip"                                    },
-   {  'p',  "prop"                                   },
+   {  'c',  "archive"                                },
+   {  'p',  "closed"                                 },
    {  'x',  "exec"                                   },
    {  'z',  "temp"                                   },
    {  'd',  "dir"                                    },
@@ -700,7 +700,7 @@ MIME_write         (
 char
 MIME_treehead      (void)
 {
-   printf ("\n#---name------------------------------------------    --------size---    -------count---    ---desc-------------------------------------------\n");
+   printf ("\n#---name------------------------------------------  --------size---  -------count---  ---desc------------------------------------------- \n");
    return 0;
 }
 
@@ -756,7 +756,7 @@ MIME_tree          (void)
    printf ("\n\n\n");
    printf ("#--context  ---values------------------------------- \n");
    printf ("source      helios-phaeton                           \n");
-   printf ("label       all files sizes by mime categories       \n");
+   printf ("label       total file size by mime category         \n");
    printf ("display     radial                                   \n");
    printf ("rings       3                                        \n");
    printf ("\n\n\n");
@@ -770,7 +770,7 @@ MIME_tree          (void)
       MIME_treecat (x_save);
    }
    /*---(footer)-------------------------*/
-   printf ("   %-44.44s     %15lld  %15lld  %-50.50s \n", "((empty))", h_drive->size - mime [0].sbytes, 0, "((empty))");
+   printf ("   %-44.44s     %15lld  %15lld  %-50.50s \n", "(empty)", h_drive->size - mime [0].sbytes, 0, "(empty)");
    MIME_treehead ();
    printf ("# END-OF-FILE\n");
    /*---(complete)-----------------------*/

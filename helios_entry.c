@@ -752,7 +752,7 @@ DATA_empty         (tDRIVE *a_drive, tPTRS *a_root)
    /*> debug.envi  = 'y';                                                             <* 
     *> debug.enviM = 'y';                                                             <*/
    x_ptrs = DATA_create (a_root);
-   DEBUG_ENVI   yLOG_point   ("((empty))" , x_ptrs);
+   DEBUG_ENVI   yLOG_point   ("(empty)"   , x_ptrs);
    DEBUG_ENVI   yLOG_point   ("parent"    , x_ptrs->parent);
    DEBUG_ENVI   yLOG_point   ("->data"    , x_ptrs->parent->data);
    DEBUG_ENVI   yLOG_info    ("->->name"  , x_ptrs->parent->data->name);
@@ -760,7 +760,7 @@ DATA_empty         (tDRIVE *a_drive, tPTRS *a_root)
    DEBUG_ENVI   yLOG_point   ("->tail"    , x_ptrs->parent->sib_tail);
    DEBUG_ENVI   yLOG_point   ("->->data"  , x_ptrs->parent->sib_tail->data);
    DEBUG_ENVI   yLOG_info    ("->->->name", x_ptrs->parent->sib_tail->data->name);
-   strcpy (x_ptrs->data->name, "((empty))");
+   strcpy (x_ptrs->data->name, "(empty)");
    x_ptrs->data->drive = a_drive->ref;
    x_ptrs->data->type  = 'd';
    x_ptrs->data->level =   1;

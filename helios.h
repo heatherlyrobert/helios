@@ -207,8 +207,8 @@ typedef long long        llong;
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define     VER_NUM     "01.0j"
-#define     VER_TXT     "update to hyleoroi mimetree output"
+#define     VER_NUM     "01.0k"
+#define     VER_TXT     "renamed zip cateorgy to arachive, prop to closed"
 
 
 #define     FILE_CONF   "/etc/helios.conf"
