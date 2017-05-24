@@ -757,8 +757,8 @@ MIME_tree          (void)
    printf ("#--context  ---values------------------------------- \n");
    printf ("source      helios-phaeton                           \n");
    printf ("label       total file size by mime category         \n");
-   printf ("display     radial                                   \n");
-   printf ("rings       3                                        \n");
+   printf ("format      mimecat                                  \n");
+   printf ("color       dark                                     \n");
    printf ("\n\n\n");
    /*---(root)---------------------------*/
    MIME_treehead ();

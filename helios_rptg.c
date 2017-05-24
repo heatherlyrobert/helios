@@ -218,8 +218,7 @@ RPTG_dirtree       (
       printf ("#--context  ---values------------------------------- \n");
       printf ("source      heilos-phaeton                           \n");
       printf ("label       full directory tree for 2017-05-21       \n");
-      printf ("display     radial                                   \n");
-      printf ("rings       3                                        \n");
+      printf ("format      dirtree                                  \n");
       printf ("\n\n\n");
    }
    /*---(prefix)-------------------------*/

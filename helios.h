@@ -207,8 +207,8 @@ typedef long long        llong;
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define     VER_NUM     "01.0k"
-#define     VER_TXT     "renamed zip cateorgy to arachive, prop to closed"
+#define     VER_NUM     "01.0l"
+#define     VER_TXT     "passes format option to hyleoroi for mime and dirtree"
 
 
 #define     FILE_CONF   "/etc/helios.conf"
