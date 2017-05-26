@@ -207,8 +207,8 @@ typedef long long        llong;
 
 
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define     VER_NUM     "01.0l"
-#define     VER_TXT     "passes format option to hyleoroi for mime and dirtree"
+#define     VER_NUM     "1.0m"
+#define     VER_TXT     "updated to new, amazing make_program make process"
 
 
 #define     FILE_CONF   "/etc/helios.conf"

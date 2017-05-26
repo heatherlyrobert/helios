@@ -758,7 +758,6 @@ MIME_tree          (void)
    printf ("source      helios-phaeton                           \n");
    printf ("label       total file size by mime category         \n");
    printf ("format      mimecat                                  \n");
-   printf ("color       dark                                     \n");
    printf ("\n\n\n");
    /*---(root)---------------------------*/
    MIME_treehead ();
