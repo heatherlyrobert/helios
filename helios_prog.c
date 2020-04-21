@@ -2,7 +2,6 @@
 #include    "helios.h"       /* LOCAL  : main header                          */
 
 tGLOBAL     my;
-tDEBUG      debug;
 
 
 /*====================------------------------------------====================*/
@@ -166,193 +165,25 @@ PROG_version       (void)
    return verstring;
 }
 
-char         /*--: wholesale urgents change --------------[ ------ [ ------ ]-*/
-PROG_urgsmass      (char a_set, char a_extra)
-{
-   /*---(overall)------------------------*/
-   debug.tops   = a_set;
-   debug.summ   = a_set;
-   /*---(startup/shutdown)---------------*/
-   debug.args   = a_set;
-   debug.conf   = a_set;
-   debug.prog   = a_set;
-   /*---(file processing)----------------*/
-   debug.inpt   = a_set;
-   debug.inptM  = a_set;
-   debug.outp   = a_set;
-   debug.outpM  = a_set;
-   /*---(event handling)-----------------*/
-   debug.loop   = a_set;
-   debug.user   = a_set;
-   debug.apis   = a_set;
-   debug.sign   = a_set;
-   debug.scrp   = a_set;
-   debug.hist   = a_set;
-   /*---(program)------------------------*/
-   debug.graf   = a_set;
-   debug.data   = a_set;
-   debug.envi   = a_set;
-   debug.enviM  = a_set;
-   /*---(specific)-----------------------*/
-   if (a_extra == 'y') {
-      debug.sort   = a_set;
-      debug.mime   = a_set;
-      debug.perms  = a_set;
-      debug.drive  = a_set;
-   }
-   /*---(complete)-----------------------*/
-   return 0;
-}
-
-char             /* [------] process the command line urgent arguments -------*/
-PROG_urgs          (int argc, char *argv[])
-{
-   /*---(locals)-----------+-----------+-*/
-   int         i           = 0;        /* loop iterator -- arguments          */
-   char       *a           = NULL;     /* current argument                    */
-   int         x_len       = 0;        /* argument length                     */
-   int         x_total     = 0;
-   int         x_urgs      = 0;
-   char        x_logger    = '-';
-   /*---(default urgents)----------------*/
-   PROG_urgsmass ('-', 'y');
-   /*---(logger preprocessing)-----------*/
-   debug.logger = -1;
-   for (i = 1; i < argc; ++i) {
-      a = argv[i];
-      if (a[0] != '@')  continue;
-      x_logger   = 'y';
-      if       (strcmp ("@a"        , a) == 0)  debug.args = 'y';
-      else if  (strcmp ("@@args"    , a) == 0)  debug.args = 'y';
-      else if  (strcmp ("@f"        , a) == 0)  debug.args = 'y';
-      else if  (strcmp ("@@full"    , a) == 0)  debug.args = 'y';
-      else if  (strcmp ("@k"        , a) == 0)  debug.args = 'y';
-      else if  (strcmp ("@@kitchen" , a) == 0)  debug.args = 'y';
-      else if ((strcmp ("@q", a) == 0) || (strcmp ("@@quiet", a) == 0)) {
-         x_logger = 'n';
-         PROG_urgsmass ('-', 'y');
-         break;
-      }
-   }
-   /*---(startup logging)----------------*/
-   if (x_logger == 'y') {
-      debug.tops = 'y';
-      debug.logger = yLOGS_begin ("helios" , YLOG_SYS, YLOG_NOISE);
-      DEBUG_TOPS  yLOG_info     ("purpose",  "file location, change, and search services");
-      DEBUG_TOPS  yLOG_info     ("helios" ,  PROG_version  ());
-      DEBUG_TOPS  yLOG_info     ("yLOG"   ,  yLOGS_version ());
-   } else {
-      debug.logger = yLOGS_begin ("helios" , YLOG_SYS, YLOG_QUIET);
-   }
-   /*---(walk through urgents)-----------*/
-   DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
-   for (i = 1; i < argc; ++i) {
-      /*---(prepare)---------------------*/
-      a        = argv[i];
-      x_len    = strlen (a);
-      ++x_total;
-      /*---(filter)----------------------*/
-      if (a[0] != '@')  continue;
-      ++x_urgs;
-      DEBUG_ARGS  yLOG_info  ("urgent"    , a);
-      /*---(overall)---------------------*/
-      if      (strncmp(a, "@t"           ,10) == 0)  debug.tops = 'y';
-      else if (strncmp(a, "@@top"        ,10) == 0)  debug.tops = 'y';
-      else if (strncmp(a, "@s"           ,10) == 0)  debug.tops = debug.summ  = 'y';
-      else if (strncmp(a, "@@summ"       ,10) == 0)  debug.tops = debug.summ  = 'y';
-      /*---(startup/shutdown)------------*/
-      else if (strncmp(a, "@a"           ,10) == 0)  debug.tops = debug.args  = 'y';
-      else if (strncmp(a, "@@args"       ,10) == 0)  debug.tops = debug.args  = 'y';
-      else if (strncmp(a, "@c"           ,10) == 0)  debug.tops = debug.conf  = 'y';
-      else if (strncmp(a, "@@conf"       ,10) == 0)  debug.tops = debug.conf  = 'y';
-      else if (strncmp(a, "@p"           ,10) == 0)  debug.tops = debug.prog  = 'y';
-      else if (strncmp(a, "@@prog"       ,10) == 0)  debug.tops = debug.prog  = 'y';
-      /*---(file processing)-------------*/
-      else if (strncmp(a, "@i"           ,10) == 0)  debug.tops = debug.inpt  = 'y';
-      else if (strncmp(a, "@@inpt"       ,10) == 0)  debug.tops = debug.inpt  = 'y';
-      else if (strncmp(a, "@I"           ,10) == 0)  debug.tops = debug.inpt  = debug.inptM = 'y';
-      else if (strncmp(a, "@@INPT"       ,10) == 0)  debug.tops = debug.inpt  = debug.inptM = 'y';
-      else if (strncmp(a, "@o"           ,10) == 0)  debug.tops = debug.outp  = 'y';
-      else if (strncmp(a, "@@outp"       ,10) == 0)  debug.tops = debug.outp  = 'y';
-      else if (strncmp(a, "@O"           ,10) == 0)  debug.tops = debug.outp  = debug.outpM = 'y';
-      else if (strncmp(a, "@@OUTP"       ,10) == 0)  debug.tops = debug.outp  = debug.outpM = 'y';
-      /*---(processing)------------------*/
-      else if (strncmp(a, "@l"           ,10) == 0)  debug.tops = debug.loop  = 'y';
-      else if (strncmp(a, "@@loop"       ,10) == 0)  debug.tops = debug.loop  = 'y';
-      else if (strncmp(a, "@u"           ,10) == 0)  debug.tops = debug.user  = 'y';
-      else if (strncmp(a, "@@user"       ,10) == 0)  debug.tops = debug.user  = 'y';
-      else if (strncmp(a, "@z"           ,10) == 0)  debug.tops = debug.apis  = 'y';
-      else if (strncmp(a, "@@apis"       ,10) == 0)  debug.tops = debug.apis  = 'y';
-      else if (strncmp(a, "@x"           ,10) == 0)  debug.tops = debug.sign  = 'y';
-      else if (strncmp(a, "@@sign"       ,10) == 0)  debug.tops = debug.sign  = 'y';
-      else if (strncmp(a, "@b"           ,10) == 0)  debug.tops = debug.scrp  = 'y';
-      else if (strncmp(a, "@@scrp"       ,10) == 0)  debug.tops = debug.scrp  = 'y';
-      else if (strncmp(a, "@h"           ,10) == 0)  debug.tops = debug.hist  = 'y';
-      else if (strncmp(a, "@@hist"       ,10) == 0)  debug.tops = debug.hist  = 'y';
-      /*---(program)---------------------*/
-      else if (strncmp(a, "@g"           ,10) == 0)  debug.tops = debug.graf  = 'y';
-      else if (strncmp(a, "@@graf"       ,10) == 0)  debug.tops = debug.graf  = 'y';
-      else if (strncmp(a, "@d"           ,10) == 0)  debug.tops = debug.data  = 'y';
-      else if (strncmp(a, "@@data"       ,10) == 0)  debug.tops = debug.data  = 'y';
-      else if (strncmp(a, "@e"           ,10) == 0)  debug.tops = debug.envi  = 'y';
-      else if (strncmp(a, "@@envi"       ,10) == 0)  debug.tops = debug.envi  = 'y';
-      else if (strncmp(a, "@E"           ,10) == 0)  debug.tops = debug.envi  = debug.enviM = 'y';
-      else if (strncmp(a, "@@ENVI"       ,10) == 0)  debug.tops = debug.envi  = debug.enviM = 'y';
-      /*---(complex)---------------------*/
-      else if (strncmp(a, "@f"           ,10) == 0)  PROG_urgsmass ('y', '-');
-      else if (strncmp(a, "@@full"       ,10) == 0)  PROG_urgsmass ('y', '-');
-      else if (strncmp(a, "@k"           ,10) == 0)  PROG_urgsmass ('y', 'y');
-      else if (strncmp(a, "@@kitchen"    ,10) == 0)  PROG_urgsmass ('y', 'y');
-      /*---(specific)--------------------*/
-      else if (strncmp(a, "@@sort"       ,10) == 0)  debug.tops = debug.sort  = 'y';
-      else if (strncmp(a, "@@mime"       ,10) == 0)  debug.tops = debug.mime  = 'y';
-      else if (strncmp(a, "@@perms"      ,10) == 0)  debug.tops = debug.perms = 'y';
-      else if (strncmp(a, "@@drive"      ,10) == 0)  debug.tops = debug.drive = 'y';
-      /*---(unknown)--------------------*/
-      else {
-         DEBUG_ARGS  yLOG_note    ("urgent not understood");
-      }
-      /*---(done)-----------------------*/
-   }
-   /*---(display urgents)----------------*/
-   DEBUG_ARGS  yLOG_note    ("summarization of urgent processing");
-   DEBUG_ARGS  yLOG_value   ("entries"   , x_total);
-   DEBUG_ARGS  yLOG_value   ("urgents"   , x_urgs);
-   DEBUG_ARGS  yLOG_note    ("standard urgents");
-   DEBUG_ARGS  yLOG_char    ("tops"      , debug.tops);
-   DEBUG_ARGS  yLOG_char    ("summ"      , debug.summ);
-   DEBUG_ARGS  yLOG_char    ("args"      , debug.args);
-   DEBUG_ARGS  yLOG_char    ("conf"      , debug.conf);
-   DEBUG_ARGS  yLOG_char    ("prog"      , debug.prog);
-   DEBUG_ARGS  yLOG_char    ("inpt"      , debug.inpt);
-   DEBUG_ARGS  yLOG_char    ("INPT"      , debug.inptM);
-   DEBUG_ARGS  yLOG_char    ("outp"      , debug.outp);
-   DEBUG_ARGS  yLOG_char    ("OUTP"      , debug.outpM);
-   DEBUG_ARGS  yLOG_char    ("loop"      , debug.loop);
-   DEBUG_ARGS  yLOG_char    ("user"      , debug.user);
-   DEBUG_ARGS  yLOG_char    ("apis"      , debug.apis);
-   DEBUG_ARGS  yLOG_char    ("sign"      , debug.sign);
-   DEBUG_ARGS  yLOG_char    ("scrp"      , debug.scrp);
-   DEBUG_ARGS  yLOG_char    ("hist"      , debug.hist);
-   DEBUG_ARGS  yLOG_char    ("graf"      , debug.graf);
-   DEBUG_ARGS  yLOG_char    ("data"      , debug.data);
-   DEBUG_ARGS  yLOG_char    ("envi"      , debug.envi);
-   DEBUG_ARGS  yLOG_char    ("ENVI"      , debug.enviM);
-   DEBUG_ARGS  yLOG_note    ("specialty urgents");
-   DEBUG_ARGS  yLOG_char    ("sort"      , debug.sort);
-   DEBUG_ARGS  yLOG_char    ("mime"      , debug.mime);
-   DEBUG_ARGS  yLOG_char    ("perms"     , debug.perms);
-   /*---(complete)-----------------------*/
-   DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
-   return 0;
-}
+   /*> DEBUG_ARGS  yLOG_char    ("mime"      , debug.mime);                           <* 
+    *> DEBUG_ARGS  yLOG_char    ("perms"     , debug.perms);                          <*/
 
 char             /* [------] minimal pre-argument program initialization -----*/
 PROG_init          (void)
 {
    /*---(locals)-----------+-----------+-*/
    int         i           = 0;
-   /*---(begin)--------------------------*/
+   /*---(log header)---------------------*/
+   DEBUG_PROG   yLOG_info     ("purpose" , P_PURPOSE);
+   DEBUG_PROG   yLOG_info     ("namesake", P_NAMESAKE);
+   DEBUG_PROG   yLOG_info     ("heritage", P_HERITAGE);
+   DEBUG_PROG   yLOG_info     ("imagery" , P_IMAGERY);
+   DEBUG_PROG   yLOG_info     ("helios"  , PROG_version    ());
+   DEBUG_PROG   yLOG_info     ("yURG"    , yURG_version    ());
+   DEBUG_PROG   yLOG_info     ("ySTR"    , ySTR_version    ());
+   DEBUG_PROG   yLOG_info     ("yLOG"    , yLOGS_version   ());
+   DEBUG_PROG   yLOG_info     ("ySORT"   , ySORT_version   ());
+   /*---(header)-------------------------*/
    DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
    /*---(default run-time options)-------*/
    strcpy (my.host     , "-"      );
@@ -415,7 +246,7 @@ PROG_init          (void)
    for (i = 0; i < MAX_DEPTH; ++i)  root_stack [i] == NULL;
    for (i = 0; i < MAX_DEPTH; ++i)  dir_stack  [i] == NULL;
    my.level        =   0;
-   DEBUG_MIME  yLOG_value ("n_mime"    , n_mime);
+   DEBUG_CONF  yLOG_value ("n_mime"    , n_mime);
    /*---(complete)-----------------------*/
    DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
    return 0;
@@ -742,21 +573,22 @@ PROG_begin         (void)
 char                /* PURPOSE : shutdown program and free memory ------------*/
 PROG_end           (void)
 {
+   DRIVE_wrap ();
    DEBUG_TOPS   yLOG_break   ();
    DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
    if (my.regex_len > 0)  regfree (&(my.regex_comp));
-   DEBUG_SUMM   yLOG_value   ("n_audio"   , my.n_audio);
-   DEBUG_SUMM   yLOG_value   ("n_video"   , my.n_video);
-   DEBUG_SUMM   yLOG_value   ("n_image"   , my.n_image);
-   DEBUG_SUMM   yLOG_value   ("n_text"    , my.n_text);
-   DEBUG_SUMM   yLOG_value   ("n_progs"   , my.n_progs);
-   DEBUG_SUMM   yLOG_value   ("n_data"    , my.n_data);
-   DEBUG_SUMM   yLOG_value   ("n_apps"    , my.n_apps);
-   DEBUG_SUMM   yLOG_value   ("n_comp"    , my.n_comp);
-   DEBUG_SUMM   yLOG_value   ("n_model"   , my.n_model);
-   DEBUG_SUMM   yLOG_value   ("n_other"   , my.n_other);
-   DEBUG_SUMM   yLOG_value   ("n_unknown" , my.n_unknown);
-   DEBUG_SUMM   yLOG_value   ("n_huh"     , my.n_huh);
+   DEBUG_RPTG   yLOG_value   ("n_audio"   , my.n_audio);
+   DEBUG_RPTG   yLOG_value   ("n_video"   , my.n_video);
+   DEBUG_RPTG   yLOG_value   ("n_image"   , my.n_image);
+   DEBUG_RPTG   yLOG_value   ("n_text"    , my.n_text);
+   DEBUG_RPTG   yLOG_value   ("n_progs"   , my.n_progs);
+   DEBUG_RPTG   yLOG_value   ("n_data"    , my.n_data);
+   DEBUG_RPTG   yLOG_value   ("n_apps"    , my.n_apps);
+   DEBUG_RPTG   yLOG_value   ("n_comp"    , my.n_comp);
+   DEBUG_RPTG   yLOG_value   ("n_model"   , my.n_model);
+   DEBUG_RPTG   yLOG_value   ("n_other"   , my.n_other);
+   DEBUG_RPTG   yLOG_value   ("n_unknown" , my.n_unknown);
+   DEBUG_RPTG   yLOG_value   ("n_huh"     , my.n_huh);
    DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
    DEBUG_TOPS   yLOGS_end    ();
    return 0;

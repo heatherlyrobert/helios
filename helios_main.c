@@ -17,12 +17,13 @@ main               (int argc, char *argv[])
    int         i           = 0;
    tDRIVE     *x_drive     = NULL;
    /*---(startup)------------------------*/
-   if (rc == 0)   rc = PROG_urgs    (argc, argv);
-   if (rc == 0)   rc = PROG_init    ();
-   if (rc == 0)   rc = PROG_args    (argc, argv);
-   if (rc == 0)   rc = PROG_begin   ();
-   if (rc != 0) {
-      PROG_end     ();
+   if (rc >= 0)  rc = yURG_logger  (argc, argv);
+   if (rc >= 0)  rc = yURG_urgs    (argc, argv);
+   if (rc >= 0)  rc = PROG_init    ();
+   if (rc >= 0)  rc = PROG_args    (argc, argv);
+   if (rc >= 0)  rc = PROG_begin   ();
+   if (rc <  0) {
+      PROG_end ();
       return -1;
    }
    /*---(main)---------------------------*/

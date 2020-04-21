@@ -140,13 +140,13 @@ FREAD_all          (void)
    /*---(open)---------------------------*/
    DEBUG_INPT   yLOG_note    ("open helios db file");
    f_in = fopen (my.database, "rb");
-   DEBUG_INPTM  yLOG_point   ("f_in"      , f_in);
+   DEBUG_INPT   yLOG_point   ("f_in"      , f_in);
    if (f_in == NULL) {
       printf ("can not open database %s\n", my.database);
       DEBUG_INPT   yLOG_note    ("can not open helios data file");
       return -1;
    }
-   DEBUG_INPTM  yLOG_note    ("file successfullly openned");
+   DEBUG_INPT   yLOG_note    ("file successfullly openned");
    /*---(get drive)----------------------*/
    fread  (&x_limit, sizeof (short), 1, f_in);
    DEBUG_INPT   yLOG_value   ("x_limit"   , x_limit);
@@ -173,10 +173,10 @@ FREAD_all          (void)
    DEBUG_INPT   yLOG_note    ("start reading records");
    --rce;
    while (1) {
-      DEBUG_INPTM  yLOG_enter   ("read_loop");
+      DEBUG_INPT   yLOG_enter   ("read_loop");
       DEBUG_INPT   yLOG_value   ("count"     , x_count);
       /*---(create data payload)------------*/
-      DEBUG_INPTM  yLOG_note    ("malloc local data payload");
+      DEBUG_INPT   yLOG_note    ("malloc local data payload");
       x_data  = NULL;
       x_tries = 0;
       while (x_data == NULL) {
@@ -185,35 +185,35 @@ FREAD_all          (void)
       }
       if (x_data == NULL) {
          DEBUG_INPT   yLOG_note    ("data malloc failed, DONE");
-         DEBUG_INPTM  yLOG_exit    ("read_loop");
+         DEBUG_INPT   yLOG_exit    ("read_loop");
          DEBUG_INPT   yLOG_exit    (__FUNCTION__);
          return rce;
       }
-      DEBUG_INPTM  yLOG_value   ("tries"     , x_tries);
-      DEBUG_INPTM  yLOG_point   ("local data", x_data);
-      DEBUG_INPTM  yLOG_note    ("binary read");
+      DEBUG_INPT   yLOG_value   ("tries"     , x_tries);
+      DEBUG_INPT   yLOG_point   ("local data", x_data);
+      DEBUG_INPT   yLOG_note    ("binary read");
       rc = fread (x_data, sizeof (tDATA), 1, f_in);
-      DEBUG_INPTM  yLOG_value   ("fread_rc"  , rc);
+      DEBUG_INPT   yLOG_value   ("fread_rc"  , rc);
       if (rc == 0) {
-         DEBUG_INPTM  yLOG_note    ("zero indicates end of file");
-         DEBUG_INPTM  yLOG_exit    ("read_loop");
+         DEBUG_INPT   yLOG_note    ("zero indicates end of file");
+         DEBUG_INPT   yLOG_exit    ("read_loop");
          break;
       }
-      DEBUG_INPTM  yLOG_value   ("inode"     , x_data->inode);
-      DEBUG_INPTM  yLOG_value   ("dnode"     , x_data->dnode);
-      DEBUG_INPTM  yLOG_note    ("find dnode");
+      DEBUG_INPT   yLOG_value   ("inode"     , x_data->inode);
+      DEBUG_INPT   yLOG_value   ("dnode"     , x_data->dnode);
+      DEBUG_INPT   yLOG_note    ("find dnode");
       /*> x_dnode = x_data->dnode;                                                    <* 
        *> if (x_data->level == 0) {                                                   <* 
-       *>    DEBUG_INPTM  yLOG_note    ("root, so no parent dnode");                  <* 
+       *>    DEBUG_INPT   yLOG_note    ("root, so no parent dnode");                  <* 
        *>    x_dir == NULL;                                                           <* 
        *> }  else if (x_dnode == x_dnodes) {                                          <* 
-       *>    DEBUG_INPTM  yLOG_note    ("same as last dnode, reuse");                 <* 
+       *>    DEBUG_INPT   yLOG_note    ("same as last dnode, reuse");                 <* 
        *> } else {                                                                    <* 
        *>    x_dir = dir_stack [(int) x_data->level - 1];                             <* 
-       *>    DEBUG_INPTM  yLOG_point   ("x_dir"     , x_dir);                         <* 
+       *>    DEBUG_INPT   yLOG_point   ("x_dir"     , x_dir);                         <* 
        *>    if (x_dir == NULL) {                                                     <* 
-       *>       DEBUG_INPTM  yLOG_note    ("NULL parent means skip record");          <* 
-       *>       DEBUG_INPTM  yLOG_exit    ("read_loop");                              <* 
+       *>       DEBUG_INPT   yLOG_note    ("NULL parent means skip record");          <* 
+       *>       DEBUG_INPT   yLOG_exit    ("read_loop");                              <* 
        *>       continue;                                                             <* 
        *>    }                                                                        <* 
        *> }                                                                           <*/
@@ -227,21 +227,21 @@ FREAD_all          (void)
          DEBUG_INPT   yLOG_point   ("->data"    , x_dir->data);
          DEBUG_INPT   yLOG_info    ("->->name"  , x_dir->data->name);
       }
-      DEBUG_INPTM  yLOG_note    ("create ptrs and data");
+      DEBUG_INPT   yLOG_note    ("create ptrs and data");
       x_ptrs = DATA_create (x_dir);
-      DEBUG_INPTM  yLOG_point   ("new ptrs"  , x_ptrs);
+      DEBUG_INPT   yLOG_point   ("new ptrs"  , x_ptrs);
       if (x_ptrs == NULL) {
-         DEBUG_INPTM  yLOG_note    ("failed creating ptrs");
-         DEBUG_INPTM  yLOG_exit    ("read_loop");
+         DEBUG_INPT   yLOG_note    ("failed creating ptrs");
+         DEBUG_INPT   yLOG_exit    ("read_loop");
          break;
       }
-      DEBUG_INPTM  yLOG_point   ("new data"  , x_ptrs->data);
-      DEBUG_INPTM  yLOG_note    ("free new data node");
+      DEBUG_INPT   yLOG_point   ("new data"  , x_ptrs->data);
+      DEBUG_INPT   yLOG_note    ("free new data node");
       free (x_ptrs->data);
-      DEBUG_INPTM  yLOG_note    ("attach local malloc'd data node");
+      DEBUG_INPT   yLOG_note    ("attach local malloc'd data node");
       x_ptrs->data = x_data;
-      DEBUG_INPTM  yLOG_point   ("data now"  , x_ptrs->data);
-      DEBUG_INPTM  yLOG_note    ("handle if a dir");
+      DEBUG_INPT   yLOG_point   ("data now"  , x_ptrs->data);
+      DEBUG_INPT   yLOG_note    ("handle if a dir");
       if (x_data->type == 'd' && strchr (".)", x_data->stype) != NULL) {
          dir_stack [(int) x_data->level] = x_ptrs;
       }
@@ -275,7 +275,7 @@ FREAD_all          (void)
          }
       }
       ++x_count;
-      DEBUG_INPTM  yLOG_exit    ("read_loop");
+      DEBUG_INPT   yLOG_exit    ("read_loop");
    }
    if (my.dump == 'y') {
       if ((x_count %  5) != 0) printf ("\n");
@@ -346,20 +346,20 @@ MIME_read          (void)
    char       *s           = NULL;          /* strtok context                 */
    double      v           =  0.0;
    /*---(header)-------------------------*/
-   DEBUG_MIME   yLOG_enter   (__FUNCTION__);
+   DEBUG_CONF   yLOG_enter   (__FUNCTION__);
    /*---(open file)----------------------*/
    f_mime = fopen (FILE_MIME, "r");
-   DEBUG_MIME  yLOG_point   ("file"      , f_mime);
+   DEBUG_CONF  yLOG_point   ("file"      , f_mime);
    --rce;  if (f_mime == NULL) {
-      DEBUG_MIME  yLOG_exit    (__FUNCTION__);
+      DEBUG_CONF  yLOG_exit    (__FUNCTION__);
       return rce;
    }
    /*---(read lines)---------------------*/
-   DEBUG_MIME  yLOG_note    ("read lines");
+   DEBUG_CONF  yLOG_note    ("read lines");
    while (1) {
       /*---(read and clean)--------------*/
       ++f_lines;
-      DEBUG_MIME  yLOG_value   ("line"      , f_lines);
+      DEBUG_CONF  yLOG_value   ("line"      , f_lines);
       fgets (x_recd, MAX_RECD, f_mime);
       if (feof(f_mime))           break;
       if (x_recd [0] == '#')      continue;
@@ -368,38 +368,38 @@ MIME_read          (void)
       x_len = strlen (x_recd);
       if (x_len <= 0)             continue;
       x_recd [--x_len] = '\0';
-      DEBUG_MIME  yLOG_value   ("n_mime"    , n_mime);
-      DEBUG_MIME  yLOG_info    ("fixed"     , x_recd);
+      DEBUG_CONF  yLOG_value   ("n_mime"    , n_mime);
+      DEBUG_CONF  yLOG_info    ("fixed"     , x_recd);
       /*---(extension)-------------------*/
       p = strtok_r (x_recd, q, &s);
       if (p == NULL)              continue;
       ySTR_trim (p, ySTR_BOTH);
       strcpy (mime [n_mime].ext , p);
-      DEBUG_MIME  yLOG_info    ("ext"       , mime [n_mime].ext);
+      DEBUG_CONF  yLOG_info    ("ext"       , mime [n_mime].ext);
       /*---(category)--------------------*/
       p = strtok_r (NULL  , q, &s);
       if (p == NULL)              continue;
       ySTR_trim (p, ySTR_BOTH);
       mime [n_mime].cat = p [0];
-      DEBUG_MIME  yLOG_char    ("cat"       , mime [n_mime].cat);
+      DEBUG_CONF  yLOG_char    ("cat"       , mime [n_mime].cat);
       /*---(desc)------------------------*/
       p = strtok_r (NULL  , q, &s);
       if (p == NULL)              continue;
       ySTR_trim (p, ySTR_BOTH);
       strcpy (mime [n_mime].desc , p);
-      DEBUG_MIME  yLOG_info    ("desc"      , mime [n_mime].desc);
+      DEBUG_CONF  yLOG_info    ("desc"      , mime [n_mime].desc);
       /*---(like)------------------------*/
       p = strtok_r (NULL  , q, &s);
       if (p == NULL)              continue;
       ySTR_trim (p, ySTR_BOTH);
       mime [n_mime].like = p [0];
-      DEBUG_MIME  yLOG_char    ("like"      , mime [n_mime].like);
+      DEBUG_CONF  yLOG_char    ("like"      , mime [n_mime].like);
       /*---(seen)------------------------*/
       p = strtok_r (NULL  , q, &s);
       if (p == NULL)              continue;
       ySTR_trim (p, ySTR_BOTH);
       FILE_uncommas (p, &(mime [n_mime].seen));
-      DEBUG_MIME  yLOG_value   ("seen"      , mime [n_mime].seen);
+      DEBUG_CONF  yLOG_value   ("seen"      , mime [n_mime].seen);
       /*---(seen percent)----------------*/
       p = strtok_r (NULL  , q, &s);
       if (p == NULL)              continue;
@@ -408,7 +408,7 @@ MIME_read          (void)
       if (p == NULL)              continue;
       ySTR_trim (p, ySTR_BOTH);
       FILE_uncommas (p, &(mime [n_mime].sbytes));
-      DEBUG_MIME  yLOG_value   ("sbytes"    , mime [n_mime].sbytes);
+      DEBUG_CONF  yLOG_value   ("sbytes"    , mime [n_mime].sbytes);
       /*---(seen bytes percent)----------*/
       p = strtok_r (NULL  , q, &s);
       if (p == NULL)              continue;
@@ -417,7 +417,7 @@ MIME_read          (void)
       if (p == NULL)              continue;
       ySTR_trim (p, ySTR_BOTH);
       FILE_uncommas (p, &(mime [n_mime].kept));
-      DEBUG_MIME  yLOG_value   ("kept"      , mime [n_mime].kept);
+      DEBUG_CONF  yLOG_value   ("kept"      , mime [n_mime].kept);
       /*---(kept percent)----------------*/
       p = strtok_r (NULL  , q, &s);
       if (p == NULL)              continue;
@@ -426,7 +426,7 @@ MIME_read          (void)
       if (p == NULL)              continue;
       ySTR_trim (p, ySTR_BOTH);
       FILE_uncommas (p, &(mime [n_mime].kbytes));
-      DEBUG_MIME  yLOG_value   ("kbytes"    , mime [n_mime].kbytes);
+      DEBUG_CONF  yLOG_value   ("kbytes"    , mime [n_mime].kbytes);
       /*---(kept bytes percent)----------*/
       p = strtok_r (NULL  , q, &s);
       if (p == NULL)              continue;
@@ -455,7 +455,7 @@ MIME_read          (void)
    /*---(wrapup)-------------------------*/
    fclose (f_mime);
    /*---(complete)-----------------------*/
-   DEBUG_MIME   yLOG_exit    (__FUNCTION__);
+   DEBUG_CONF   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
@@ -578,9 +578,9 @@ MIME_write         (
    t_nfound    = mime [0].found;
    t_bfound    = mime [0].fbytes; 
    /*---(header)-------------------------*/
-   DEBUG_MIME   yLOG_enter   (__FUNCTION__);
-   DEBUG_MIME   yLOG_char    ("a_dest"    , a_dest);
-   DEBUG_MIME   yLOG_char    ("a_space"   , a_space);
+   DEBUG_CONF   yLOG_enter   (__FUNCTION__);
+   DEBUG_CONF   yLOG_char    ("a_dest"    , a_dest);
+   DEBUG_CONF   yLOG_char    ("a_space"   , a_space);
    /*---(open file)----------------------*/
    if (a_dest == 's') {
       f_mime = stdout;
@@ -590,17 +590,17 @@ MIME_write         (
    else {
       /*---(open file)----------------------*/
       f_mime = fopen (FILE_MIME, "w");
-      DEBUG_MIME   yLOG_point   ("f_mime"    , f_mime);
-      DEBUG_MIME   yLOG_point   ("file"      , f_mime);
+      DEBUG_CONF   yLOG_point   ("f_mime"    , f_mime);
+      DEBUG_CONF   yLOG_point   ("file"      , f_mime);
       --rce;  if (f_mime == NULL) {
-         DEBUG_MIME   yLOG_exit    (__FUNCTION__);
+         DEBUG_CONF   yLOG_exit    (__FUNCTION__);
          return rce;
       }
-      DEBUG_MIME   yLOG_note    ("print header");
+      DEBUG_CONF   yLOG_note    ("print header");
       fprintf (f_mime, "#!/usr/local/bin/helios\n");
       fprintf (f_mime, "#   recognized mime types for use in helios\n");
    }
-   DEBUG_MIME   yLOG_point   ("f_mime"    , f_mime);
+   DEBUG_CONF   yLOG_point   ("f_mime"    , f_mime);
    /*---(process all)--------------------*/
    for (i = 0; i < n_mime; ++i) {
       /*---(formatting)------------------*/
@@ -660,7 +660,7 @@ MIME_write         (
    MIME_subhead (f_mime, a_space, '#');
    fclose (f_mime);
    /*---(complete)-----------------------*/
-   DEBUG_MIME   yLOG_exit    (__FUNCTION__);
+   DEBUG_CONF   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 

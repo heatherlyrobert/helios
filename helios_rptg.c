@@ -146,11 +146,11 @@ RPTG_regex         (
             else if ((((x_data->oth - '0') % 4) % 2) == 1)                          x_allowed = 'o';
             else if (x_data->gid == my.gid && (((x_data->grp - '0') % 4) % 2) == 1) x_allowed = 'g';
             else if (x_data->uid == my.uid && (((x_data->own - '0') % 4) % 2) == 1) x_allowed = 'u';
-            DEBUG_PERMS  printf ("%c   ", x_allowed);
-            DEBUG_PERMS  printf ("%c %d   ", x_data->oth, ((x_data->oth - '0') % 4) % 2);
-            DEBUG_PERMS  printf ("%4d %4d %c %d   ", my.gid, x_data->gid, x_data->grp, ((x_data->grp - '0') % 4) % 2);
-            DEBUG_PERMS  printf ("%4d %4d %c %d   ", my.uid, x_data->uid, x_data->own, ((x_data->own - '0') % 4) % 2);
-            DEBUG_PERMS  printf ("%s/%s\n", x_path, x_data->name);
+            DEBUG_GRAF   printf ("%c   ", x_allowed);
+            DEBUG_GRAF   printf ("%c %d   ", x_data->oth, ((x_data->oth - '0') % 4) % 2);
+            DEBUG_GRAF   printf ("%4d %4d %c %d   ", my.gid, x_data->gid, x_data->grp, ((x_data->grp - '0') % 4) % 2);
+            DEBUG_GRAF   printf ("%4d %4d %c %d   ", my.uid, x_data->uid, x_data->own, ((x_data->own - '0') % 4) % 2);
+            DEBUG_GRAF   printf ("%s/%s\n", x_path, x_data->name);
             if (x_allowed != '-')  RPTG_regex (a_level + 1, x_ptrs, x_path);
          }
       }

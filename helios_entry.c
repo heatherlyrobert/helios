@@ -134,8 +134,8 @@ DATA_wipe          (
    /*---(defense)------------------------*/
    --rce;  if (a_curr == NULL) return rce;
    /*---(header)-------------------------*/
-   DEBUG_ENVIM  yLOG_senter  (__FUNCTION__);
-   DEBUG_ENVIM  yLOG_spoint  (a_curr);
+   DEBUG_ENVI_M yLOG_senter  (__FUNCTION__);
+   DEBUG_ENVI_M yLOG_spoint  (a_curr);
    /*---(clear types)--------------------*/
    a_curr->type       = '-';
    a_curr->stype      = '.';
@@ -164,7 +164,7 @@ DATA_wipe          (
    a_curr->len        =   0;
    a_curr->name [0]   = '\0';
    /*---(complete)-----------------------*/
-   DEBUG_ENVIM  yLOG_sexit   (__FUNCTION__);
+   DEBUG_ENVI_M yLOG_sexit   (__FUNCTION__);
    return 0;
 }
 
@@ -177,38 +177,38 @@ DATA_create        (
    tDATA      *x_data      = NULL;          /* current entry                  */
    char        x_tries     = 0;             /* malloc attempts                */
    /*---(header)-------------------------*/
-   DEBUG_ENVIM  yLOG_enter   (__FUNCTION__);
+   DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
    /*---(create ptrs)--------------------*/
-   DEBUG_ENVIM  yLOG_note    ("malloc ptrs");
+   DEBUG_ENVI   yLOG_note    ("malloc ptrs");
    while (x_ptrs == NULL) {
       if (++x_tries > 3)  break;
       x_ptrs = (tPTRS*) malloc (sizeof (tPTRS));
    }
    if (x_ptrs == NULL) {
-      DEBUG_ENVIM  yLOG_note    ("ptrs malloc failed, SKIPPED");
-      DEBUG_ENVIM  yLOG_exit    (__FUNCTION__);
+      DEBUG_ENVI   yLOG_note    ("ptrs malloc failed, SKIPPED");
+      DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
       return NULL;
    }
-   DEBUG_ENVIM  yLOG_point   ("created"   , x_ptrs);
+   DEBUG_ENVI   yLOG_point   ("created"   , x_ptrs);
    /*---(create data payload)------------*/
-   DEBUG_ENVIM  yLOG_note    ("malloc data");
+   DEBUG_ENVI   yLOG_note    ("malloc data");
    while (x_data == NULL) {
       if (++x_tries > 3)  break;
       x_data = (tDATA*) malloc (sizeof (tDATA));
    }
    if (x_data == NULL) {
       free (x_ptrs);
-      DEBUG_ENVIM  yLOG_note    ("data malloc failed, SKIPPED");
-      DEBUG_ENVIM  yLOG_exit    (__FUNCTION__);
+      DEBUG_ENVI   yLOG_note    ("data malloc failed, SKIPPED");
+      DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
       return NULL;
    }
-   DEBUG_ENVIM  yLOG_point   ("created"   , x_data);
+   DEBUG_ENVI   yLOG_point   ("created"   , x_data);
    /*---(clean data)---------------------*/
-   DEBUG_ENVIM  yLOG_note    ("clean and hook up data payload");
+   DEBUG_ENVI   yLOG_note    ("clean and hook up data payload");
    x_ptrs->data  = x_data;
    DATA_wipe (x_data);
    /*---(hook to overall list)-----------*/
-   DEBUG_ENVIM  yLOG_note    ("hook to overall list");
+   DEBUG_ENVI   yLOG_note    ("hook to overall list");
    x_ptrs->next = NULL;
    if (n_ptrs == 0)  {
       h_ptrs        = x_ptrs;
@@ -221,14 +221,14 @@ DATA_create        (
    ++n_ptrs;
    ++n_ptrs_ever;
    /*---(initialize children)------------*/
-   DEBUG_ENVIM  yLOG_note    ("initialize children");
+   DEBUG_ENVI   yLOG_note    ("initialize children");
    x_ptrs->sib_head   = NULL;
    x_ptrs->sib_tail   = NULL;
    x_ptrs->nchildren  = 0;
    x_ptrs->sib_prev   = NULL;
    x_ptrs->sib_next   = NULL;
    /*---(hook up to parent)--------------*/
-   DEBUG_ENVIM  yLOG_note    ("hook to parent dir");
+   DEBUG_ENVI   yLOG_note    ("hook to parent dir");
    x_ptrs->parent      = a_parent;
    if (a_parent != NULL) {
       if (a_parent->sib_head  == NULL) {
@@ -242,9 +242,9 @@ DATA_create        (
       ++a_parent->nchildren;
       x_ptrs->data->dnode = a_parent->data->inode;
    }
-   DEBUG_ENVIM  yLOG_value   ("dnode"     , x_ptrs->data->dnode);
+   DEBUG_ENVI   yLOG_value   ("dnode"     , x_ptrs->data->dnode);
    /*---(complete)-----------------------*/
-   DEBUG_ENVIM  yLOG_exit    (__FUNCTION__);
+   DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
    return x_ptrs;
 }
 
@@ -260,29 +260,29 @@ DATA_find          (
    --rce;  if (a_dir  == NULL)   return NULL;
    --rce;  if (a_name == NULL)   return NULL;
    /*---(header)-------------------------*/
-   /*> DEBUG_ENVIM  yLOG_enter   (__FUNCTION__);                                      <* 
-    *> DEBUG_ENVIM  yLOG_point   ("a_dir"     , a_dir);                               <* 
-    *> DEBUG_ENVIM  yLOG_point   ("a_dir>data", a_dir->data);                         <* 
-    *> DEBUG_ENVIM  yLOG_info    ("dir_name"  , a_dir->data->name);                   <* 
-    *> DEBUG_ENVIM  yLOG_info    ("a_name"    , a_name);                              <*/
+   /*> DEBUG_ENVI   yLOG_enter   (__FUNCTION__);                                      <* 
+    *> DEBUG_ENVI   yLOG_point   ("a_dir"     , a_dir);                               <* 
+    *> DEBUG_ENVI   yLOG_point   ("a_dir>data", a_dir->data);                         <* 
+    *> DEBUG_ENVI   yLOG_info    ("dir_name"  , a_dir->data->name);                   <* 
+    *> DEBUG_ENVI   yLOG_info    ("a_name"    , a_name);                              <*/
    /*---(cycle children)-----------------*/
    x_ptrs = a_dir->sib_head;
    while (x_ptrs != NULL) {
-      /*> DEBUG_ENVIM  yLOG_point   ("x_ptrs"    , x_ptrs);                           <* 
-       *> DEBUG_ENVIM  yLOG_point   ("data"      , x_ptrs->data);                     <*/
+      /*> DEBUG_ENVI   yLOG_point   ("x_ptrs"    , x_ptrs);                           <* 
+       *> DEBUG_ENVI   yLOG_point   ("data"      , x_ptrs->data);                     <*/
       if (  x_ptrs->data       != NULL &&
             x_ptrs->data->name != NULL) {
-         /*> DEBUG_ENVIM  yLOG_point   ("name"      , x_ptrs->data->name);            <*/
+         /*> DEBUG_ENVI   yLOG_point   ("name"      , x_ptrs->data->name);            <*/
          if (strcmp (a_name, x_ptrs->data->name) == 0) {
-            /*> DEBUG_ENVIM  yLOG_note    ("found it");                               <* 
-             *> DEBUG_ENVIM  yLOG_exit    (__FUNCTION__);                             <*/
+            /*> DEBUG_ENVI   yLOG_note    ("found it");                               <* 
+             *> DEBUG_ENVI   yLOG_exit    (__FUNCTION__);                             <*/
             return x_ptrs;
          }
       }
       x_ptrs = x_ptrs->sib_next;
    }
    /*---(complete)-----------------------*/
-   /*> DEBUG_ENVIM  yLOG_exit    (__FUNCTION__);                                      <*/
+   /*> DEBUG_ENVI   yLOG_exit    (__FUNCTION__);                                      <*/
    return NULL;
 }
 
@@ -303,7 +303,7 @@ DATA_mime          (
    /*---(prepare)------------------------*/
    strcpy (x_ext, a_ext);
    for (i = 0; i < x_len; ++i)   x_ext [i] = tolower (x_ext [i]);
-   DEBUG_MIME   yLOG_info    ("x_ext"     , x_ext);
+   DEBUG_RPTG   yLOG_info    ("x_ext"     , x_ext);
    /*---(search for matche)--------------*/
    for (i = 0; i < n_mime; ++i) {
       /*---(filter)----------------------*/
@@ -311,8 +311,8 @@ DATA_mime          (
       if (mime [i].ext  [1] != x_ext [1])      continue;
       if (strcmp (mime [i].ext , x_ext) != 0)  continue;
       /*---(report)----------------------*/
-      DEBUG_MIME   yLOG_value   ("found at"  , i);
-      DEBUG_MIME   yLOG_info    ("found"     , mime [i].ext);
+      DEBUG_RPTG   yLOG_value   ("found at"  , i);
+      DEBUG_RPTG   yLOG_info    ("found"     , mime [i].ext);
       /*---(update)----------------------*/
       a_data->cat = mime [i].cat;
       strcpy (a_data->ext, mime [i].ext);
@@ -356,36 +356,36 @@ DATA_stats         (
    char        x_conf      [10] = "conf";
    char        x_guess     [10] = "---";
    /*---(header)-------------------------*/
-   DEBUG_ENVIM  yLOG_enter   (__FUNCTION__);
-   DEBUG_ENVIM  yLOG_point   ("a_ptrs"    , a_ptrs);
+   DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
+   DEBUG_ENVI   yLOG_point   ("a_ptrs"    , a_ptrs);
    /*---(defense : null command)---------*/
    --rce; if (a_ptrs == NULL) {
-      DEBUG_ENVIM  yLOG_note    ("called with null ptrs pointer, exiting");
-      DEBUG_ENVIM  yLOG_exit    (__FUNCTION__);
+      DEBUG_ENVI   yLOG_note    ("called with null ptrs pointer, exiting");
+      DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
       return rce;
    }
    x_data = a_ptrs->data;
-   DEBUG_ENVIM  yLOG_point   ("x_data"    , x_data);
+   DEBUG_ENVI   yLOG_point   ("x_data"    , x_data);
    /*---(defense : null name)------------*/
    --rce; if (x_data->name == NULL) {
-      DEBUG_ENVIM  yLOG_note    ("called with null entry name, exiting");
-      DEBUG_ENVIM  yLOG_exit    (__FUNCTION__);
+      DEBUG_ENVI   yLOG_note    ("called with null entry name, exiting");
+      DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
       return rce;
    }
-   DEBUG_ENVIM  yLOG_info    ("name"      , x_data->name);
-   DEBUG_ENVIM  yLOG_info    ("full_name" , a_full);
+   DEBUG_ENVI   yLOG_info    ("name"      , x_data->name);
+   DEBUG_ENVI   yLOG_info    ("full_name" , a_full);
    /*---(get the file information)-------*/
    rci = lstat (a_full, &st);
-   DEBUG_ENVIM  yLOG_value   ("lstat_rc"  , rci);
+   DEBUG_ENVI   yLOG_value   ("lstat_rc"  , rci);
    /*---(defense : real file)------------*/
    --rce; if (rci < 0) {
-      DEBUG_ENVIM  yLOG_note    ("lstat can not find file, exiting");
-      DEBUG_ENVIM  yLOG_exit    (__FUNCTION__);
+      DEBUG_ENVI   yLOG_note    ("lstat can not find file, exiting");
+      DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
       return rce;
    }
    /*---(inode)--------------------------*/
    x_data->inode = st.st_ino;
-   DEBUG_ENVIM  yLOG_value   ("inode"     , x_data->inode);
+   DEBUG_ENVI   yLOG_value   ("inode"     , x_data->inode);
    /*---(uid and gid)--------------------*/
    x_data->uid   = st.st_uid;
    x_data->gid   = st.st_gid;
@@ -399,7 +399,7 @@ DATA_stats         (
    else if (S_ISLNK (st.st_mode))  c = 'l';
    else                            c = '?';
    x_data->type  = c;
-   DEBUG_ENVIM  yLOG_char    ("file_type" , x_data->type);
+   DEBUG_ENVI   yLOG_char    ("file_type" , x_data->type);
    /*---(update type, if link)-----------*/
    if (c == 'l') {
       rci = stat (a_full, &st2);
@@ -428,14 +428,14 @@ DATA_stats         (
    x_data->oth = s [9];
    /*---(timestamp)----------------------*/
    x_data->changed    = st.st_mtime;
-   DEBUG_ENVIM  yLOG_value   ("changed"   , x_data->changed);
+   DEBUG_ENVI   yLOG_value   ("changed"   , x_data->changed);
    /*---(size)---------------------------*/
    x_data->bytes = st.st_size;
    x_data->cum   = st.st_size;
-   DEBUG_ENVIM  yLOG_value   ("bytes"     , x_data->bytes);
+   DEBUG_ENVI   yLOG_value   ("bytes"     , x_data->bytes);
    sprintf (s, "%d", st.st_size);
    x_data->size  = strlen (s);
-   DEBUG_ENVIM  yLOG_value   ("exponent"  , x_data->size);
+   DEBUG_ENVI   yLOG_value   ("exponent"  , x_data->size);
    /*---(name length)--------------------*/
    x_data->len = strlen (x_data->name);
    /*---(name quality)-------------------*/
@@ -463,7 +463,7 @@ DATA_stats         (
          continue;
       }
    }
-   DEBUG_ENVIM  yLOG_value   ("x_warn"    , x_warn);
+   DEBUG_ENVI   yLOG_value   ("x_warn"    , x_warn);
    switch (x_warn) {
    case 0 : x_data->ascii = '-';  break;
    case 1 : x_data->ascii = 'A';  break;
@@ -473,10 +473,10 @@ DATA_stats         (
    case 5 : x_data->ascii = 'X';  break;
    }
    /*---(get extension)-------------------*/
-   DEBUG_MIME   yLOG_enter   ("mime testing");
-   DEBUG_MIME   yLOG_info    ("name"      , x_data->name);
+   DEBUG_RPTG   yLOG_enter   ("mime testing");
+   DEBUG_RPTG   yLOG_info    ("name"      , x_data->name);
    p = strrchr (x_data->name, '.');
-   DEBUG_MIME   yLOG_point   ("post p"    , p);
+   DEBUG_RPTG   yLOG_point   ("post p"    , p);
    /*---(fix for obvious types)-----------*/
    if      (x_data->type == 'd')                    p = x_dir;
    else if (x_data->stype == '>')                   p = x_link;
@@ -485,28 +485,28 @@ DATA_stats         (
    if (p != NULL) {
       /*---(try postfix extension)--------*/
       ++p;
-      DEBUG_MIME   yLOG_info    ("post name" , p);
+      DEBUG_RPTG   yLOG_info    ("post name" , p);
       x_len = strlen (p);
-      DEBUG_MIME   yLOG_value   ("post len"  , x_len);
+      DEBUG_RPTG   yLOG_value   ("post len"  , x_len);
       rc = 0;
       if (x_len <= 7) {
          rc = DATA_mime (x_data, p);
-         DEBUG_MIME   yLOG_value   ("post rc"   , rc);
+         DEBUG_RPTG   yLOG_value   ("post rc"   , rc);
       }
       /*---(try infix extension)----------*/
       if (rc <= 0) {
          p  = strchr (x_data->name, '.');
-         DEBUG_MIME   yLOG_point   ("infix p"   , p);
+         DEBUG_RPTG   yLOG_point   ("infix p"   , p);
          if (p != NULL) {
             ++p;
             q  = strchr (p           , '.');
-            DEBUG_MIME   yLOG_point   ("infix q"   , q);
-            DEBUG_MIME   yLOG_value   ("q - p"     , (long) (q - p));
+            DEBUG_RPTG   yLOG_point   ("infix q"   , q);
+            DEBUG_RPTG   yLOG_value   ("q - p"     , (long) (q - p));
             if (q != NULL && (q - p) > 0 && (q - p) <= 7) {
                *q = '\0';
-               DEBUG_MIME   yLOG_info    ("infix name", p);
+               DEBUG_RPTG   yLOG_info    ("infix name", p);
                rc = DATA_mime (x_data, p);
-               DEBUG_MIME   yLOG_value   ("infix rc"  , rc);
+               DEBUG_RPTG   yLOG_value   ("infix rc"  , rc);
                *q = '.';
             }
          }
@@ -547,9 +547,9 @@ DATA_stats         (
    /*---(grand total)---------------------*/
    ++(mime [0].seen);
    mime [0].sbytes += x_data->bytes;
-   DEBUG_MIME   yLOG_exit    ("mime testing");
+   DEBUG_RPTG   yLOG_exit    ("mime testing");
    /*---(complete)------------------------*/
-   DEBUG_ENVIM  yLOG_exit    (__FUNCTION__);
+   DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
    return rc;
 }
 
@@ -577,9 +577,9 @@ DATA_gather        (
    char        x_keep      = a_keep;
    /*---(header)-------------------------*/
    DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
-   DEBUG_ENVIM  yLOG_value   ("a_level"   , a_level);
-   DEBUG_ENVIM  yLOG_point   ("a_ptrs"    , a_ptrs);
-   DEBUG_ENVIM  yLOG_char    ("a_keep"    , a_keep);
+   DEBUG_ENVI   yLOG_value   ("a_level"   , a_level);
+   DEBUG_ENVI   yLOG_point   ("a_ptrs"    , a_ptrs);
+   DEBUG_ENVI   yLOG_char    ("a_keep"    , a_keep);
    /*---(defense)------------------------*/
    --rce;  if (a_level >  my.maxlevel) {
       DEBUG_ENVI   yLOG_note    ("max recursion reached, return");
@@ -591,14 +591,14 @@ DATA_gather        (
       DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
       return rce;
    }
-   DEBUG_ENVIM  yLOG_point   ("dir_data"  , a_ptrs->data);
+   DEBUG_ENVI   yLOG_point   ("dir_data"  , a_ptrs->data);
    --rce;  if (a_ptrs->data == NULL) {
       DEBUG_ENVI   yLOG_note    ("directory data payload NULL, failed");
       DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
       return rce;
    }
    x_dir = a_ptrs->data;
-   DEBUG_ENVIM  yLOG_point   ("dir_name"  , x_dir->name);
+   DEBUG_ENVI   yLOG_point   ("dir_name"  , x_dir->name);
    --rce;  if (x_dir->name == NULL) {
       DEBUG_ENVI   yLOG_note    ("directory name NULL, failed");
       DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
@@ -606,7 +606,7 @@ DATA_gather        (
    }
    DEBUG_ENVI   yLOG_info    ("dir_name"  , x_dir->name);
    DEBUG_CONF   yLOG_info    ("dir_name"  , x_dir->name);
-   DEBUG_ENVIM  yLOG_value   ("dir_len"   , x_dir->len);
+   DEBUG_ENVI   yLOG_value   ("dir_len"   , x_dir->len);
    --rce;  if (x_dir->len >= MAX_NAME) {
       DEBUG_ENVI   yLOG_note    ("directory name too long, failed");
       DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
@@ -654,7 +654,7 @@ DATA_gather        (
       DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
       return rce;
    }
-   DEBUG_ENVIM  yLOG_note    ("success, location open");
+   DEBUG_ENVI   yLOG_note    ("success, location open");
    /*---(cycle through the entries)------*/
    /*> DEBUG_ENVI   yLOG_sync    ();                                                  <*/
    --rce;
@@ -669,7 +669,7 @@ DATA_gather        (
       /*---(create if required)----------*/
       if (x_ptrs == NULL) {
          x_ptrs = DATA_create (a_ptrs);
-         DEBUG_ENVIM  yLOG_point   ("new"       , x_ptrs);
+         DEBUG_ENVI   yLOG_point   ("new"       , x_ptrs);
          if (x_ptrs == NULL) {
             DEBUG_ENVI   yLOG_note    ("could not allocate an entry");
             DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
@@ -677,7 +677,7 @@ DATA_gather        (
             return rce;
          }
       } else {
-         DEBUG_ENVIM  yLOG_point   ("exists"    , x_ptrs);
+         DEBUG_ENVI   yLOG_point   ("exists"    , x_ptrs);
       }
       x_data = x_ptrs->data;
       /*---(get name saved)--------------*/
@@ -750,8 +750,6 @@ DATA_empty         (tDRIVE *a_drive, tPTRS *a_root)
    char        rc          = 0;
    tPTRS      *x_ptrs      = NULL;          /* current entry                  */
    DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
-   /*> debug.envi  = 'y';                                                             <* 
-    *> debug.enviM = 'y';                                                             <*/
    x_ptrs = DATA_create (a_root);
    DEBUG_ENVI   yLOG_point   ("(empty)"   , x_ptrs);
    DEBUG_ENVI   yLOG_point   ("parent"    , x_ptrs->parent);

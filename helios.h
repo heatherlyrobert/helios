@@ -24,8 +24,8 @@
 
 #define     P_VERMAJOR  "1.--, first major version in production"
 #define     P_VERMINOR  "1.1-, adding extensive unit testing"
-#define     P_VERNUM    "1.1a"
-#define     P_VERTXT    "added unit testing and many little fixes the helios_drive"
+#define     P_VERNUM    "1.1b"
+#define     P_VERTXT    "broke out drive mtab and stat processing to allow more unit testing"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -254,83 +254,83 @@ typedef long long        llong;
 
 
 
-/*===[[ DEBUGGING SETUP ]]====================================================*/
-/* this is my latest standard format, vars, and urgents                       */
-/* v3.0b : added signal handling                                (2014-feb-01) */
-struct cDEBUG
-{
-   /*---(handle)-------------------------*/
-   int         logger;                 /* log file so that we don't close it  */
-   /*---(overall)------------------------*/  /* abcdefghi_kl__opq_stu__x__    */
-   /* f = full urgents turns on all standard urgents                          */
-   /* k = kitchen sink and turns everything, i mean everything on             */
-   /* q = quiet turns all urgents off including the log itself                */
-   char        tops;                   /* t) broad structure and context      */
-   char        summ;                   /* s) statistics and analytical output */
-   /*---(startup/shutdown)---------------*/
-   char        args;                   /* a) command line args and urgents    */
-   char        conf;                   /* c) configuration handling           */
-   char        prog;                   /* p) program setup and teardown       */
-   /*---(file processing)----------------*/
-   char        inpt;                   /* i) text/data file input             */
-   char        inptM;                  /* i) text/data file input   (mas/more)*/
-   char        outp;                   /* o) text/data file output            */
-   char        outpM;                  /* o) text/data file output  (mas/more)*/
-   /*---(event handling)-----------------*/
-   char        loop;                   /* l) main program event loop          */
-   char        user;                   /* u) user input and handling          */
-   char        apis;                   /* z) interprocess communication       */
-   char        sign;                   /* x) os signal handling               */
-   char        scrp;                   /* b) scripts and batch operations     */
-   char        hist;                   /* h) history, undo, redo              */
-   /*---(program)------------------------*/
-   char        graf;                   /* g) grahpics, drawing, and display   */
-   char        data;                   /* d) complex data structure handling  */
-   char        envi;                   /* e) environment processing           */
-   char        enviM;                  /* E) environment processing (mas/more)*/
-   /*---(specific)-----------------------*/
-   char        sort;                   /* debugging directory sort            */
-   char        mime;                   /* debugging assignment of mime info   */
-   char        perms;                  /* debugging access permissions        */
-   char        drive;                  /* debugging drive                     */
-   /*---(done)---------------------------*/
-};
-typedef     struct      cDEBUG       tDEBUG;
-extern      tDEBUG      debug;
+/*> /+===[[ DEBUGGING SETUP ]]====================================================+/   <* 
+ *> /+ this is my latest standard format, vars, and urgents                       +/   <* 
+ *> /+ v3.0b : added signal handling                                (2014-feb-01) +/   <* 
+ *> struct cDEBUG                                                                      <* 
+ *> {                                                                                  <* 
+ *>    /+---(handle)-------------------------+/                                        <* 
+ *>    int         logger;                 /+ log file so that we don't close it  +/   <* 
+ *>    /+---(overall)------------------------+/  /+ abcdefghi_kl__opq_stu__x__    +/   <* 
+ *>    /+ f = full urgents turns on all standard urgents                          +/   <* 
+ *>    /+ k = kitchen sink and turns everything, i mean everything on             +/   <* 
+ *>    /+ q = quiet turns all urgents off including the log itself                +/   <* 
+ *>    char        tops;                   /+ t) broad structure and context      +/   <* 
+ *>    char        summ;                   /+ s) statistics and analytical output +/   <* 
+ *>    /+---(startup/shutdown)---------------+/                                        <* 
+ *>    char        args;                   /+ a) command line args and urgents    +/   <* 
+ *>    char        conf;                   /+ c) configuration handling           +/   <* 
+ *>    char        prog;                   /+ p) program setup and teardown       +/   <* 
+ *>    /+---(file processing)----------------+/                                        <* 
+ *>    char        inpt;                   /+ i) text/data file input             +/   <* 
+ *>    char        inptM;                  /+ i) text/data file input   (mas/more)+/   <* 
+ *>    char        outp;                   /+ o) text/data file output            +/   <* 
+ *>    char        outpM;                  /+ o) text/data file output  (mas/more)+/   <* 
+ *>    /+---(event handling)-----------------+/                                        <* 
+ *>    char        loop;                   /+ l) main program event loop          +/   <* 
+ *>    char        user;                   /+ u) user input and handling          +/   <* 
+ *>    char        apis;                   /+ z) interprocess communication       +/   <* 
+ *>    char        sign;                   /+ x) os signal handling               +/   <* 
+ *>    char        scrp;                   /+ b) scripts and batch operations     +/   <* 
+ *>    char        hist;                   /+ h) history, undo, redo              +/   <* 
+ *>    /+---(program)------------------------+/                                        <* 
+ *>    char        graf;                   /+ g) grahpics, drawing, and display   +/   <* 
+ *>    char        data;                   /+ d) complex data structure handling  +/   <* 
+ *>    char        envi;                   /+ e) environment processing           +/   <* 
+ *>    char        enviM;                  /+ E) environment processing (mas/more)+/   <* 
+ *>    /+---(specific)-----------------------+/                                        <* 
+ *>    char        sort;                   /+ debugging directory sort            +/   <* 
+ *>    char        mime;                   /+ debugging assignment of mime info   +/   <* 
+ *>    char        perms;                  /+ debugging access permissions        +/   <* 
+ *>    char        drive;                  /+ debugging drive                     +/   <* 
+ *>    /+---(done)---------------------------+/                                        <* 
+ *> };                                                                                 <* 
+ *> typedef     struct      cDEBUG       tDEBUG;                                       <* 
+ *> extern      tDEBUG      debug;                                                     <*/
 
-#define     DEBUG_TOPS          if (debug.tops      == 'y')
-#define     DEBUG_SUMM          if (debug.summ      == 'y')
-#define     DEBUG_ARGS          if (debug.args      == 'y')
-#define     DEBUG_CONF          if (debug.conf      == 'y')
-#define     DEBUG_PROG          if (debug.prog      == 'y')
-#define     DEBUG_INPT          if (debug.inpt      == 'y')
-#define     DEBUG_INPTM         if (debug.inptM     == 'y')
-#define     DEBUG_OUTP          if (debug.outp      == 'y')
-#define     DEBUG_OUTPM         if (debug.outpM     == 'y')
-#define     DEBUG_LOOP          if (debug.loop      == 'y')
-#define     DEBUG_USER          if (debug.user      == 'y')
-#define     DEBUG_APIS          if (debug.apis      == 'y')
-#define     DEBUG_SIGN          if (debug.sign      == 'y')
-#define     DEBUG_SCRP          if (debug.scrp      == 'y')
-#define     DEBUG_HIST          if (debug.hist      == 'y')
-#define     DEBUG_GRAF          if (debug.graf      == 'y')
-#define     DEBUG_DATA          if (debug.data      == 'y')
-#define     DEBUG_ENVI          if (debug.envi      == 'y')
-#define     DEBUG_ENVIM         if (debug.enviM     == 'y')
-#define     DEBUG_SORT          if (debug.sort      == 'y')
-#define     DEBUG_MIME          if (debug.mime      == 'y')
-#define     DEBUG_PERMS         if (debug.mime      == 'y')
-#define     DEBUG_DRIVE         if (debug.drive     == 'y')
+/*> #define     DEBUG_TOPS          if (debug.tops      == 'y')                       <* 
+ *> #define     DEBUG_SUMM          if (debug.summ      == 'y')                       <* 
+ *> #define     DEBUG_ARGS          if (debug.args      == 'y')                       <* 
+ *> #define     DEBUG_CONF          if (debug.conf      == 'y')                       <* 
+ *> #define     DEBUG_PROG          if (debug.prog      == 'y')                       <* 
+ *> #define     DEBUG_INPT          if (debug.inpt      == 'y')                       <* 
+ *> #define     DEBUG_INPTM         if (debug.inptM     == 'y')                       <* 
+ *> #define     DEBUG_OUTP          if (debug.outp      == 'y')                       <* 
+ *> #define     DEBUG_OUTPM         if (debug.outpM     == 'y')                       <* 
+ *> #define     DEBUG_LOOP          if (debug.loop      == 'y')                       <* 
+ *> #define     DEBUG_USER          if (debug.user      == 'y')                       <* 
+ *> #define     DEBUG_APIS          if (debug.apis      == 'y')                       <* 
+ *> #define     DEBUG_SIGN          if (debug.sign      == 'y')                       <* 
+ *> #define     DEBUG_SCRP          if (debug.scrp      == 'y')                       <* 
+ *> #define     DEBUG_HIST          if (debug.hist      == 'y')                       <* 
+ *> #define     DEBUG_GRAF          if (debug.graf      == 'y')                       <* 
+ *> #define     DEBUG_DATA          if (debug.data      == 'y')                       <* 
+ *> #define     DEBUG_ENVI          if (debug.envi      == 'y')                       <* 
+ *> #define     DEBUG_ENVIM         if (debug.enviM     == 'y')                       <* 
+ *> #define     DEBUG_SORT          if (debug.sort      == 'y')                       <* 
+ *> #define     DEBUG_MIME          if (debug.mime      == 'y')                       <* 
+ *> #define     DEBUG_PERMS         if (debug.mime      == 'y')                       <* 
+ *> #define     DEBUG_DRIVE         if (debug.drive     == 'y')                       <*/
 
 
 typedef     struct     cDRIVE    tDRIVE;
 struct cDRIVE {
    uchar       ref;
-   char        host        [20];
-   char        serial      [20];
-   char        device      [20];
-   char        mpoint      [50];
-   char        type        [10];
+   char        host        [LEN_LABEL];
+   char        serial      [LEN_LABEL];
+   char        device      [LEN_FULL];
+   char        mpoint      [LEN_FULL];
+   char        type        [LEN_LABEL];
    llong       size;
    int         written;                /* dir entry was written on            */
    tDRIVE     *prev;
@@ -589,8 +589,12 @@ char        RPTG_dirtree       (int a_level, tPTRS *a_ptrs, char *a_path);
 char        RPTG_summ          (void);
 
 char        DRIVE_init              (void);
+char        DRIVE_wrap              (void);
 char        DRIVE_append            (tDRIVE **a_drive);
-char        DRIVE_remove            (tDRIVE **a_drive);
+char        DRIVE__remove           (tDRIVE **a_drive);
+char        DRIVE__purge            (void);
+char        DRIVE__mtab             (cchar *a_mount, char *a_part, char *a_type);
+char        DRIVE__stats            (cchar *a_part, llong *a_size, char *a_serial);
 char        DRIVE_populate          (tDRIVE **a_drive, char *a_mount, long a_time);
 char*       DRIVE__unit             (char *a_question, int n);
 

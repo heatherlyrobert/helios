@@ -23,59 +23,65 @@ DRIVE_init         (void)
 }
 
 char
+DRIVE_wrap              (void)
+{
+   return DRIVE__purge ();
+}
+
+char
 DRIVE__wipe         (tDRIVE *a_drive)
 {
-   strcpy (a_drive->host  , my.host);
-   strcpy (a_drive->serial, "-");
-   strcpy (a_drive->device, "-");
-   strcpy (a_drive->mpoint, "-");
-   strcpy (a_drive->type  , "-");
+   strlcpy (a_drive->host  , my.host, LEN_LABEL);
+   strlcpy (a_drive->serial, "-"    , LEN_LABEL);
+   strlcpy (a_drive->device, "-"    , LEN_FULL);
+   strlcpy (a_drive->mpoint, "-"    , LEN_FULL);
+   strlcpy (a_drive->type  , "-"    , LEN_LABEL);
    a_drive->size           = 0;
    a_drive->written        = 0;
    return 0;
 }
 
 char
-DRIVE_remove            (tDRIVE **a_drive)
+DRIVE__remove           (tDRIVE **a_drive)
 {
    /*---(local variables)--+-----------+-*/
    char        rce         =  -10;
    /*---(header)-------------------------*/
-   DEBUG_DRIVE  yLOG_senter  (__FUNCTION__);
+   DEBUG_ENVI   yLOG_senter  (__FUNCTION__);
    /*---(defense)------------------------*/
-   DEBUG_DRIVE  yLOG_point   ("a_drive"   , a_drive);
+   DEBUG_ENVI   yLOG_point   ("a_drive"   , a_drive);
    --rce;  if (a_drive == NULL) {
-      DEBUG_DRIVE  yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(unhook from main list)----------*/
-   DEBUG_CELL   yLOG_note    ("linked cell, unlinking now");
+   DEBUG_ENVI   yLOG_note    ("linked cell, unlinking now");
    if ((*a_drive)->next != NULL)   (*a_drive)->next->prev = (*a_drive)->prev;
    else                            t_drive                = (*a_drive)->prev;
    if ((*a_drive)->prev != NULL)   (*a_drive)->prev->next = (*a_drive)->next;
    else                            h_drive                = (*a_drive)->next;
    /*---(free main)----------------------*/
-   DEBUG_CELL   yLOG_note    ("freeing and nulling");
+   DEBUG_ENVI   yLOG_note    ("freeing and nulling");
    DRIVE__wipe (*a_drive);
    free (*a_drive);
    *a_drive = NULL;
    /*---(update counts)------------------*/
    --n_drive;
-   DEBUG_DRIVE  yLOG_value   ("n_drive"   , n_drive);
+   DEBUG_ENVI   yLOG_value   ("n_drive"   , n_drive);
    /*---(complete)-----------------------*/
-   DEBUG_DRIVE  yLOG_exit    (__FUNCTION__);
+   DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
    return 0;
 
 }
 
 char
-DRIVE_purge        (void)
+DRIVE__purge            (void)
 {  /*---(local variables)--+-----------+-*/
    char        rce         =  -10;
    tDRIVE     *x_curr      = NULL;
    x_curr = h_drive;
    while (x_curr != NULL) {
-      DRIVE_remove (&x_curr);
+      DRIVE__remove (&x_curr);
       x_curr = h_drive;
    }
    return 0;
@@ -88,11 +94,11 @@ DRIVE_append            (tDRIVE **a_drive)
    tDRIVE     *x_new       = NULL;
    char        x_tries     =    0;
    /*---(header)-------------------------*/
-   DEBUG_DRIVE  yLOG_enter   (__FUNCTION__);
+   DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
    /*---(defense)------------------------*/
-   DEBUG_DRIVE  yLOG_point   ("a_drive"   , a_drive);
+   DEBUG_ENVI   yLOG_point   ("a_drive"   , a_drive);
    --rce;  if (a_drive == NULL) {
-      DEBUG_DRIVE  yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(create drive)-------------------*/
@@ -100,17 +106,17 @@ DRIVE_append            (tDRIVE **a_drive)
       if (++x_tries > 3)  break;
       x_new = (tDRIVE*) malloc (sizeof (tDRIVE));
    }
-   DEBUG_CELL   yLOG_value   ("x_tries"   , x_tries);
-   DEBUG_CELL   yLOG_point   ("x_new"     , x_new);
+   DEBUG_ENVI   yLOG_value   ("x_tries"   , x_tries);
+   DEBUG_ENVI   yLOG_point   ("x_new"     , x_new);
    if (x_new == NULL) {
-      DEBUG_DRIVE  yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(clean data)---------------------*/
-   DEBUG_DRIVE  yLOG_note    ("clean data elements");
+   DEBUG_ENVI   yLOG_note    ("clean data elements");
    DRIVE__wipe (x_new);
    /*---(hook to overall list)-----------*/
-   DEBUG_DRIVE  yLOG_note    ("hook to overall list");
+   DEBUG_ENVI   yLOG_note    ("hook to overall list");
    x_new->next = NULL;
    if (h_drive == NULL)  {
       h_drive        = x_new;
@@ -124,11 +130,192 @@ DRIVE_append            (tDRIVE **a_drive)
    x_new->ref     = u_drive;
    ++u_drive;
    ++n_drive;
-   DEBUG_DRIVE  yLOG_value   ("n_drive"   , n_drive);
+   DEBUG_ENVI   yLOG_value   ("n_drive"   , n_drive);
    /*---(save back)----------------------*/
    if (a_drive != NULL)  *a_drive = x_new;
    /*---(complete)-----------------------*/
-   DEBUG_DRIVE  yLOG_exit    (__FUNCTION__);
+   DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+char
+DRIVE__mtab        (cchar *a_mount, char *a_part, char *a_type)
+{
+   /*---(locals)-----------+-----------+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   FILE       *f           = NULL;
+   int         fd          =   -1;
+   char        x_recd      [MAX_RECD];
+   char       *p;
+   char       *q           = " ";
+   char       *r           = NULL;
+   int         x_len       =   0;
+   /*---(header)-------------------------*/
+   DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
+   /*---(prepare)------------------------*/
+   if (a_part != NULL)   strlcpy (a_part, "", LEN_FULL);
+   if (a_type != NULL)   strlcpy (a_type, "", LEN_LABEL);
+   /*---(defense)------------------------*/
+   DEBUG_ENVI   yLOG_point   ("a_mount"   , a_mount);
+   --rce;  if (a_mount == NULL) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_ENVI   yLOG_point   ("a_part"    , a_part);
+   --rce;  if (a_part == NULL) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_ENVI   yLOG_point   ("a_type"    , a_type);
+   --rce;  if (a_type == NULL) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(open mtab file)-----------------*/
+   f = fopen ("/etc/mtab", "r");
+   DEBUG_ENVI   yLOG_point   ("mtab"      , f);
+   --rce;  if (f == NULL) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(find mount point)---------------*/
+   DEBUG_ENVI   yLOG_note    ("find mount point");
+   --rce;  while (1) {
+      fgets (x_recd, MAX_RECD, f);
+      if (feof(f)) {
+         DEBUG_ENVI   yLOG_note    ("hit EOF before finding mountpoint");
+         rc = rce;
+         break;
+      }
+      /*---(filter)----------------------*/
+      x_len = strlen (x_recd);
+      if (x_len <= 0)                       continue;
+      x_recd [--x_len] = '\0';
+      /*---(check partition)-------------*/
+      p = strtok_r (x_recd, q, &r);
+      if (p == NULL)                        continue;
+      ySTR_trim (p, ySTR_BOTH);
+      DEBUG_ENVI   yLOG_info    ("device"    , p);
+      if (p[0] != '/')  {
+         DEBUG_ENVI   yLOG_note    ("not a device entry");
+         continue;
+      }
+      strlcpy (a_part, p, LEN_FULL);
+      /*---(match mountpoint)------------*/
+      p = strtok_r (NULL  , q, &r);
+      if (p == NULL)                        continue;
+      ySTR_trim (p, ySTR_BOTH);
+      DEBUG_ENVI   yLOG_info    ("mpoint"    , p);
+      if (strcmp (p, a_mount) != 0) {
+         DEBUG_ENVI   yLOG_note    ("does not match requested mount point");
+         continue;
+      }
+      /*---(gather type)-----------------*/
+      p = strtok_r (NULL  , q, &r);
+      if (p == NULL)                        continue;
+      ySTR_trim (p, ySTR_BOTH);
+      DEBUG_ENVI   yLOG_info    ("type"      , p);
+      strlcpy (a_type, p, LEN_LABEL);
+      /*---(done)------------------------*/
+      break;
+   }
+   /*---(close mtab file)----------------*/
+   fclose (f);
+   /*---(clean up if an error)-----------*/
+   if (rc < 0) {
+      strlcpy (a_part, "", LEN_FULL);
+      strlcpy (a_type, "", LEN_LABEL);
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
+   return rc;
+}
+
+char
+DRIVE__stats       (cchar *a_part, llong *a_size, char *a_serial)
+{
+   /*---(locals)-----------+-----------+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   int         rci         =    0;
+   FILE       *f           = NULL;
+   int         fd          =   -1;
+   char        x_full      [LEN_FULL]  = "";
+   char       *p;
+   char       *q           = " ";
+   char       *r           = NULL;
+   int         x_len       =   0;
+   struct      hd_driveid  hd;
+   /*---(header)-------------------------*/
+   DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
+   /*---(prepare)------------------------*/
+   if (a_size   != NULL)   *a_size  = 0;
+   if (a_serial != NULL)   strlcpy (a_serial, "", LEN_LABEL);
+   /*---(defense)------------------------*/
+   DEBUG_ENVI   yLOG_point   ("a_part"    , a_part);
+   --rce;  if (a_part == NULL) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_ENVI   yLOG_point   ("a_size"    , a_size);
+   --rce;  if (a_size == NULL) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_ENVI   yLOG_point   ("a_serial"  , a_serial);
+   --rce;  if (a_serial == NULL) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(get size)-----------------------*/
+   DEBUG_ENVI   yLOG_info    ("a_part"    , a_part);
+   x_len = strlen (a_part);
+   DEBUG_ENVI   yLOG_value   ("x_len"     , x_len);
+   --rce;  if (x_len < 3 || strchr ("1234567890", a_part [x_len - 1]) == NULL) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   fd = open (a_part, O_RDONLY);
+   DEBUG_ENVI   yLOG_value   ("fd"        , fd);
+   --rce;  if (fd <  0) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   rci = ioctl (fd, BLKGETSIZE64, a_size);
+   DEBUG_ENVI   yLOG_value   ("ioctl"     , rci);
+   close (fd);
+   --rce;  if (rci <  0) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_ENVI   yLOG_value   ("*a_size"   , *a_size);
+   /*---(change device file)-------------*/
+   DEBUG_ENVI   yLOG_note    ("get serial number");
+   strlcpy (x_full, a_part, LEN_FULL);
+   x_len = strlen (x_full);
+   x_full [--x_len] = '\0';
+   if (x_full [x_len - 1] == '1')  x_full [--x_len] = '\0';
+   DEBUG_ENVI   yLOG_info    ("x_full"    , x_full);
+   /*---(get serial number)--------------*/
+   fd = open (x_full, O_RDONLY);
+   DEBUG_ENVI   yLOG_value   ("fd"        , fd);
+   --rce;  if (fd <  0) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   rci = ioctl (fd, HDIO_GET_IDENTITY, &hd);
+   DEBUG_ENVI   yLOG_value   ("ioctl"     , rci);
+   close (fd);
+   --rce;  if (rci <  0) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   strlcpy   (a_serial, hd.serial_no, LEN_LABEL);
+   ySTR_trim (a_serial, ySTR_BOTH);
+   DEBUG_ENVI   yLOG_info    ("a_serial"  , a_serial);
+   /*---(complete)-----------------------*/
+   DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
@@ -136,129 +323,47 @@ char             /* [------] figure out unique environment -------------------*/
 DRIVE_populate     (tDRIVE **a_drive, char *a_mount, long a_time)
 {
    /*---(locals)-----------+-----------+-*/
-   char        rc          =    0;
-   FILE       *f_mtab      = NULL;
    char        rce         =  -10;
-   int         fd          =   -1;
-   char        x_recd      [MAX_RECD];
-   char       *p;
-   char       *q           = " ";
-   char       *r           = NULL;
-   char        x_partition [20]       = "";
-   int         rci         =   0;
-   char        dsize_s     [100] = "";
-   char        x_serial    [20]  = "";
-   int         x_len       =   0;
-   struct      hd_driveid  hd;
+   char        rc          =    0;
+   char        x_part      [LEN_FULL]  = "";
+   char        x_type      [LEN_LABEL] = "";
+   llong       x_size      =   0;
+   char        x_serial    [LEN_LABEL] = "";
    tDRIVE     *x_drive     = NULL;
    /*---(header)-------------------------*/
-   DEBUG_DRIVE  yLOG_enter   (__FUNCTION__);
-   /*---(get device)---------------------*/
-   f_mtab = fopen ("/etc/mtab", "r");
-   DEBUG_DRIVE  yLOG_point   ("mtab"      , f_mtab);
-   --rce;  if (f_mtab == NULL) {
-      DEBUG_DRIVE  yLOG_note    ("failed to open mtab");
-      DEBUG_DRIVE  yLOG_exit    (__FUNCTION__);
+   DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
+   /*---(find mount)---------------------*/
+   rc = DRIVE__mtab (a_mount, x_part, x_type);
+   DEBUG_ENVI   yLOG_value   ("mtab"      , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_DRIVE  yLOG_note    ("successfully openned");
-   /*---(find mount point)---------------*/
-   DEBUG_DRIVE  yLOG_note    ("find mount point");
-   while (1) {
-      fgets (x_recd, MAX_RECD, f_mtab);
-      if (feof(f_mtab))                     break;
-      /*---(filter)----------------------*/
-      x_len = strlen (x_recd);
-      if (x_len <= 0)                       continue;
-      x_recd [--x_len] = '\0';
-      /*---(parse)-----------------------*/
-      p = strtok_r (x_recd, q, &r);
-      if (p == NULL)                        continue;
-      ySTR_trim (p, ySTR_BOTH);
-      DEBUG_DRIVE  yLOG_info    ("device"    , p);
-      if (p[0] != '/')  {
-         DEBUG_DRIVE  yLOG_note    ("not a device entry");
-         continue;
-      }
-      strncpy (x_partition, p, 20);
-      p = strtok_r (NULL  , q, &r);
-      if (p == NULL)                        continue;
-      ySTR_trim (p, ySTR_BOTH);
-      DEBUG_DRIVE  yLOG_info    ("mpoint"    , p);
-      if (strcmp (p, a_mount) != 0) {
-         DEBUG_DRIVE  yLOG_note    ("does not match requested mount point");
-         continue;
-      }
-      p = strtok_r (NULL  , q, &r);
-      if (p == NULL)                        continue;
-      ySTR_trim (p, ySTR_BOTH);
-      DEBUG_DRIVE  yLOG_info    ("type"      , p);
-      /*---(create the entry)---------------*/
-      rc = DRIVE_append (&x_drive);
-      strncpy (x_drive->device   , x_partition, 20);
-      strncpy (x_drive->mpoint   , a_mount    , 50);
-      strncpy (x_drive->type     , p          , 10);
-      break;
-   }
-   --rce;  if (x_drive == NULL) {
-      /*> printf ("could not find mountpoint %s in mtab\n", a_mount);                 <*/
-      DEBUG_DRIVE  yLOG_note    ("never found mount point");
-      DEBUG_DRIVE  yLOG_exit    (__FUNCTION__);
+   /*---(get stats)----------------------*/
+   rc = DRIVE__stats (x_part, &x_size, x_serial);
+   DEBUG_ENVI   yLOG_value   ("stats"     , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   /*---(get size)-----------------------*/
-   DEBUG_DRIVE  yLOG_note    ("get partition size");
-   fd = open (x_drive->device, O_RDONLY);
-   DEBUG_DRIVE  yLOG_value   ("fd"        , fd);
-   --rce;  if (fd <  0) {
-      /*> printf ("could not open device %s in mtab\n", x_drive->device);             <*/
-      DEBUG_DRIVE  yLOG_note    ("can not open device");
-      DEBUG_DRIVE  yLOG_exit    (__FUNCTION__);
+   /*---(append)-------------------------*/
+   rc = DRIVE_append (&x_drive);
+   DEBUG_ENVI   yLOG_value   ("append"    , rc);
+   --rce;  if (rc < 0 || x_drive == NULL) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   rci = ioctl (fd, BLKGETSIZE64, &(x_drive->size));
-   close (fd);
-   DEBUG_DRIVE  yLOG_value   ("rci"       , rci);
-   --rce;  if (rci <  0) {
-      /*> printf ("could not retrieve device file size\n");                           <*/
-      DEBUG_DRIVE  yLOG_note    ("can not get partition size");
-      DEBUG_DRIVE  yLOG_exit    (__FUNCTION__);
-      return rce;
-   }
-   FILE_commas (x_drive->size, dsize_s);
-   DEBUG_DRIVE  yLOG_info    ("size"      , dsize_s);
-   /*---(get serial number)--------------*/
-   DEBUG_DRIVE  yLOG_note    ("get serial number");
-   strcpy (x_serial, x_drive->device);
-   x_len = strlen (x_serial);
-   x_serial [--x_len] = '\0';
-   if (x_serial [x_len - 1] == '1')  x_serial [--x_len] = '\0';
-   fd = open (x_serial, O_RDONLY);
-   DEBUG_DRIVE  yLOG_value   ("fd"        , fd);
-   --rce;  if (fd <  0) {
-      /*> printf ("could not open drive %s\n", x_serial);                             <*/
-      DEBUG_DRIVE  yLOG_note    ("can not open full drive");
-      DEBUG_DRIVE  yLOG_exit    (__FUNCTION__);
-      return rce;
-   }
-   rci = ioctl (fd, HDIO_GET_IDENTITY, &hd);
-   close (fd);
-   DEBUG_DRIVE  yLOG_value   ("rci"       , rci);
-   --rce;  if (rci <  0) {
-      /*> printf ("could not get serial number of drive %s\n", x_serial);             <*/
-      DEBUG_DRIVE  yLOG_note    ("can not get drive serial number");
-      DEBUG_DRIVE  yLOG_exit    (__FUNCTION__);
-      return rce;
-   }
-   strncpy   (x_serial, hd.serial_no, 20);
-   ySTR_trim (x_serial, ySTR_BOTH);
-   strncpy   (x_drive->serial, x_serial, 20);
-   DEBUG_DRIVE  yLOG_info    ("serial id" , x_drive->serial);
+   /*---(populate)-----------------------*/
+   strlcpy (x_drive->device   , x_part  , LEN_FULL);
+   strlcpy (x_drive->mpoint   , a_mount , LEN_FULL);
+   strlcpy (x_drive->type     , x_type  , LEN_LABEL);
+   x_drive->size    = x_size;
+   strlcpy (x_drive->serial   , x_serial, LEN_LABEL);
    x_drive->written = a_time;
    /*---(save back)----------------------*/
    if (a_drive != NULL)  *a_drive = x_drive;
    /*---(complete)-----------------------*/
-   DEBUG_DRIVE  yLOG_exit    (__FUNCTION__);
+   DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
