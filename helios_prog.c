@@ -162,7 +162,7 @@ PROG_version       (void)
 #else
    strncpy (t, "[unknown  ]", 15);
 #endif
-   snprintf (verstring, 100, "%s   %s : %s", t, VER_NUM, VER_TXT);
+   snprintf (verstring, 100, "%s   %s : %s", t, P_VERNUM, P_VERTXT);
    return verstring;
 }
 
@@ -237,12 +237,12 @@ PROG_urgs          (int argc, char *argv[])
    /*---(startup logging)----------------*/
    if (x_logger == 'y') {
       debug.tops = 'y';
-      debug.logger = yLOG_begin ("helios" , yLOG_SYSTEM, yLOG_NOISE);
+      debug.logger = yLOGS_begin ("helios" , YLOG_SYS, YLOG_NOISE);
       DEBUG_TOPS  yLOG_info     ("purpose",  "file location, change, and search services");
-      DEBUG_TOPS  yLOG_info     ("helios" ,  PROG_version ());
-      DEBUG_TOPS  yLOG_info     ("yLOG"   ,  yLOG_version ());
+      DEBUG_TOPS  yLOG_info     ("helios" ,  PROG_version  ());
+      DEBUG_TOPS  yLOG_info     ("yLOG"   ,  yLOGS_version ());
    } else {
-      debug.logger = yLOG_begin ("helios" , yLOG_SYSTEM, yLOG_QUIET);
+      debug.logger = yLOGS_begin ("helios" , YLOG_SYS, YLOG_QUIET);
    }
    /*---(walk through urgents)-----------*/
    DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
@@ -355,7 +355,7 @@ PROG_init          (void)
    /*---(begin)--------------------------*/
    DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
    /*---(default run-time options)-------*/
-   strcpy (my.host     , ""       );
+   strcpy (my.host     , "-"      );
    my.runtime      = time (NULL);
    my.maxlevel     =   99;   /* maxiumum */
    my.conf         =  'y';
@@ -719,6 +719,7 @@ char             /* [------] post-argument program initialization ------------*/
 PROG_begin         (void)
 {
    DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
+   api_ysort_init ();
    my.regex_len = strlen (my.regex);
    if (my.regex_case == 'y')  my.regex_rc  = regcomp (&(my.regex_comp), my.regex, REG_EXTENDED);
    else                       my.regex_rc  = regcomp (&(my.regex_comp), my.regex, REG_EXTENDED | REG_ICASE);
@@ -731,7 +732,7 @@ PROG_begin         (void)
    }
    my.uid    = geteuid();
    my.gid    = getegid();
-   DRIVE_host ();
+   DRIVE_init ();
    DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
    DEBUG_TOPS   yLOG_break   ();
    /*---(complete)-----------------------*/
@@ -757,38 +758,49 @@ PROG_end           (void)
    DEBUG_SUMM   yLOG_value   ("n_unknown" , my.n_unknown);
    DEBUG_SUMM   yLOG_value   ("n_huh"     , my.n_huh);
    DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
-   DEBUG_TOPS   yLOG_end     ();
+   DEBUG_TOPS   yLOGS_end    ();
    return 0;
 }
 
 
 
 /*====================------------------------------------====================*/
-/*===----                   helpers for unit testing                   ----===*/
+/*===----                         unit testing                         ----===*/
 /*====================------------------------------------====================*/
-static void      o___TESTING_________________o (void) {;}
+static void  o___UNITTEST________o () { return; }
 
-char       /*----: set up program urgents/debugging --------------------------*/
-PROG_testquiet     (void)
+char         /*-> set up programgents/debugging ------[ light  [uz.320.011.05]*/ /*-[00.0000.00#.#]-*/ /*-[--.---.---.--]-*/
+PROG__unit_quiet     (void)
 {
    char       *x_args [1]  = { "helios" };
-   PROG_urgs   (1, x_args);
+   yURG_logger (1, x_args);
    PROG_init   ();
+   yURG_urgs   (1, x_args);
    PROG_args   (1, x_args);
-   /*> PROG_begin  ();                                                                <*/
+   PROG_begin  ();
    return 0;
 }
 
-char       /*----: set up program urgents/debugging --------------------------*/
-PROG_testloud      (void)
+char         /*-> set up programgents/debugging ------[ light  [uz.320.011.05]*/ /*-[00.0000.00#.!]-*/ /*-[--.---.---.--]-*/
+PROG__unit_loud      (void)
 {
-   /*> char       *x_args [3]  = { "helios", "@@log", "@@cmds"    };                  <* 
-    *> PROG_urgs   (3, x_args);                                                       <* 
-    *> PROG_init   ();                                                                <* 
-    *> PROG_args   (3, x_args);                                                       <*/
-   /*> PROG_begin  ();                                                                <*/
+   int         x_argc      = 3;
+   char       *x_args [20] = { "helios_unit", "@@kitchen", "@@args" };
+   yURG_logger (x_argc, x_args);
+   PROG_init   ();
+   yURG_urgs   (x_argc, x_args);
+   PROG_args   (x_argc, x_args);
+   PROG_begin  ();
    return 0;
 }
+
+char         /*-> set up program urgents/debugging ---[ light  [uz.210.001.01]*/ /*-[00.0000.00#.!]-*/ /*-[--.---.---.--]-*/
+PROG__unit_end       (void)
+{
+   PROG_end       ();
+   return 0;
+}
+
 
 
 

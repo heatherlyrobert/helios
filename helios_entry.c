@@ -712,7 +712,8 @@ DATA_gather        (
       /*---(done)------------------------*/
    }
    closedir (dir);
-   GNOME_bucket (0, &(a_ptrs->sib_head), &(a_ptrs->sib_tail));
+   rc = ySORT_troll (YSORT_NONE, YSORT_ASCEND, &(a_ptrs->sib_head), &(a_ptrs->sib_tail));
+   /*> GNOME_bucket (0, &(a_ptrs->sib_head), &(a_ptrs->sib_tail));                    <*/
    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
    return 0;
 }

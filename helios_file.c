@@ -151,7 +151,7 @@ FREAD_all          (void)
    fread  (&x_limit, sizeof (short), 1, f_in);
    DEBUG_INPT   yLOG_value   ("x_limit"   , x_limit);
    for (i = 0; i < x_limit; ++i) {
-      x_drive = DRIVE_append ();
+      rc = DRIVE_append (&x_drive);
       fread  (&x_temp   , sizeof (tDRIVE), 1, f_in);
       x_drive->ref   = x_temp.ref;
       strcpy (x_drive->host    , x_temp.host);
@@ -316,54 +316,20 @@ FILE_percents      (long a_number, long a_total, char *a_string)
    return 0;
 }
 
-char 
+char
 FILE_commas        (llong a_number, char *a_string)
 {
-   /*---(locals)-----------+-----------+-*/
-   int         j           = 0;
-   int         k           = 0;
-   char        x_temp      [20]  = "";
-   int         x_len       = 0;
-   /*---(format)-------------------------*/
-   if (a_number == 0) {
-      strcpy (a_string, "-");
-      return 0;
-   }
-   sprintf (x_temp, "%lld", a_number);
-   x_len = strlen (x_temp);
-   for (j = (x_len - 1) / 3; j > 0; --j) {
-      for (k = x_len; k >= x_len - (j * 3); --k) {
-         x_temp [k + 1] = x_temp [k];
-      }
-      x_temp [x_len - (j * 3)] = ',';
-      ++x_len;
-      x_temp [x_len] = '\0';
-   }
-   /*---(complete)-----------------------*/
-   strcpy (a_string, x_temp);
+   strl4comma (a_number, a_string, 0, 'c', '-', LEN_LABEL);
    return 0;
 }
 
-long
-FILE_uncommas      (char *a_string)
+char
+FILE_uncommas      (char *a_string, llong *a_number)
 {
-   /*---(locals)-----------+-----------+-*/
-   int         i           = 0;
-   int         x_len       = 0;
-   char       *x_loc       = NULL;
-   /*---(unformat)-----------------------*/
-   x_len = strlen  (a_string);
-   if (x_len == 1 && a_string [0] == '-') return 0;
-   x_loc = strrchr (a_string, ',');
-   while (x_loc != NULL) {
-      for (i = (int) (x_loc - a_string); i < x_len; ++i) {
-         a_string [i] = a_string [i + 1];
-      }
-      --x_len;
-      x_loc = strrchr (a_string, ',');
-   }
-   /*---(complete)-----------------------*/
-   return atol (a_string);
+   double     x_val;
+   strl2comma (a_string, &x_val, LEN_LABEL);
+   *a_number = x_val;
+   return 0;
 }
 
 char
@@ -378,6 +344,7 @@ MIME_read          (void)
    char       *p           =    0;          /* strtok pointer                 */
    char       *q           = "";          /* strtok delimeter               */
    char       *s           = NULL;          /* strtok context                 */
+   double      v           =  0.0;
    /*---(header)-------------------------*/
    DEBUG_MIME   yLOG_enter   (__FUNCTION__);
    /*---(open file)----------------------*/
@@ -431,7 +398,7 @@ MIME_read          (void)
       p = strtok_r (NULL  , q, &s);
       if (p == NULL)              continue;
       ySTR_trim (p, ySTR_BOTH);
-      mime [n_mime].seen = FILE_uncommas (p);
+      FILE_uncommas (p, &(mime [n_mime].seen));
       DEBUG_MIME  yLOG_value   ("seen"      , mime [n_mime].seen);
       /*---(seen percent)----------------*/
       p = strtok_r (NULL  , q, &s);
@@ -440,7 +407,7 @@ MIME_read          (void)
       p = strtok_r (NULL  , q, &s);
       if (p == NULL)              continue;
       ySTR_trim (p, ySTR_BOTH);
-      mime [n_mime].sbytes = FILE_uncommas (p);
+      FILE_uncommas (p, &(mime [n_mime].sbytes));
       DEBUG_MIME  yLOG_value   ("sbytes"    , mime [n_mime].sbytes);
       /*---(seen bytes percent)----------*/
       p = strtok_r (NULL  , q, &s);
@@ -449,7 +416,7 @@ MIME_read          (void)
       p = strtok_r (NULL  , q, &s);
       if (p == NULL)              continue;
       ySTR_trim (p, ySTR_BOTH);
-      mime [n_mime].kept = FILE_uncommas (p);
+      FILE_uncommas (p, &(mime [n_mime].kept));
       DEBUG_MIME  yLOG_value   ("kept"      , mime [n_mime].kept);
       /*---(kept percent)----------------*/
       p = strtok_r (NULL  , q, &s);
@@ -458,7 +425,7 @@ MIME_read          (void)
       p = strtok_r (NULL  , q, &s);
       if (p == NULL)              continue;
       ySTR_trim (p, ySTR_BOTH);
-      mime [n_mime].kbytes = FILE_uncommas (p);
+      FILE_uncommas (p, &(mime [n_mime].kbytes));
       DEBUG_MIME  yLOG_value   ("kbytes"    , mime [n_mime].kbytes);
       /*---(kept bytes percent)----------*/
       p = strtok_r (NULL  , q, &s);

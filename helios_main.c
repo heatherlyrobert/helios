@@ -29,9 +29,7 @@ main               (int argc, char *argv[])
    DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
    if (my.updatedb == 'y' || strcmp (argv [0], "helios_update") == 0 || strcmp (argv [0], "updatedb") == 0) {
       if (rc == 0) rc = PROG_conf    ();
-      if (rc == 0) x_drive = DRIVE_append ();
-      if (x_drive == NULL) rc = -1;
-      if (rc == 0) rc = DRIVE_populate (x_drive);
+      if (rc == 0) rc = DRIVE_populate (&x_drive, my.mpoint, my.runtime);
       if (rc == 0) {
          for (i = 0; i < n_mime; ++i) {
             mime [i].seen   = 0;

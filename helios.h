@@ -1,9 +1,40 @@
 /*===============================[[ beg-code ]]===============================*/
 
+
+/*===[[ BEG_HEADER ]]=========================================================*/
+
+/*===[[ ONE_LINERS ]]=========================================================*/
+/*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-12345678901-12345678901-*/
+
+#define     P_FOCUS     "SU (system utilities)"
+#define     P_NICHE     "ff (filesystem finder)"
+#define     P_PURPOSE   "provide file location, search, and summary services"
+
+#define     P_NAMESAKE  "helios-phaeton (titan of the sun)"
+#define     P_HERITAGE  "the all-seeing titan god of the sun and clear sight"
+#define     P_IMAGERY   "drives the sun in a fiery chariot pulled by four winged horses"
+
+#define     P_SYSTEM    "gnu/linux   (powerful, ubiquitous, technical, and hackable)"
+#define     P_LANGUAGE  "ansi-c      (wicked, limitless, universal, and everlasting)"
+#define     P_CODESIZE  "small       (appoximately 2,000 slocl)"
+
+#define     P_AUTHOR    "heatherlyrobert"
+#define     P_CREATED   "2014-10"
+#define     P_DEPENDS   "none"
+
+#define     P_VERMAJOR  "1.--, first major version in production"
+#define     P_VERMINOR  "1.1-, adding extensive unit testing"
+#define     P_VERNUM    "1.1a"
+#define     P_VERTXT    "added unit testing and many little fixes the helios_drive"
+
+#define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
+#define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
+#define     P_REMINDER  "there are many better options, but i *own* every byte of this one"
+
 /*===[[ HEADER ]]=============================================================*/
 /*
  *   focus         : ((tbd))
- *   application   : helios-phaeton    (greek titan of the sun)
+ *   heritage      : helios-phaeton (greek titan of the sun)
  *   purpose       : provide file location, change, and search services
  *
  *   base_system   : gnu/linux   (powerful, ubiquitous, technical, and hackable)
@@ -189,8 +220,10 @@
 #include    <regex.h>        /* POSIX  (04) regcomp, regexec, regfree         */
 
 /*===[[ CUSTOM LIBRARIES ]]===================================================*/
-#include    <yLOG.h>         /* CUSTOM (35) heatherly program logging/tracing */
-#include    <ySTR.h>         /* CUSTOM (--) heatherly string handling         */
+#include    <yURG.h>         /* CUSTOM : heatherly urgent processing          */
+#include    <yLOG.h>         /* CUSTOM : heatherly program logging            */
+#include    <ySTR.h>         /* CUSTOM : heatherly string handling            */
+#include    <ySORT.h>        /* CUSTOM : heatherly sorting and searching      */
 
 
 
@@ -206,9 +239,6 @@ typedef long long        llong;
 
 
 
-/* rapidly evolving version number to aid with visual change confirmation     */
-#define     VER_NUM     "1.0m"
-#define     VER_TXT     "updated to new, amazing make_program make process"
 
 
 #define     FILE_CONF   "/etc/helios.conf"
@@ -499,6 +529,8 @@ extern      tGLOBAL    my;
 #define     OPT_STATS           if (my.statistics   == 'y')
 
 
+extern      char          unit_answer [LEN_FULL];
+
 
 /*===[[ HELIOS_MAIN.C ]]======================================================*/
 int         main               (int argc, char *argv[]);
@@ -515,8 +547,10 @@ char        PROG_conf          (void);
 char        PROG_begin         (void);
 char        PROG_end           (void);
 /*---(testing)--------------*/
-char        PROG_testquiet     (void);
-char        PROG_testloud      (void);
+/*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
+char        PROG__unit_loud         (void);
+char        PROG__unit_quiet        (void);
+char        PROG__unit_end          (void);
 
 
 /*===[[ HELIOS_FILE.C ]]======================================================*/
@@ -525,7 +559,8 @@ char        FWRITE_all         (tPTRS  *a_ptrs);
 char        FREAD_all          (void);
 char        MIME_read          (void);
 char        MIME_write         (char a_dest, char a_space);
-char        FILE_commas        (long long a_number, char *a_string);
+char        FILE_commas        (llong a_number, char *a_string);
+char        FILE_uncommas      (char *a_string, llong *a_number);
 char        MIME_tree          (void);
 
 
@@ -544,7 +579,8 @@ char        GNOME_sort         (int a_level, tPTRS **a_head, tPTRS **a_tail);
 /*---(postal)---------------*/
 char        GNOME_scatter      (int a_level, tPTRS **a_head, tPTRS **a_tail, tSLOT a_slots [SEVENBIT]);
 char        GNOME_gather       (int a_level, tPTRS **a_head, tPTRS **a_tail, tSLOT a_slots [SEVENBIT]);
-char        GNOME_bucket       (int a_level, tPTRS **a_head, tPTRS **a_tail);
+/*> char        GNOME_bucket       (int a_level, tPTRS **a_head, tPTRS **a_tail);     <*/
+char        api_ysort_init          (void);
 
 
 /*===[[ HELIOS_RPTG.C ]]======================================================*/
@@ -552,19 +588,20 @@ char        RPTG_regex         (int a_level, tPTRS *a_ptrs, char *a_path);
 char        RPTG_dirtree       (int a_level, tPTRS *a_ptrs, char *a_path);
 char        RPTG_summ          (void);
 
-char        DRIVE_host         (void);
-tDRIVE     *DRIVE_append       (void);
-char        DRIVE_wipe         (tDRIVE *a_drive);
-char        DRIVE_populate     (tDRIVE *a_drive);
+char        DRIVE_init              (void);
+char        DRIVE_append            (tDRIVE **a_drive);
+char        DRIVE_remove            (tDRIVE **a_drive);
+char        DRIVE_populate          (tDRIVE **a_drive, char *a_mount, long a_time);
+char*       DRIVE__unit             (char *a_question, int n);
 
-char       *ySTR_trim          (char *a_source, char a_mode);
-#define       ySTR_NONE      'n'
-#define       ySTR_HEAD      'h'
-#define       ySTR_TAIL      't'
-#define       ySTR_BOTH      'b'
-#define       ySTR_SINGLE    's'
-#define       ySTR_EVERY     'e'
-#define       ySTR_MAX       'm'
+/*> char       *ySTR_trim          (char *a_source, char a_mode);                     <* 
+ *> #define       ySTR_NONE      'n'                                                  <* 
+ *> #define       ySTR_HEAD      'h'                                                  <* 
+ *> #define       ySTR_TAIL      't'                                                  <* 
+ *> #define       ySTR_BOTH      'b'                                                  <* 
+ *> #define       ySTR_SINGLE    's'                                                  <* 
+ *> #define       ySTR_EVERY     'e'                                                  <* 
+ *> #define       ySTR_MAX       'm'                                                  <*/
 
 char       *ySTR_sub           (char *a_source, int a_beg, int a_len, char a_mode);
 
