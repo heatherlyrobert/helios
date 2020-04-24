@@ -10,7 +10,7 @@
 #define     P_NICHE     "ff (filesystem finder)"
 #define     P_PURPOSE   "provide file location, search, and summary services"
 
-#define     P_NAMESAKE  "helios-phaeton (titan of the sun)"
+#define     P_NAMESAKE  "helios-phaeton (radiant)"
 #define     P_HERITAGE  "the all-seeing titan god of the sun and clear sight"
 #define     P_IMAGERY   "drives the sun in a fiery chariot pulled by four winged horses"
 
@@ -24,29 +24,28 @@
 
 #define     P_VERMAJOR  "1.--, first major version in production"
 #define     P_VERMINOR  "1.1-, adding extensive unit testing"
-#define     P_VERNUM    "1.1b"
-#define     P_VERTXT    "broke out drive mtab and stat processing to allow more unit testing"
+#define     P_VERNUM    "1.1c"
+#define     P_VERTXT    "fixed and tested entry functions, except starts"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
 #define     P_REMINDER  "there are many better options, but i *own* every byte of this one"
 
-/*===[[ HEADER ]]=============================================================*/
+
 /*
- *   focus         : ((tbd))
- *   heritage      : helios-phaeton (greek titan of the sun)
- *   purpose       : provide file location, change, and search services
  *
- *   base_system   : gnu/linux   (powerful, ubiquitous, technical, and hackable)
- *   lang_name     : ansi-c      (wicked, limitless, universal, and everlasting)
- *   dependencies  : none
- *   size          : small       (approximately 2,000 slocL)
- * 
- *   author        : rsheatherly
- *   created       : 2014-10
- *   priorities    : direct, simple, brief, vigorous, and lucid (h.w. fowler)
- *   end goal      : loosely coupled, strict interface, maintainable, traceable
+ *  design notes...
+ *  -- data and pointers where separated to make binary read and write simplier
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
+
+
 
 /*===[[ GREEK HERITAGE ]]=====================================================*/
 /*
@@ -155,7 +154,7 @@
  *   helios will also add several enhancements to target database building...
  *      -- ability to ignore specific directories altogether (dir_ignore)
  *      -- ability to gather sizes, but not the dir itself (dir_stop)
- *      -- ability to gather sizes below, but not entries below (dir_over)
+ *      -- ability to gather sizes below, but not entries below (dir_silent)
  *      -- ability to skip certain dir name where ever found (dir_never)
  *      -- ability to merge databases across machines and networks
  *
@@ -254,75 +253,6 @@ typedef long long        llong;
 
 
 
-/*> /+===[[ DEBUGGING SETUP ]]====================================================+/   <* 
- *> /+ this is my latest standard format, vars, and urgents                       +/   <* 
- *> /+ v3.0b : added signal handling                                (2014-feb-01) +/   <* 
- *> struct cDEBUG                                                                      <* 
- *> {                                                                                  <* 
- *>    /+---(handle)-------------------------+/                                        <* 
- *>    int         logger;                 /+ log file so that we don't close it  +/   <* 
- *>    /+---(overall)------------------------+/  /+ abcdefghi_kl__opq_stu__x__    +/   <* 
- *>    /+ f = full urgents turns on all standard urgents                          +/   <* 
- *>    /+ k = kitchen sink and turns everything, i mean everything on             +/   <* 
- *>    /+ q = quiet turns all urgents off including the log itself                +/   <* 
- *>    char        tops;                   /+ t) broad structure and context      +/   <* 
- *>    char        summ;                   /+ s) statistics and analytical output +/   <* 
- *>    /+---(startup/shutdown)---------------+/                                        <* 
- *>    char        args;                   /+ a) command line args and urgents    +/   <* 
- *>    char        conf;                   /+ c) configuration handling           +/   <* 
- *>    char        prog;                   /+ p) program setup and teardown       +/   <* 
- *>    /+---(file processing)----------------+/                                        <* 
- *>    char        inpt;                   /+ i) text/data file input             +/   <* 
- *>    char        inptM;                  /+ i) text/data file input   (mas/more)+/   <* 
- *>    char        outp;                   /+ o) text/data file output            +/   <* 
- *>    char        outpM;                  /+ o) text/data file output  (mas/more)+/   <* 
- *>    /+---(event handling)-----------------+/                                        <* 
- *>    char        loop;                   /+ l) main program event loop          +/   <* 
- *>    char        user;                   /+ u) user input and handling          +/   <* 
- *>    char        apis;                   /+ z) interprocess communication       +/   <* 
- *>    char        sign;                   /+ x) os signal handling               +/   <* 
- *>    char        scrp;                   /+ b) scripts and batch operations     +/   <* 
- *>    char        hist;                   /+ h) history, undo, redo              +/   <* 
- *>    /+---(program)------------------------+/                                        <* 
- *>    char        graf;                   /+ g) grahpics, drawing, and display   +/   <* 
- *>    char        data;                   /+ d) complex data structure handling  +/   <* 
- *>    char        envi;                   /+ e) environment processing           +/   <* 
- *>    char        enviM;                  /+ E) environment processing (mas/more)+/   <* 
- *>    /+---(specific)-----------------------+/                                        <* 
- *>    char        sort;                   /+ debugging directory sort            +/   <* 
- *>    char        mime;                   /+ debugging assignment of mime info   +/   <* 
- *>    char        perms;                  /+ debugging access permissions        +/   <* 
- *>    char        drive;                  /+ debugging drive                     +/   <* 
- *>    /+---(done)---------------------------+/                                        <* 
- *> };                                                                                 <* 
- *> typedef     struct      cDEBUG       tDEBUG;                                       <* 
- *> extern      tDEBUG      debug;                                                     <*/
-
-/*> #define     DEBUG_TOPS          if (debug.tops      == 'y')                       <* 
- *> #define     DEBUG_SUMM          if (debug.summ      == 'y')                       <* 
- *> #define     DEBUG_ARGS          if (debug.args      == 'y')                       <* 
- *> #define     DEBUG_CONF          if (debug.conf      == 'y')                       <* 
- *> #define     DEBUG_PROG          if (debug.prog      == 'y')                       <* 
- *> #define     DEBUG_INPT          if (debug.inpt      == 'y')                       <* 
- *> #define     DEBUG_INPTM         if (debug.inptM     == 'y')                       <* 
- *> #define     DEBUG_OUTP          if (debug.outp      == 'y')                       <* 
- *> #define     DEBUG_OUTPM         if (debug.outpM     == 'y')                       <* 
- *> #define     DEBUG_LOOP          if (debug.loop      == 'y')                       <* 
- *> #define     DEBUG_USER          if (debug.user      == 'y')                       <* 
- *> #define     DEBUG_APIS          if (debug.apis      == 'y')                       <* 
- *> #define     DEBUG_SIGN          if (debug.sign      == 'y')                       <* 
- *> #define     DEBUG_SCRP          if (debug.scrp      == 'y')                       <* 
- *> #define     DEBUG_HIST          if (debug.hist      == 'y')                       <* 
- *> #define     DEBUG_GRAF          if (debug.graf      == 'y')                       <* 
- *> #define     DEBUG_DATA          if (debug.data      == 'y')                       <* 
- *> #define     DEBUG_ENVI          if (debug.envi      == 'y')                       <* 
- *> #define     DEBUG_ENVIM         if (debug.enviM     == 'y')                       <* 
- *> #define     DEBUG_SORT          if (debug.sort      == 'y')                       <* 
- *> #define     DEBUG_MIME          if (debug.mime      == 'y')                       <* 
- *> #define     DEBUG_PERMS         if (debug.mime      == 'y')                       <* 
- *> #define     DEBUG_DRIVE         if (debug.drive     == 'y')                       <*/
-
-
 typedef     struct     cDRIVE    tDRIVE;
 struct cDRIVE {
    uchar       ref;
@@ -343,8 +273,54 @@ extern      short      n_drive;
 extern      short      u_drive;
 
 
-typedef     struct     cDATA     tDATA;
-struct cDATA {
+#define       ENTRY_DIR      'd'
+#define       ENTRY_CDEV     'c'
+#define       ENTRY_BDEV     'b'
+#define       ENTRY_FIFO     'f'
+#define       ENTRY_SOCK     's'
+#define       ENTRY_REG      '-'
+#define       ENTRY_LINK     'l'
+#define       ENTRY_HUH      '?'
+#define       ENTRY_DEVICES  "dcbfs"
+
+#define       STYPE_NORM     '.'
+#define       STYPE_LINK     '>'
+
+#define       DIR_NORMAL     '-'
+#define       DIR_SILENT     '~'
+#define       DIR_PASS       '('
+#define       DIR_LAST       ')'
+#define       DIR_NEVER      'X'
+#define       DIR_SYMLINK    '@'
+
+#define       ASCII_BASIC    '-'
+#define       ASCII_UPPER    'A'
+#define       ASCII_PUNCT    '+'
+#define       ASCII_EXTEND   '#'
+#define       ASCII_SPACE    '>'
+#define       ASCII_CRAZY    'X'
+
+#define       EXT_DIR        "d_dir"
+#define       EXT_CONF       "t_conf"
+#define       EXT_EXEC       "x_exec"  
+#define       EXT_BDEV       "b_dev"
+#define       EXT_CDEV       "c_dev"
+#define       EXT_FIFO       "f_fifo"
+#define       EXT_SOCK       "s_socket"
+#define       EXT_DLINK      "d_link"
+#define       EXT_RLINK      "r_link"
+#define       EXT_ELINK      "x_link"
+#define       EXT_CLINK      "c_link"
+#define       EXT_BLINK      "b_link"
+#define       EXT_FLINK      "f_link"
+#define       EXT_SLINK      "s_link"
+#define       EXT_ULINK      "u_link"
+#define       EXT_BACKUP     "b_tilde"
+#define       EXT_UNKNOWN    "u_ext"
+#define       EXT_MYSTERY    "u_none"
+
+typedef     struct     cENTRY    tENTRY;
+struct cENTRY {
    /*---(types)--------------------------*/
    char        type;                   /* dir entry type                      */
    char        stype;                  /* dir entry link/blocked              */
@@ -354,6 +330,7 @@ struct cDATA {
    ushort      gid;                    /* dir entry group id                  */
    char        grp;                    /* dir entry permissions for group     */
    char        oth;                    /* dir entry permissions for other     */
+   char        super;                  /* whether suid or guid is set         */
    /*---(unique)-------------------------*/
    uchar       drive;                  /* unique drive/partition/mpoint       */
    int         inode;                  /* dir entry filesystem inode          */
@@ -366,18 +343,18 @@ struct cDATA {
    long        cum;                    /* bytes in entry and below            */
    /*---(categorization)-----------------*/
    char        cat;                    /* mime-like category                  */
-   char        ext         [   7];     /* mime-like extension                 */
+   char        ext         [LEN_TERSE];/* mime-like extension                 */
    /*---(name)---------------------------*/
    char        level;                  /* recursion level of entry            */
    uchar       ascii;                  /* quality of name                     */
    uchar       len;                    /* length of name                      */
-   char        name        [MAX_NAME]; /* name                                */
+   char        name        [LEN_HUND]; /* name                                */
 };
 
 typedef     struct     cPTRS     tPTRS;
 struct cPTRS {
    /*---(payload)------------------------*/
-   tDATA      *data;
+   tENTRY      *data;
    /*---(parent/child connection)--------*/
    tPTRS      *parent;                 /* actual containing dir entry         */
    tPTRS      *sib_head;               /* first entry under a directory       */
@@ -390,15 +367,12 @@ struct cPTRS {
    tPTRS      *prev;                   /* overall doublly linked list         */
    /*---(done)---------------------------*/
 };
-
 extern      tPTRS      *h_ptrs;
 extern      tPTRS      *t_ptrs;
 extern      int         n_ptrs;
 extern      int         n_ptrs_ever;
 
-extern      tPTRS      *h_ptrd;
-extern      tPTRS      *t_ptrd;
-extern      int         n_ptrd;
+
 
 extern      tPTRS      *dir_stack  [MAX_DEPTH];
 extern      tPTRS      *root_stack [MAX_DEPTH];
@@ -408,10 +382,10 @@ extern      tPTRS      *root_stack [MAX_DEPTH];
 typedef     struct      cNODIR    tNODIR;
 struct cNODIR {
    char        type;
-   char        name        [MAX_NAME];
+   char        name        [LEN_HUND];
    int         len;
 };
-extern      tNODIR      nodir [MAX_NODIR];
+extern      tNODIR      g_nodir [MAX_NODIR];
 extern      int         n_nodir;
 
 
@@ -424,12 +398,28 @@ struct cBUCKET {
 #define     SEVENBIT      128
 
 
+/*---(content)--------------*/
+#define     MIME_AUDIO       'a'
+#define     MIME_VIDEO       'v'
+#define     MIME_IMAGE       'i'
+#define     MIME_CODE        's'
+#define     MIME_ASCII       't'
+#define     MIME_DBASE       'b'
+#define     MIME_CRYPT       'c'
+#define     MIME_PROP        'p'
+#define     MIME_EXEC        'x'
+#define     MIME_DIR         'd'
+#define     MIME_TEMP        'z'
+#define     MIME_OTHER       'u'
+#define     MIME_HUH         '?'
+
+
 #define     MAX_MIME      500
 typedef     struct      cMIME       tMIME;
 struct cMIME {
-   char        ext         [10];
+   char        ext         [LEN_TERSE];
    char        cat;
-   char        desc        [50];
+   char        desc        [LEN_DESC];
    char        like;
    int         seen;
    llong       sbytes;
@@ -441,22 +431,14 @@ struct cMIME {
 extern      tMIME       mime [MAX_MIME];
 extern      int         n_mime;
 
-#define     MAX_CAT         50
-typedef     struct      cCAT        tCAT;
-struct cCAT {
-   char        cat;
-   char        desc        [50];
-};
-extern      tCAT        cats [MAX_CAT];
-
 
 struct cGLOBAL {
    /*------------------------------------*/
-   char        host        [MAX_STR];  /* host name of current computer       */
+   char        host        [LEN_DESC]; /* host name of current computer       */
    long        runtime;                /* run time for helios                 */
    int         maxlevel;               /* maximum recursion on entry gather   */          
    char        conf;                   /* whether to process conf file        */
-   char        conf_file   [MAX_NAME]; /* alternate configuration file        */
+   char        conf_file   [LEN_PATH]; /* alternate configuration file        */
    char        updatedb;               /* update mode flag (y/-)              */
    char        verbose;                /* show dirs as traversing             */
    int         uid;                    /* users user id                       */
@@ -482,14 +464,14 @@ struct cGLOBAL {
    char        mime_table;             /* show summary mime statistics        */
    char        statistics;             /* show summary database statistics    */
    char        dump;                   /* dump all recorts as read            */
-   char        path        [MAX_NAME]; /* begin search using this path        */
+   char        path        [LEN_PATH]; /* begin search using this path        */
    tPTRS      *start;                  /* begin search from this location     */
    int         level;                  /* begin search at this level          */
    char        dirtree;                /* display directory tree              */
    char        mimetree;               /* display mime-based tree             */
-   char        mpoint      [MAX_STR];  /* mountpoint to inventory             */
+   char        mpoint      [LEN_DESC]; /* mountpoint to inventory             */
    short       drive;                  /* currently processed drive           */
-   char        database    [MAX_NAME]; /* alternative database                */
+   char        database    [LEN_PATH]; /* alternative database                */
    /*---(mime type processing)-----------*/
    int         mime_exe;               /* mime index for executable           */
    int         mime_other;             /* mime index for unlabeled            */
@@ -508,14 +490,15 @@ struct cGLOBAL {
    int         n_audio;
    int         n_video;
    int         n_image;
-   int         n_text;
-   int         n_progs;
-   int         n_data;
-   int         n_apps;
-   int         n_comp;
-   int         n_model;
+   int         n_code;
+   int         n_ascii;
+   int         n_dbase;
+   int         n_crypt;
+   int         n_prop;
+   int         n_exec;
+   int         n_temp;
+   int         n_dir;
    int         n_other;
-   int         n_unknown;
    int         n_huh;
    /*---(done)---------------------------*/
 };
@@ -543,7 +526,6 @@ char        PROG_urgsmass      (char a_set, char a_extra);
 char        PROG_urgs          (int argc, char *argv[]);
 char        PROG_args          (int argc, char *argv[]);
 /*> char        PROG_getdrive      (void);                                            <*/
-char        PROG_conf          (void);
 char        PROG_begin         (void);
 char        PROG_end           (void);
 /*---(testing)--------------*/
@@ -554,21 +536,50 @@ char        PROG__unit_end          (void);
 
 
 /*===[[ HELIOS_FILE.C ]]======================================================*/
-char        FWRITE_dir         (FILE *a_file, tPTRS *a_ptrs, int *a_count);
-char        FWRITE_all         (tPTRS  *a_ptrs);
-char        FREAD_all          (void);
-char        MIME_read          (void);
-char        MIME_write         (char a_dest, char a_space);
-char        FILE_commas        (llong a_number, char *a_string);
-char        FILE_uncommas      (char *a_string, llong *a_number);
-char        MIME_tree          (void);
+char        FWRITE_dir              (FILE *a_file, tPTRS *a_ptrs, int *a_count);
+char        FWRITE_all              (tPTRS  *a_ptrs);
+char        FREAD_all               (void);
+char        FILE_commas             (llong a_number, char *a_string);
+char        FILE_uncommas           (char *a_string, llong *a_number);
+/*---(mime)-----------------*/
+char        MIME_read               (void);
+char        MIME_write              (char a_dest, char a_space);
+char        MIME_find_cat           (cchar *a_ext, int *a_index, char *a_cat, long a_bytes);
+char        MIME_tree               (void);
+char        MIME__clearall          (void);
+char*       MIME__unit              (char *a_question, int n);
+/*---(config)---------------*/
+char        CONF__parse             (cchar *a_recd);
+char        CONF_read               (void);
+char        CONF_find               (char *a_full, char *a_name, char *a_stype, char *a_silent);
+char*       CONF__unit              (char *a_question, int n);
 
 
 /*===[[ HELIOS_ENTRY.C ]]=====================================================*/
-char        DATA_gather        (int a_level, tDRIVE *a_drive, tPTRS  *a_ptrs, char *a_path, char a_keep);
-tPTRS*      DATA_root          (tDRIVE *a_drive);
+/*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
+/*---(program)--------------*/
+char        ENTRY_init              (void);
+char        ENTRY_wrap              (void);
+/*---(malloc)---------------*/
+char        ENTRY_new               (tPTRS **a_new, tPTRS *a_parent);
+char        ENTRY__free             (tPTRS **a_ptrs);
+char        ENTRY__wipe             (tENTRY *a_curr);
+char        ENTRY__purge            (void);
+char        ENTRY__dirclear         (tPTRS *a_from);
+/*---(support)--------------*/
+char        ENTRY__name_check       (cchar *a_name, char *a_warn, uchar *a_len);
+char        ENTRY__type_check       (cchar *a_name, tSTAT *a_stat, uchar *a_stype, uchar *a_type);
+char        ENTRY__perms_check      (tSTAT *a_stat, ushort *a_uid, char *a_own, ushort *a_gid, char *a_grp, char *a_oth, char *a_super);
+char        ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_stype, char a_type, char *a_ext, char *a_cat, long a_bytes);
+int         ENTRY__populate         (tPTRS *a_ptrs, char *a_full);
+char        ENTRY__level_prep       (int a_level, tPTRS *a_parent, char *a_path, char *a_newpath);
+
+char        ENTRY__level_read       (int a_level, tPTRS  *a_ptrs, char *a_path, char a_ilent);
+
+tPTRS*      ENTRY__root        (tDRIVE *a_drive);
 tPTRS*      DATA_empty         (tDRIVE *a_drive, tPTRS *a_root);
 tPTRS*      DATA_start         (char *a_path);
+char*       ENTRY__unit             (char *a_question, int n);
 
 
 /*===[[ HELIOS_SORT.C ]]======================================================*/
@@ -598,14 +609,6 @@ char        DRIVE__stats            (cchar *a_part, llong *a_size, char *a_seria
 char        DRIVE_populate          (tDRIVE **a_drive, char *a_mount, long a_time);
 char*       DRIVE__unit             (char *a_question, int n);
 
-/*> char       *ySTR_trim          (char *a_source, char a_mode);                     <* 
- *> #define       ySTR_NONE      'n'                                                  <* 
- *> #define       ySTR_HEAD      'h'                                                  <* 
- *> #define       ySTR_TAIL      't'                                                  <* 
- *> #define       ySTR_BOTH      'b'                                                  <* 
- *> #define       ySTR_SINGLE    's'                                                  <* 
- *> #define       ySTR_EVERY     'e'                                                  <* 
- *> #define       ySTR_MAX       'm'                                                  <*/
 
 char       *ySTR_sub           (char *a_source, int a_beg, int a_len, char a_mode);
 

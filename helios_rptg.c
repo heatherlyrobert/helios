@@ -11,9 +11,9 @@ RPTG_regex         (
       char       *a_path      )             /* full path of directory to scan */
 {  /*---(local variables)--+-----------+-*/
    char        rce         = -10;           /* return code for errors         */
-   tDATA      *x_dir       = NULL;          /* directory data                 */
+   tENTRY      *x_dir       = NULL;          /* directory data                 */
    tPTRS      *x_ptrs      = NULL;          /* current entry                  */
-   tDATA      *x_data      = NULL;          /* current entry data             */
+   tENTRY      *x_data      = NULL;          /* current entry data             */
    char        rc          = 0;
    char        x_path      [500];
    int         i           = 0;
@@ -79,7 +79,7 @@ RPTG_regex         (
       if (x_data != NULL) {
          DEBUG_GRAF   yLOG_info    ("entry"     , x_data->name);
          x_days = (my.runtime - x_data->changed) / (365 * 24 * 60);
-         if (x_data->type != 'd') {
+         if (x_data->type != ENTRY_DIR) {
             /*---(non-regex filtering)---*/
             if (my.find == 'y') {
                /*---(days)---------------*/
@@ -142,14 +142,14 @@ RPTG_regex         (
             }
          } else {
             x_allowed = '-';
-            if (my.uid == 0)                                                        x_allowed = 'r';
-            else if ((((x_data->oth - '0') % 4) % 2) == 1)                          x_allowed = 'o';
-            else if (x_data->gid == my.gid && (((x_data->grp - '0') % 4) % 2) == 1) x_allowed = 'g';
-            else if (x_data->uid == my.uid && (((x_data->own - '0') % 4) % 2) == 1) x_allowed = 'u';
+            if (my.uid == 0)                                                x_allowed = 'r';
+            else if (((x_data->oth % 4) % 2) == 1)                          x_allowed = 'o';
+            else if (x_data->gid == my.gid && ((x_data->grp % 4) % 2) == 1) x_allowed = 'g';
+            else if (x_data->uid == my.uid && ((x_data->own % 4) % 2) == 1) x_allowed = 'u';
             DEBUG_GRAF   printf ("%c   ", x_allowed);
-            DEBUG_GRAF   printf ("%c %d   ", x_data->oth, ((x_data->oth - '0') % 4) % 2);
-            DEBUG_GRAF   printf ("%4d %4d %c %d   ", my.gid, x_data->gid, x_data->grp, ((x_data->grp - '0') % 4) % 2);
-            DEBUG_GRAF   printf ("%4d %4d %c %d   ", my.uid, x_data->uid, x_data->own, ((x_data->own - '0') % 4) % 2);
+            DEBUG_GRAF   printf ("%c %d   ", x_data->oth, (x_data->oth % 4) % 2);
+            DEBUG_GRAF   printf ("%4d %4d %c %d   ", my.gid, x_data->gid, x_data->grp, (x_data->grp % 4) % 2);
+            DEBUG_GRAF   printf ("%4d %4d %c %d   ", my.uid, x_data->uid, x_data->own, (x_data->own % 4) % 2);
             DEBUG_GRAF   printf ("%s/%s\n", x_path, x_data->name);
             if (x_allowed != '-')  RPTG_regex (a_level + 1, x_ptrs, x_path);
          }
@@ -169,9 +169,9 @@ RPTG_dirtree       (
       char       *a_path      )             /* full path of directory to scan */
 {  /*---(local variables)--+-----------+-*/
    char        rce         = -10;           /* return code for errors         */
-   tDATA      *x_dir       = NULL;          /* directory data                 */
+   tENTRY      *x_dir       = NULL;          /* directory data                 */
    tPTRS      *x_ptrs      = NULL;          /* current entry                  */
-   tDATA      *x_data      = NULL;          /* current entry data             */
+   tENTRY      *x_data      = NULL;          /* current entry data             */
    char        rc          = 0;
    char        x_path      [500];
    int         i           = 0;
@@ -251,7 +251,7 @@ RPTG_dirtree       (
       x_data = x_ptrs->data;
       if (x_data != NULL) {
          DEBUG_GRAF   yLOG_info    ("entry"     , x_data->name);
-         if (x_data->type == 'd') {
+         if (x_data->type == ENTRY_DIR) {
             RPTG_dirtree (a_level + 1, x_ptrs, x_path);
          }
       }
@@ -278,7 +278,7 @@ RPTG_summ          (void)
    tDRIVE     *x_drive     = NULL;
    /*---(process all)--------------------*/
    for (i = 1; i < n_mime; ++i) {
-      if (mime [i].cat == 'd' && strcmp (mime [i].ext, "dir") == 0) {
+      if (mime [i].cat == MIME_DIR && strcmp (mime [i].ext, "dir") == 0) {
          x_dseen  += mime [i].seen;
          x_dkept  += mime [i].kept;
       } else {
@@ -310,18 +310,18 @@ RPTG_summ          (void)
    printf (" %12.12s");
    FILE_commas (x_dkept, x_comma);
    printf (" %12.12s");
-   FILE_commas (sizeof (tDATA), x_comma);
+   FILE_commas (sizeof (tENTRY), x_comma);
    printf (" %12.12s");
-   FILE_commas (x_dkept * sizeof (tDATA), x_comma);
+   FILE_commas (x_dkept * sizeof (tENTRY), x_comma);
    printf (" %12.12s\n");
    printf ("files       ");
    FILE_commas (x_fseen, x_comma);
    printf (" %12.12s");
    FILE_commas (x_fkept, x_comma);
    printf (" %12.12s");
-   FILE_commas (sizeof (tDATA), x_comma);
+   FILE_commas (sizeof (tENTRY), x_comma);
    printf (" %12.12s");
-   FILE_commas (x_fkept * sizeof (tDATA), x_comma);
+   FILE_commas (x_fkept * sizeof (tENTRY), x_comma);
    printf (" %12.12s\n");
    printf ("             ------------ ------------              ------------\n");
    printf ("   total    ");
@@ -330,11 +330,11 @@ RPTG_summ          (void)
    FILE_commas (x_dkept + x_fkept, x_comma);
    printf (" %12.12s");
    printf ("             ");
-   FILE_commas ((x_dkept + x_fkept) * sizeof (tDATA), x_comma);
+   FILE_commas ((x_dkept + x_fkept) * sizeof (tENTRY), x_comma);
    printf (" %12.12s\n");
    printf ("                                                    ------------\n");
    printf ("                  with device entries (appoximate) ");
-   FILE_commas (sizeof (short) + (n_drive * sizeof (tDRIVE)) + ((x_dkept + x_fkept) * sizeof (tDATA)), x_comma);
+   FILE_commas (sizeof (short) + (n_drive * sizeof (tDRIVE)) + ((x_dkept + x_fkept) * sizeof (tENTRY)), x_comma);
    printf (" %12.12s\n");
    /*---(complete)-----------------------*/
    return 0;

@@ -221,18 +221,19 @@ PROG_init          (void)
    my.total        =    0;
    /*---(others)-------------------------*/
    my.mpoint [0]   = '\0';
-   DATA_init   ();
+   ENTRY_init  ();
    my.n_audio      =    0;
    my.n_video      =    0;
    my.n_image      =    0;
-   my.n_text       =    0;
-   my.n_progs      =    0;
-   my.n_data       =    0;
-   my.n_apps       =    0;
-   my.n_comp       =    0;
-   my.n_model      =    0;
+   my.n_code       =    0;
+   my.n_ascii      =    0;
+   my.n_dbase      =    0;
+   my.n_crypt      =    0;
+   my.n_prop       =    0;
+   my.n_exec       =    0;
+   my.n_temp       =    0;
+   my.n_dir        =    0;
    my.n_other      =    0;
-   my.n_unknown    =    0;
    my.n_huh        =    0;
    my.path  [0]    = '\0';
    my.start        = NULL;
@@ -411,141 +412,6 @@ PROG_args          (int argc, char *argv[])
    return 0;
 }
 
-char         /*===[[ read configuration ]]================[ ------ [ ------ ]=*/
-PROG_conf          (void)
-{  /*---(locals)-----------+-----------+-*/
-   FILE       *f_conf      = NULL;
-   char        rc          = 0;
-   char        rce         = -10;
-   char        x_recd      [MAX_RECD];           /* input record              */
-   int         x_len       = 0;                  /* string length             */
-   char       *p;
-   char       *q           = "\x1F";
-   char       *r           = NULL;
-   char        x_temp      [20];
-   char        x_verbs     [1000] = " dir_ignore dir_stop dir_over dir_never dir_last dir_append mountpoint ";
-   char        x_verb      [20];
-   int         i           = 0;
-   char        x_field     [ 20][100];
-   /*---(header)-------------------------*/
-   DEBUG_TOPS  yLOG_enter   (__FUNCTION__);
-   /*---(check for option)---------------*/
-   if (my.conf != 'y') {
-      DEBUG_CONF   yLOG_note    ("elected not to process configuration file");
-      DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
-      return 0;
-   }
-   /*---(open configuration)-------------*/
-   DEBUG_CONF   yLOG_info    ("conf_file" , my.conf_file);
-   f_conf = fopen (my.conf_file, "r");
-   DEBUG_CONF   yLOG_point   ("file point", f_conf);
-   --rce;  if (f_conf == NULL) {
-      printf ("fatal, helios configuration file %s could not be openned\n", my.conf_file);
-      DEBUG_CONF   yLOG_note    ("failed to open file");
-      DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
-      return rce;
-   }
-   DEBUG_CONF   yLOG_note    ("successfully openned");
-   /*---(read)---------------------------*/
-   while (1) {
-      fgets (x_recd, MAX_RECD, f_conf);
-      if (feof(f_conf))                     break;
-      /*---(filter)----------------------*/
-      x_len = strlen (x_recd);
-      if (x_len <= 0)                       continue;
-      x_recd [--x_len] = '\0';
-      if (x_len <= 0)                       continue;
-      if (x_recd [0] == '#')                continue;
-      DEBUG_CONF   yLOG_info    ("read"      , x_recd);
-      /*---(get recd type)---------------*/
-      p = strtok_r (x_recd, q, &r);
-      if (p == NULL)                        continue;
-      ySTR_trim (p, ySTR_BOTH);
-      x_len = strlen (p);
-      if (x_len <= 2)                       continue;
-      sprintf (x_temp, " %s ", p);
-      DEBUG_CONF   yLOG_info    ("x_temp"    , x_temp);
-      if (strstr (x_verbs, p) == NULL)      continue;
-      strncpy (x_verb, p, 20);
-      DEBUG_CONF   yLOG_info    ("x_verb"    , x_verb);
-      /*---(get fields)------------------*/
-      for (i = 0; i < 20; ++i) {
-         p = strtok_r (NULL  , q, &r);
-         if (p == NULL)                     break;
-         ySTR_trim (p, ySTR_BOTH);
-         strncpy (x_field [i], p, 100);
-         DEBUG_CONF   yLOG_info    ("field"     , x_field [i]);
-      }
-      /*---(act)-------------------------*/
-      rc = 0;
-      if (x_verb [0] == 'd') {
-         switch (x_verb [4]) {
-         case 'i' : strncpy (nodir [n_nodir].name, x_field [0], MAX_NAME);
-                    nodir [n_nodir].len = strlen (x_field [0]);
-                    nodir [n_nodir].type = '#';
-                    ++n_nodir;
-                    DEBUG_CONF   yLOG_note    ("adding an ignore type");
-                    break;
-         case 's' : strncpy (nodir [n_nodir].name, x_field [0], MAX_NAME);
-                    nodir [n_nodir].len = strlen (x_field [0]);
-                    nodir [n_nodir].type = ')';
-                    ++n_nodir;
-                    DEBUG_CONF   yLOG_note    ("adding a stop type");
-                    break;
-         case 'o' : strncpy (nodir [n_nodir].name, x_field [0], MAX_NAME);
-                    nodir [n_nodir].len = strlen (x_field [0]);
-                    nodir [n_nodir].type = '(';
-                    ++n_nodir;
-                    DEBUG_CONF   yLOG_note    ("adding a over type");
-                    break;
-         case 'n' : strncpy (nodir [n_nodir].name, x_field [0], MAX_NAME);
-                    nodir [n_nodir].len = strlen (x_field [0]);
-                    nodir [n_nodir].type = 'x';
-                    ++n_nodir;
-                    DEBUG_CONF   yLOG_note    ("adding a never type");
-                    break;
-         case 'l' : strncpy (nodir [n_nodir].name, x_field [0], MAX_NAME);
-                    nodir [n_nodir].len = strlen (x_field [0]);
-                    nodir [n_nodir].type = '@';
-                    ++n_nodir;
-                    DEBUG_CONF   yLOG_note    ("adding a last type");
-                    break;
-         case 'a' : strncpy (nodir [n_nodir].name, x_field [0], MAX_NAME);
-                    nodir [n_nodir].len = strlen (x_field [0]);
-                    nodir [n_nodir].type = '/';
-                    ++n_nodir;
-                    DEBUG_CONF   yLOG_note    ("adding a append type");
-                    break;
-         default  : break;
-         }
-         DEBUG_CONF   yLOG_value   ("n_nodir"   , n_nodir);
-      } else if (strcmp (x_verb, "mountpoint") == 0) {
-         DEBUG_CONF   yLOG_note    ("mountpoint default found in conf");
-         if (my.mpoint [0] != '\0') {
-            DEBUG_CONF   yLOG_note    ("but, mountpoint already set by arg");
-         } else {
-            DEBUG_CONF   yLOG_note    ("mpoint currently null");
-            strcpy (my.mpoint, x_field [0]);
-         }
-         DEBUG_CONF   yLOG_info    ("mpoint"    , my.mpoint);
-      }
-      /*---(done)------------------------*/
-   }
-   /*---(close configuration)------------*/
-   DEBUG_CONF   yLOG_note    ("closing configuration file");
-   rc = fclose (f_conf);
-   DEBUG_CONF   yLOG_value   ("close rc"  , rc);
-   --rce;  if (rc != 0) {
-      DEBUG_CONF   yLOG_note    ("failed to close file");
-      DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
-      return rce;
-   }
-   DEBUG_CONF   yLOG_note    ("successfully closed configuration file");
-   /*---(complete)-----------------------*/
-   DEBUG_TOPS  yLOG_exit    (__FUNCTION__);
-   return 0;
-}
-
 char             /* [------] post-argument program initialization ------------*/
 PROG_begin         (void)
 {
@@ -580,14 +446,12 @@ PROG_end           (void)
    DEBUG_RPTG   yLOG_value   ("n_audio"   , my.n_audio);
    DEBUG_RPTG   yLOG_value   ("n_video"   , my.n_video);
    DEBUG_RPTG   yLOG_value   ("n_image"   , my.n_image);
-   DEBUG_RPTG   yLOG_value   ("n_text"    , my.n_text);
-   DEBUG_RPTG   yLOG_value   ("n_progs"   , my.n_progs);
-   DEBUG_RPTG   yLOG_value   ("n_data"    , my.n_data);
-   DEBUG_RPTG   yLOG_value   ("n_apps"    , my.n_apps);
-   DEBUG_RPTG   yLOG_value   ("n_comp"    , my.n_comp);
-   DEBUG_RPTG   yLOG_value   ("n_model"   , my.n_model);
+   DEBUG_RPTG   yLOG_value   ("n_code"    , my.n_code);
+   DEBUG_RPTG   yLOG_value   ("n_ascii"   , my.n_ascii);
+   DEBUG_RPTG   yLOG_value   ("n_crypt"   , my.n_crypt);
+   DEBUG_RPTG   yLOG_value   ("n_prop"    , my.n_prop);
+   DEBUG_RPTG   yLOG_value   ("n_exec"    , my.n_exec);
    DEBUG_RPTG   yLOG_value   ("n_other"   , my.n_other);
-   DEBUG_RPTG   yLOG_value   ("n_unknown" , my.n_unknown);
    DEBUG_RPTG   yLOG_value   ("n_huh"     , my.n_huh);
    DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
    DEBUG_TOPS   yLOGS_end    ();
