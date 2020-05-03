@@ -8,7 +8,7 @@ int         n_nodir;
 tPTRS      *dir_stack   [MAX_DEPTH];
 tPTRS      *root_stack  [MAX_DEPTH];
 
-tMIME       mime        [MAX_MIME];
+tMIME       g_mime      [MAX_MIME];
 int         n_mime      = 0;
 
 tPTRS     *h_ptrs;
@@ -17,32 +17,69 @@ int        n_ptrs;
 int        n_ptrs_ever;
 
 
+int     g_target  =    0;
+int     g_looked  =    0;
+int     g_matched =    0;
+tENTRY *g_found   = NULL;
+char    g_path    [LEN_RECD] = "";
+
 
 /*====================------------------------------------====================*/
-/*===----                         program level                        ----===*/
+/*===----                       small support                          ----===*/
 /*====================------------------------------------====================*/
-static void      o___PROGRAM_________________o (void) {;}
+static void      o___SUPPORT_________________o (void) {;}
 
-char         /*===[[ initialize data structures ]]========[ ------ [ ------ ]=*/
-ENTRY_init              (void)
-{
+char         /*===[[ wipe a data payload ]]===============[ ------ [ ------ ]=*/
+ENTRY__wipe             (tPTRS *a_curr)
+{  /*---(local variables)--+-----------+-*/
+   char        rce         = -10;           /* return code for errors         */
+   tENTRY     *x_data      = NULL;
+   /*---(defense)------------------------*/
+   --rce;  if (a_curr == NULL) return rce;
    /*---(header)-------------------------*/
-   DEBUG_ENVI   yLOG_senter  (__FUNCTION__);
-   /*---(pointers)-----------------------*/
-   h_ptrs             = NULL;
-   t_ptrs             = NULL;
-   n_ptrs             = 0;
-   n_ptrs_ever        = 0;
-   n_mime             = 0;
-   MIME_read ();
+   DEBUG_ENVI_M yLOG_senter  (__FUNCTION__);
+   DEBUG_ENVI_M yLOG_spoint  (a_curr);
+   /*---(ground pointers)----------------*/
+   a_curr->parent     = NULL;
+   a_curr->nchild     = 0;
+   a_curr->c_head     = NULL;
+   a_curr->c_tail     = NULL;
+   a_curr->s_prev     = NULL;
+   a_curr->s_next     = NULL;
+   a_curr->m_prev     = NULL;
+   a_curr->m_next     = NULL;
+   /*---(wipe data)----------------------*/
+   x_data = a_curr->data;
+   /*---(clear types)--------------------*/
+   x_data->lvl        =   0;
+   x_data->type       = ENTRY_REG;
+   x_data->stype      = STYPE_NORMAL;
+   /*---(clear perms)--------------------*/
+   x_data->uid        =   0;
+   x_data->own        =   0;
+   x_data->gid        =   0;
+   x_data->grp        =   0;
+   x_data->oth        =   0;
+   x_data->super      = '-';
+   /*---(unique)-------------------------*/
+   x_data->drive      =   0;
+   x_data->inode      =  -1;
+   x_data->dnode      =  -1;
+   /*---(times)--------------------------*/
+   x_data->changed    =   0;
+   /*---(sizes)--------------------------*/
+   x_data->bytes      =   0;
+   x_data->cum        =   0;
+   x_data->size       =   0;
+   /*---(categorization)-----------------*/
+   x_data->cat        = MIME_HUH;
+   strlcpy (x_data->ext, "-", LEN_TERSE);
+   /*---(name)---------------------------*/
+   x_data->ascii      = '-';
+   x_data->len        =   0;
+   x_data->name [0]   = '\0';
    /*---(complete)-----------------------*/
-   DEBUG_ENVI   yLOG_sexit   (__FUNCTION__);
-   return 0;
-}
-
-char
-ENTRY_wrap              (void)
-{
+   DEBUG_ENVI_M yLOG_sexit   (__FUNCTION__);
    return 0;
 }
 
@@ -54,7 +91,7 @@ ENTRY_wrap              (void)
 static void      o___MALLOC__________________o (void) {;}
 
 char
-ENTRY_new               (tPTRS **a_new, tPTRS *a_parent)
+ENTRY__new              (tPTRS **a_new, tPTRS *a_parent, tDRIVE *a_drive)
 {  /*---(local variables)--+-----+-----+-*/
    char        rce         =  -10;
    tPTRS      *x_new       = NULL;          /* current entry                  */
@@ -64,6 +101,23 @@ ENTRY_new               (tPTRS **a_new, tPTRS *a_parent)
    DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
    /*---(prepare)------------------------*/
    if (a_new != NULL)  *a_new = NULL;
+   /*---(defence)------------------------*/
+   DEBUG_ENVI   yLOG_point   ("a_parent"  , a_parent);
+   DEBUG_ENVI   yLOG_point   ("a_drive"   , a_drive);
+   --rce;  if (a_parent == NULL && a_drive == NULL) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   --rce;  if (a_drive  != NULL) {
+      DEBUG_ENVI   yLOG_point   ("root"      , a_drive->root);
+      if (a_drive->root != NULL) {
+         DEBUG_ENVI   yLOG_note    ("drives root already assigned");
+         DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+         return rce;
+      }
+   } else {
+      DEBUG_ENVI   yLOG_info    ("parent"    , a_parent->data->name);
+   }
    /*---(create ptrs)--------------------*/
    DEBUG_ENVI   yLOG_note    ("malloc pointers");
    while (x_new == NULL) {
@@ -93,43 +147,50 @@ ENTRY_new               (tPTRS **a_new, tPTRS *a_parent)
    /*---(clean data)---------------------*/
    DEBUG_ENVI   yLOG_note    ("clean and hook up data payload");
    x_new->data  = x_data;
-   ENTRY__wipe (x_data);
+   ENTRY__wipe (x_new);
    /*---(hook to overall list)-----------*/
    DEBUG_ENVI   yLOG_note    ("hook to overall list");
-   x_new->next = NULL;
+   x_new->m_next = NULL;
    if (h_ptrs == NULL)  {
-      h_ptrs        = x_new;
-      x_new->prev  = NULL;
+      h_ptrs          = x_new;
+      x_new->m_prev   = NULL;
    } else {
-      t_ptrs->next  = x_new;
-      x_new->prev  = t_ptrs;
+      t_ptrs->m_next  = x_new;
+      x_new->m_prev   = t_ptrs;
    }
    t_ptrs = x_new;
    ++n_ptrs;
    ++n_ptrs_ever;
-   /*---(initialize children)------------*/
-   DEBUG_ENVI   yLOG_note    ("initialize children");
-   x_new->sib_head   = NULL;
-   x_new->sib_tail   = NULL;
-   x_new->nchildren  = 0;
-   x_new->sib_prev   = NULL;
-   x_new->sib_next   = NULL;
-   /*---(hook up to parent)--------------*/
-   DEBUG_ENVI   yLOG_note    ("hook to parent dir");
-   x_new->parent      = a_parent;
-   if (a_parent != NULL) {
-      if (a_parent->sib_head  == NULL) {
-         a_parent->sib_head           = x_new;
-         a_parent->sib_tail           = x_new;
-      } else {
-         x_new->sib_prev              = a_parent->sib_tail;
-         a_parent->sib_tail->sib_next = x_new;
-         a_parent->sib_tail           = x_new;
-      }
-      ++a_parent->nchildren;
-      x_new->data->dnode = a_parent->data->inode;
+   /*---(hook to drive)------------------*/
+   if (a_drive != NULL) {
+      a_drive->root  = x_new;
+      x_data->drive  = a_drive->ref;
    }
-   DEBUG_ENVI   yLOG_value   ("dnode"     , x_new->data->dnode);
+   /*---(hook to parent dir)-------------*/
+   if (a_parent != NULL) {
+      if (a_parent->c_head  == NULL) {
+         DEBUG_ENVI   yLOG_note    ("first child, add to front");
+         a_parent->c_head         = x_new;
+         a_parent->c_tail         = x_new;
+         a_parent->nchild         = 1;
+      } else {
+         DEBUG_ENVI   yLOG_note    ("append child, add to end");
+         x_new->s_prev            = a_parent->c_tail;
+         a_parent->c_tail->s_next = x_new;
+         a_parent->c_tail         = x_new;
+         ++(a_parent->nchild);
+      }
+      DEBUG_ENVI   yLOG_value   ("nchild"    , a_parent->nchild);
+      x_new->parent  = a_parent;
+      x_data->drive  = a_parent->data->drive;
+      x_data->lvl    = a_parent->data->lvl + 1;
+      x_data->dnode  = a_parent->data->inode;
+   } else {
+      DEBUG_ENVI   yLOG_note    ("root directory");
+      x_data->lvl    = 0;
+      x_data->dnode  = 0;
+   }
+   DEBUG_ENVI   yLOG_value   ("dnode"     , x_data->dnode);
    /*---(save back)----------------------*/
    if (a_new != NULL)  *a_new = x_new;
    /*---(complete)-----------------------*/
@@ -139,87 +200,160 @@ ENTRY_new               (tPTRS **a_new, tPTRS *a_parent)
 
 char         /*===[[ remove a single entry ]]=============[ ------ [ ------ ]=*/
 ENTRY__free             (tPTRS **a_ptrs)
-{  /*---(local variables)--+-----------+-*/
+{
+   /*---(local variables)--+-----------+-*/
    char        rce         =  -10;
    tPTRS      *x_curr      = NULL;
    tPTRS      *x_child     = NULL;
    tPTRS      *x_next      = NULL;
+   int         c           =    0;
    /*---(header)-------------------------*/
-   DEBUG_ENVI   yLOG_senter  (__FUNCTION__);
+   DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
    /*---(defense)------------------------*/
-   DEBUG_ENVI   yLOG_spoint  (a_ptrs);
+   DEBUG_ENVI   yLOG_point   ("a_ptrs"    , a_ptrs);
    --rce;  if (a_ptrs == NULL) {
-      DEBUG_ENVI   yLOG_sexitr  (__FUNCTION__, rce);
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_ENVI   yLOG_spoint  (*a_ptrs);
+   DEBUG_ENVI   yLOG_point   ("*a_ptrs"   , *a_ptrs);
    --rce;  if (*a_ptrs == NULL) {
-      DEBUG_ENVI   yLOG_sexitr  (__FUNCTION__, rce);
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    x_curr = *a_ptrs;
    /*---(free data)----------------------*/
-   DEBUG_ENVI   yLOG_snote   ("free data");
+   DEBUG_ENVI   yLOG_note    ("free data");
    if (x_curr->data != NULL)  free (x_curr->data);
    /*---(check children)-----------------*/
-   DEBUG_ENVI   yLOG_snote   ("free children");
-   x_child = x_curr->sib_head;
+   DEBUG_ENVI   yLOG_note    ("free children");
+   x_child = x_curr->c_head;
+   DEBUG_ENVI   yLOG_complex ("child"     , "%3dc, %3dn, %p", c, x_curr->nchild, x_child);
    while (x_child != NULL) {
-      x_next  = x_child->sib_next;
+      x_next  = x_child->s_next;
       ENTRY__free (&x_child);
+      DEBUG_ENVI   yLOG_point   ("x_child"   , x_child);
       x_child = x_next;
+      ++c;
+      DEBUG_ENVI   yLOG_complex ("child"     , "%3dc, %3dn, %p", c, x_curr->nchild, x_child);
    }
    /*---(unhook from siblings)-----------*/
+   DEBUG_ENVI   yLOG_point   ("parent"    , x_curr->parent);
    if (x_curr->parent != NULL) {
-      DEBUG_ENVI   yLOG_snote   ("out of sibs");
-      if (x_curr->sib_prev == NULL) {
-         if (x_curr->sib_next == NULL) {
-            x_curr->parent->sib_head   = NULL;
-            x_curr->parent->sib_tail   = NULL;
-            x_curr->parent->nchildren  = 0;
-         } else {
-            x_curr->sib_next->sib_prev = NULL;
-            x_curr->parent->sib_head   = x_curr->sib_next;
-            --(x_curr->parent->nchildren);
-         }
-      } else {
-         if (x_curr->sib_next == NULL) {
-            x_curr->sib_prev->sib_next = NULL;
-            x_curr->parent->sib_tail   = x_curr->sib_prev;
-            --(x_curr->parent->nchildren);
-         } else {
-            x_curr->sib_next->sib_prev = x_curr->sib_prev;
-            x_curr->sib_prev->sib_next = x_curr->sib_next;
-            --(x_curr->parent->nchildren);
-         }
-      }
+      DEBUG_ENVI   yLOG_note    ("out of sibs");
+      if (x_curr->s_next != NULL)   x_curr->s_next->s_prev = x_curr->s_prev;
+      else                          x_curr->parent->c_tail = x_curr->s_prev;
+      if (x_curr->s_prev != NULL)   x_curr->s_prev->s_next = x_curr->s_next;
+      else                          x_curr->parent->c_head = x_curr->s_next;
+      --(x_curr->parent->nchild);
+      x_curr->s_next = x_curr->s_prev = NULL;
    }
    /*---(unhook from overall)------------*/
-   DEBUG_ENVI   yLOG_snote   ("out of master");
-   if (x_curr->prev == NULL) {
-      if (x_curr->next == NULL) {
-         h_ptrs                     = NULL;
-         t_ptrs                     = NULL;
-         n_ptrs                     = 0;
-      } else {
-         x_curr->next->prev         = NULL;
-         h_ptrs                     = x_curr->next;
-         --n_ptrs;
-      }
-   } else {
-      if (x_curr->next == NULL) {
-         x_curr->prev->next         = NULL;
-         t_ptrs                     = x_curr->prev;
-         --n_ptrs;
-      } else {
-         x_curr->next->prev = x_curr->prev;
-         x_curr->prev->next = x_curr->next;
-         --n_ptrs;
-      }
-   }
+   DEBUG_ENVI   yLOG_note    ("out of master");
+   if (x_curr->m_next != NULL)   x_curr->m_next->m_prev = x_curr->m_prev;
+   else                          t_ptrs                 = x_curr->m_prev;
+   if (x_curr->m_prev != NULL)   x_curr->m_prev->m_next = x_curr->m_next;
+   else                          h_ptrs                 = x_curr->m_next;
+   x_curr->m_next = x_curr->m_prev = NULL;
+   --n_ptrs;
+   DEBUG_ENVI   yLOG_complex ("global"   , "%3d, head=%p, tail=%p", n_ptrs, h_ptrs, t_ptrs);
    /*---(ground pointer)-----------------*/
-   DEBUG_ENVI   yLOG_snote   ("ground");
+   DEBUG_ENVI   yLOG_note    ("ground");
+   free (x_curr);
    *a_ptrs = NULL;
+   DEBUG_ENVI   yLOG_point   ("*a_ptrs"   , *a_ptrs);
+   /*---(complete)-----------------------*/
+   DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                       simplifiers                            ----===*/
+/*====================------------------------------------====================*/
+static void      o___SIMPLIFY________________o (void) {;}
+
+char
+ENTRY_root     (tPTRS **a_new, tDRIVE *a_drive)
+{
+   char        rc          =    0;
+   DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
+   rc = ENTRY__new (a_new, NULL    , a_drive);
+   DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
+   return rc;
+}
+
+char
+ENTRY_fullroot (tPTRS **a_new, tDRIVE *a_drive)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   /*---(header)-------------------------*/
+   DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
+   /*---(create the entry)---------------*/
+   rc = ENTRY__new (a_new, NULL    , a_drive);
+   DEBUG_ENVI   yLOG_value   ("manual"    , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(name that entry)----------------*/
+   rc = ENTRY_manual    ((*a_new)->data, a_drive->mpoint, ENTRY_DIR, STYPE_NORMAL, MIME_DIR, "d_dir");
+   DEBUG_ENVI   yLOG_value   ("manual"    , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(populate statistics)------------*/
+   rc = ENTRY__populate ((*a_new), a_drive->mpoint);
+   DEBUG_ENVI   yLOG_value   ("populate"  , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
+   return rc;
+}
+
+char
+ENTRY_normal   (tPTRS **a_new, tPTRS *a_parent)
+{
+   char        rc          =    0;
+   DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
+   rc = ENTRY__new (a_new, a_parent, NULL);
+   DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
+   return rc;
+}
+
+char
+ENTRY_submount (tPTRS **a_new, tPTRS *a_parent, tDRIVE *a_drive)
+{
+   char        rc          =    0;
+   DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
+   return ENTRY__new (a_new, a_parent, a_drive);
+   DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
+   return rc;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                         program level                        ----===*/
+/*====================------------------------------------====================*/
+static void      o___PROGRAM_________________o (void) {;}
+
+char         /*===[[ initialize data structures ]]========[ ------ [ ------ ]=*/
+ENTRY_init              (void)
+{
+   /*---(header)-------------------------*/
+   DEBUG_ENVI   yLOG_senter  (__FUNCTION__);
+   /*---(pointers)-----------------------*/
+   h_ptrs             = NULL;
+   t_ptrs             = NULL;
+   n_ptrs             = 0;
+   n_ptrs_ever        = 0;
    /*---(complete)-----------------------*/
    DEBUG_ENVI   yLOG_sexit   (__FUNCTION__);
    return 0;
@@ -228,124 +362,49 @@ ENTRY__free             (tPTRS **a_ptrs)
 char         /*===[[ remove full data structure ]]========[ ------ [ ------ ]=*/
 ENTRY__purge       (void)
 {  /*---(local variables)--+-----------+-*/
-   tENTRY     *x_curr      = NULL;
+   tPTRS      *x_curr      = NULL;
    /*---(header)-------------------------*/
-   DEBUG_ENVI   yLOG_senter  (__FUNCTION__);
+   DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
    /*---(pointers)-----------------------*/
-   x_curr = h_ptrs;
-   while (x_curr != NULL) {
-      ENTRY__free (&x_curr);
-      x_curr = h_ptrs;
-   }
+   DEBUG_ENVI   yLOG_point   ("head/root" , h_ptrs);
+   ENTRY__free (&h_ptrs);
+   DEBUG_ENVI   yLOG_point   ("h_ptrs"    , h_ptrs);
    /*---(complete)-----------------------*/
-   DEBUG_ENVI   yLOG_sexit   (__FUNCTION__);
+   DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
 char         /*===[[ remove full data structure ]]========[ ------ [ ------ ]=*/
 ENTRY__dirclear    (tPTRS *a_from)
 {  /*---(local variables)--+-----------+-*/
-   tENTRY     *x_curr      = NULL;
+   tPTRS      *x_curr      = NULL;
    /*---(header)-------------------------*/
    DEBUG_ENVI   yLOG_senter  (__FUNCTION__);
    /*---(pointers)-----------------------*/
-   x_curr = a_from->sib_head;
+   x_curr = a_from->c_head;
    while (x_curr != NULL) {
       ENTRY__free (&x_curr);
-      x_curr = a_from->sib_head;
+      DEBUG_ENVI   yLOG_point   ("x_curr"    , x_curr);
+      x_curr = a_from->c_head;
    }
    /*---(complete)-----------------------*/
    DEBUG_ENVI   yLOG_sexit   (__FUNCTION__);
    return 0;
 }
 
-char         /*===[[ wipe a data payload ]]===============[ ------ [ ------ ]=*/
-ENTRY__wipe             (tENTRY *a_curr)
-{  /*---(local variables)--+-----------+-*/
-   char        rce         = -10;           /* return code for errors         */
-   /*---(defense)------------------------*/
-   --rce;  if (a_curr == NULL) return rce;
-   /*---(header)-------------------------*/
-   DEBUG_ENVI_M yLOG_senter  (__FUNCTION__);
-   DEBUG_ENVI_M yLOG_spoint  (a_curr);
-   /*---(clear types)--------------------*/
-   a_curr->type       = ENTRY_REG;
-   a_curr->stype      = '.';
-   /*---(clear perms)--------------------*/
-   a_curr->uid        =   0;
-   a_curr->own        =   0;
-   a_curr->gid        =   0;
-   a_curr->grp        =   0;
-   a_curr->oth        =   0;
-   a_curr->super      = '-';
-   /*---(unique)-------------------------*/
-   a_curr->drive      =   0;
-   a_curr->inode      =  -1;
-   a_curr->dnode      =  -1;
-   /*---(times)--------------------------*/
-   a_curr->changed    =   0;
-   /*---(sizes)--------------------------*/
-   a_curr->bytes      =   0;
-   a_curr->cum        =   0;
-   a_curr->size       =   0;
-   /*---(categorization)-----------------*/
-   a_curr->cat        = MIME_HUH;
-   strlcpy (a_curr->ext, "-", LEN_TERSE);
-   /*---(name)---------------------------*/
-   a_curr->level      =   0;
-   a_curr->ascii      = '-';
-   a_curr->len        =   0;
-   a_curr->name [0]   = '\0';
-   /*---(complete)-----------------------*/
-   DEBUG_ENVI_M yLOG_sexit   (__FUNCTION__);
+char
+ENTRY_wrap              (void)
+{
+   ENTRY__purge ();
    return 0;
 }
 
-char          /*===[[ find a directory entry ]]============[ ------ [ ------ ]=*/
-ENTRY__find             (tPTRS *a_dir, char *a_name, tPTRS **a_found)
-{  /*---(local variables)--+-----------+-*/
-   char        rce         = -10;           /* return code for errors         */
-   tPTRS      *x_ptrs      = NULL;          /* current entry                  */
-   /*---(header)-------------------------*/
-   DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
-   DEBUG_ENVI   yLOG_complex ("args"      , "%p, %p, %p", a_dir, a_name, a_found);
-   /*---(prepare)------------------------*/
-   if (a_found != NULL)  *a_found = NULL;
-   /*---(defenses)-----------------------*/
-   --rce;  if (a_dir  == NULL) {
-      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_ENVI   yLOG_info    ("dir_name"  , a_dir->data->name);
-   --rce;  if (a_name == NULL) {
-      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_ENVI   yLOG_info    ("a_name"    , a_name);
-   --rce;  if (a_found == NULL) {
-      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(cycle children)-----------------*/
-   x_ptrs = a_dir->sib_head;
-   --rce;  while (x_ptrs != NULL) {
-      /*> DEBUG_ENVI   yLOG_point   ("x_ptrs"    , x_ptrs);                           <* 
-       *> DEBUG_ENVI   yLOG_point   ("data"      , x_ptrs->data);                     <*/
-      if (x_ptrs->data != NULL && x_ptrs->data->name != NULL) {
-         /*> DEBUG_ENVI   yLOG_point   ("name"      , x_ptrs->data->name);            <*/
-         if (strcmp (a_name, x_ptrs->data->name) == 0) {
-            DEBUG_ENVI   yLOG_note    ("found it");
-            *a_found = x_ptrs;
-            DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
-            return 1;
-         }
-      }
-      x_ptrs = x_ptrs->sib_next;
-   }
-   /*---(complete)-----------------------*/
-   DEBUG_ENVI   yLOG_exit   (__FUNCTION__);
-   return 0;
-}
+
+
+/*====================------------------------------------====================*/
+/*===----                      verify/collect                          ----===*/
+/*====================------------------------------------====================*/
+static void      o___CHECKS__________________o (void) {;}
 
 char
 ENTRY__name_check       (cchar *a_name, char *a_warn, uchar *a_len)
@@ -427,7 +486,7 @@ ENTRY__type_check       (cchar *a_name, tSTAT *a_stat, uchar *a_stype, uchar *a_
    tSTAT       x_stat;
    tSTAT       x_stat_link;
    char        x_type      = ENTRY_REG;
-   char        x_link      = STYPE_NORM;
+   char        x_link      = STYPE_NORMAL;
    /*---(header)-------------------------*/
    DEBUG_ENVI   yLOG_senter  (__FUNCTION__);
    /*---(defense)------------------------*/
@@ -554,7 +613,7 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
       case   ENTRY_SOCK   :  p = EXT_SLINK;      break;
       default             :  p = EXT_ULINK;      break;
       }
-      rc = MIME_find_cat (p, &x_index, &x_cat, a_bytes);
+      rc = MIME_find_by_ext (p, &x_index, &x_cat, a_bytes);
    } else if (strchr (ENTRY_DEVICES, a_type) != NULL) {
       DEBUG_ENVI   yLOG_note    ("device entry");
       switch (a_type) {
@@ -564,11 +623,11 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
       case   ENTRY_FIFO   :  p = EXT_FIFO;       break;
       case   ENTRY_SOCK   :  p = EXT_SOCK;       break;
       }
-      rc = MIME_find_cat (p, &x_index, &x_cat, a_bytes);
+      rc = MIME_find_by_ext (p, &x_index, &x_cat, a_bytes);
    } else if (x_name [x_len - 1] == '~') {
       DEBUG_ENVI   yLOG_note    ("backup/cache entry");
       p  = EXT_BACKUP;
-      rc = MIME_find_cat (p, &x_index, &x_cat, a_bytes);
+      rc = MIME_find_by_ext (p, &x_index, &x_cat, a_bytes);
    }
    /*---(get suffix extention)------------*/
    else {
@@ -584,7 +643,7 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
          DEBUG_RPTG   yLOG_complex ("testing"   , "%d[%s]", x_len, p + 1);
          if (x_len <= 7) {
             DEBUG_RPTG   yLOG_snote   (p + 1);
-            rc = MIME_find_cat (p + 1, &x_index, &x_cat, a_bytes);
+            rc = MIME_find_by_ext (p + 1, &x_index, &x_cat, a_bytes);
             DEBUG_RPTG   yLOG_value   ("find"      , rc);
             if (rc == 0) {
                ++p;
@@ -602,7 +661,7 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
          DEBUG_ENVI   yLOG_note    ("executable entry");
          if (p == EXT_RLINK)  p  = EXT_ELINK;
          else                 p  = EXT_EXEC;
-         rc = MIME_find_cat (p, &x_index, &x_cat, a_bytes);
+         rc = MIME_find_by_ext (p, &x_index, &x_cat, a_bytes);
       }
    }
    /*---(file the rest properly)----------*/
@@ -610,15 +669,15 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
       if (strncmp (a_full, "/etc/", 5) == 0) {
          DEBUG_ENVI   yLOG_note    ("configuration entry");
          p  = EXT_CONF;
-         rc = MIME_find_cat (p, &x_index, &x_cat, a_bytes);
+         rc = MIME_find_by_ext (p, &x_index, &x_cat, a_bytes);
       } else if (x_len > 0 && x_len <= 7) {
          DEBUG_ENVI   yLOG_note    ("other entry");
          p  = EXT_UNKNOWN;
-         rc = MIME_find_cat (p, &x_index, &x_cat, a_bytes);
+         rc = MIME_find_by_ext (p, &x_index, &x_cat, a_bytes);
       } else {
          DEBUG_ENVI   yLOG_note    ("unknown entry");
          p  = EXT_MYSTERY;
-         rc = MIME_find_cat (p, &x_index, &x_cat, a_bytes);
+         rc = MIME_find_by_ext (p, &x_index, &x_cat, a_bytes);
       }
    }
    /*---(save_back)----------------------*/
@@ -632,6 +691,13 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
    return rc;
 }
+
+
+
+/*====================------------------------------------====================*/
+/*===----                       populate entries                       ----===*/
+/*====================------------------------------------====================*/
+static void      o___POPULATE________________o (void) {;}
 
 int          /*===[[ create entry statistics ]]===========[ ------ [ ------ ]=*/
 ENTRY__populate         (tPTRS *a_ptrs, char *a_full)
@@ -709,6 +775,7 @@ ENTRY__populate         (tPTRS *a_ptrs, char *a_full)
    DEBUG_ENVI   yLOG_value   ("bytes"     , x_data->bytes);
    sprintf (s, "%d", st.st_size);
    x_data->size  = strlen (s);
+   if (st.st_size < 1)  x_data->size = 0;
    DEBUG_ENVI   yLOG_value   ("exponent"  , x_data->size);
    /*---(mime category)-------------------*/
    rc = ENTRY__mime_check (a_full, x_data->name, &st, x_data->stype, x_data->type, x_data->ext, &(x_data->cat), x_data->bytes);
@@ -716,15 +783,106 @@ ENTRY__populate         (tPTRS *a_ptrs, char *a_full)
       DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
       return rce;
    }
-   ++(mime [0].seen);
-   mime [0].sbytes += x_data->bytes;
    /*---(complete)------------------------*/
    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
    return rc;
 }
 
 char
-ENTRY__level_prep       (int a_level, tPTRS *a_parent, char *a_path, char *a_newpath)
+ENTRY_manual       (tENTRY *a_entry, char *a_name, char a_type, char a_stype, char a_cat, char *a_ext)
+{
+   /*---(locals)-----------+-----------+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   tDRIVE     *x_drive     = NULL;
+   /*---(header)-------------------------*/
+   DEBUG_INPT   yLOG_enter   (__FUNCTION__);
+   /*---(defense)------------------------*/
+   DEBUG_INPT   yLOG_point   ("a_entry"   , a_entry);
+   --rce;  if (a_entry == NULL) {
+      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(populate)-----------------------*/
+   DEBUG_INPT   yLOG_point   ("a_name"    , a_name);
+   --rce;  if (a_name == NULL || strlen (a_name) < 1) {
+      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_INPT   yLOG_info    ("a_name"    , a_name);
+   strlcpy (a_entry->name, a_name, LEN_HUND);
+   a_entry->len = strlen (a_name);
+   DEBUG_INPT   yLOG_value   ("a_type"    , a_type);
+   if (a_type  !=  0)    a_entry->type  = a_type;
+   DEBUG_INPT   yLOG_value   ("a_stype"   , a_stype);
+   if (a_stype !=  0)    a_entry->stype = a_stype;
+   DEBUG_INPT   yLOG_value   ("a_cat"     , a_cat);
+   if (a_cat   !=  0)    a_entry->cat = a_cat;
+   DEBUG_INPT   yLOG_point   ("a_ext"     , a_ext);
+   if (a_ext != NULL) {
+      strlcpy (a_entry->ext , a_ext, LEN_TERSE);
+      DEBUG_INPT   yLOG_info    ("a_ext"     , a_ext);
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_INPT   yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                     act on whole level                       ----===*/
+/*====================------------------------------------====================*/
+static void      o___LEVEL___________________o (void) {;}
+
+char          /*===[[ find a directory entry ]]============[ ------ [ ------ ]=*/
+ENTRY__find             (tPTRS *a_dir, char *a_name, tPTRS **a_found)
+{  /*---(local variables)--+-----------+-*/
+   char        rce         = -10;           /* return code for errors         */
+   tPTRS      *x_ptrs      = NULL;          /* current entry                  */
+   /*---(header)-------------------------*/
+   DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
+   DEBUG_ENVI   yLOG_complex ("args"      , "%p, %p, %p", a_dir, a_name, a_found);
+   /*---(prepare)------------------------*/
+   if (a_found != NULL)  *a_found = NULL;
+   /*---(defenses)-----------------------*/
+   --rce;  if (a_dir  == NULL) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_ENVI   yLOG_info    ("dir_name"  , a_dir->data->name);
+   --rce;  if (a_name == NULL) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_ENVI   yLOG_info    ("a_name"    , a_name);
+   --rce;  if (a_found == NULL) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(cycle children)-----------------*/
+   x_ptrs = a_dir->c_head;
+   --rce;  while (x_ptrs != NULL) {
+      /*> DEBUG_ENVI   yLOG_point   ("x_ptrs"    , x_ptrs);                           <* 
+       *> DEBUG_ENVI   yLOG_point   ("data"      , x_ptrs->data);                     <*/
+      if (x_ptrs->data != NULL && x_ptrs->data->name != NULL) {
+         /*> DEBUG_ENVI   yLOG_point   ("name"      , x_ptrs->data->name);            <*/
+         if (strcmp (a_name, x_ptrs->data->name) == 0) {
+            DEBUG_ENVI   yLOG_note    ("found it");
+            *a_found = x_ptrs;
+            DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
+            return 1;
+         }
+      }
+      x_ptrs = x_ptrs->s_next;
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_ENVI   yLOG_exit   (__FUNCTION__);
+   return 0;
+}
+
+char
+ENTRY__level_prep       (tPTRS *a_parent, char *a_path, char *a_newpath)
 {  /*---(local variables)--+-----+-----+-*/
    char        rce         =  -10;
    tENTRY     *x_dir       = NULL;
@@ -733,15 +891,10 @@ ENTRY__level_prep       (int a_level, tPTRS *a_parent, char *a_path, char *a_new
    int         i           =    0;
    /*---(header)-------------------------*/
    DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
-   DEBUG_ENVI   yLOG_complex ("args"      , "%2d, %p, %p, %p", a_level, a_parent, a_path, a_newpath);
+   DEBUG_ENVI   yLOG_complex ("args"      , "%p, %p, %p", a_parent, a_path, a_newpath);
    /*---(defaults)-----------------------*/
    if (a_newpath != NULL)  strlcpy (a_newpath, "", LEN_PATH);
    /*---(defense)------------------------*/
-   DEBUG_ENVI   yLOG_value   ("maxlevel"  , my.maxlevel);
-   --rce;  if (a_level < 0 || a_level >  my.maxlevel) {
-      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
    --rce;  if (a_parent == NULL) {
       DEBUG_ENVI   yLOG_exitr    (__FUNCTION__, rce);
       return rce;
@@ -752,6 +905,12 @@ ENTRY__level_prep       (int a_level, tPTRS *a_parent, char *a_path, char *a_new
       return rce;
    }
    x_dir = a_parent->data;
+   DEBUG_ENVI   yLOG_value   ("maxlevel"  , my.maxlevel);
+   DEBUG_ENVI   yLOG_value   ("lvl"       , x_dir->lvl);
+   --rce;  if (x_dir->lvl < 0 || x_dir->lvl >  my.maxlevel) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
    DEBUG_ENVI   yLOG_point   ("dir_name"  , x_dir->name);
    --rce;  if (x_dir->name == NULL) {
       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
@@ -764,7 +923,7 @@ ENTRY__level_prep       (int a_level, tPTRS *a_parent, char *a_path, char *a_new
       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (a_path == NULL) {
+   --rce;  if (x_dir->lvl != 0 && a_path == NULL) {
       DEBUG_ENVI   yLOG_exitr    (__FUNCTION__, rce);
       return rce;
    }
@@ -773,9 +932,14 @@ ENTRY__level_prep       (int a_level, tPTRS *a_parent, char *a_path, char *a_new
       return rce;
    }
    /*---(name directory)-----------------*/
-   if      (a_level == 0)  sprintf (x_path, "%s"   , x_dir->name);
-   else if (a_level == 1)  sprintf (x_path, "/%s"  , x_dir->name);
-   else                    sprintf (x_path, "%s/%s", a_path, x_dir->name);
+   DEBUG_ENVI   yLOG_info     ("parent"    , x_dir->name);
+   if      (x_dir->lvl == 0) {
+      DEBUG_ENVI   yLOG_note    ("root of this filesystem");
+      sprintf (x_path, "%s"  , x_dir->name);
+   } else {
+      DEBUG_ENVI   yLOG_note    ("below root");
+      sprintf (x_path, "%s/%s", a_path, x_dir->name);
+   }
    x_len = strlen (x_path);
    DEBUG_ENVI   yLOG_complex ("path"      , "%d[%s]", x_len, x_path);
    /*---(save back)-----------------------*/
@@ -786,24 +950,24 @@ ENTRY__level_prep       (int a_level, tPTRS *a_parent, char *a_path, char *a_new
 }
 
 char         /*===[[ gather entries in dir ]]=============[ ------ [ ------ ]=*/
-ENTRY__level_read       (int a_level, tPTRS *a_parent, char *a_path, char a_silent)
+ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
 {  /*---(local variables)--+-----------+-*/
-   char        rce         = -10;           /* return code for errors         */
-   int         rc          = 0;             /* generic return code            */
+   char        rce         =  -10;
+   int         rc          =    0;
+   int         rc2         =    0;
    DIR        *x_dir       = NULL;          /* directory pointer              */
    tDIRENT    *x_entry     = NULL;          /* directory entry                */
    tENTRY     *x_parent    = NULL;          /* directory data                 */
    tPTRS      *x_curr      = NULL;          /* current entry                  */
    tENTRY     *x_data      = NULL;          /* current entry                  */
-   int         rc2         = 0;             /* generic return code            */
-   int         i           = 0;             /* generic iterator               */
+   int         c           = 0;
    char        x_path      [LEN_PATH];
    char        x_full      [500];
    /*---(header)-------------------------*/
    DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
-   DEBUG_ENVI   yLOG_complex ("args"      , "%2d, %p, %p, %c", a_level, a_parent, a_path, a_silent);
+   DEBUG_ENVI   yLOG_complex ("args"      , "%p, %p, %c", a_parent, a_path, a_silent);
    /*---(defense)------------------------*/
-   rc = ENTRY__level_prep (a_level, a_parent, a_path, x_path);
+   rc = ENTRY__level_prep (a_parent, a_path, x_path);
    DEBUG_ENVI   yLOG_value   ("prep"      , rc);
    --rce;  if (rc < 0) {
       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
@@ -817,10 +981,11 @@ ENTRY__level_read       (int a_level, tPTRS *a_parent, char *a_path, char a_sile
       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (x_parent->stype == DIR_PASS || x_parent->stype == DIR_NEVER) {
+   --rce;  if (x_parent->stype == STYPE_PASS || x_parent->stype == STYPE_NEVER) {
       DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
       return 0;
    }
+   DEBUG_ENVI   yLOG_complex ("head child", "%s, %s, %dn, %dc", x_path, a_parent->data->name, a_parent->nchild, c);
    /*---(open directory)-----------------*/
    x_dir = opendir (x_path);
    --rce;  if (x_dir == NULL) {
@@ -845,30 +1010,35 @@ ENTRY__level_read       (int a_level, tPTRS *a_parent, char *a_path, char a_sile
       DEBUG_ENVI   yLOG_complex ("find"      , "%d, %p", rc, x_curr);
       /*---(create if required)----------*/
       if (x_curr == NULL) {
-         rc = ENTRY_new (&x_curr, a_parent);
+         rc = ENTRY_normal (&x_curr, a_parent);
          DEBUG_ENVI   yLOG_point   ("new"       , x_curr);
          if (x_curr == NULL)   continue;
       }
       x_data = x_curr->data;
+      ++c;
+      DEBUG_ENVI   yLOG_complex ("children"  , "%3dn, %3dc", a_parent->nchild, c);
       /*---(get name saved)--------------*/
       strncpy (x_data->name, x_entry->d_name, MAX_NAME - 1);
-      x_data->level = a_level;
+      x_data->lvl   = x_curr->parent->data->lvl + 1;
       x_data->drive = x_curr->parent->data->drive;
       /*---(get attributes)--------------*/
-      if (a_level == 1)  sprintf (x_full, "/%s"  , x_entry->d_name);
-      else               sprintf (x_full, "%s/%s", x_path, x_entry->d_name);
+      if (strcmp ("/", x_parent->name) == NULL) 
+         sprintf (x_full, "/%s"  , x_entry->d_name);
+      else
+         sprintf (x_full, "%s/%s", x_path, x_entry->d_name);
+      DEBUG_ENVI   yLOG_info    ("x_full"    , x_full);
       rc = ENTRY__populate (x_curr, x_full);
       DEBUG_ENVI   yLOG_value   ("populate"  , rc);
       if (rc < 0) continue;
       /*---(recurse directories)---------*/
       if (x_data->type == ENTRY_DIR) {
-         if        (x_data->stype == STYPE_LINK) {
+         if        (x_data->stype   == STYPE_LINK) {
             DEBUG_ENVI   yLOG_note    ("stop, do not recurse on symlink directories");
-         } else if (x_parent->stype == DIR_LAST) {
+         } else if (x_parent->stype == STYPE_LAST) {
             DEBUG_ENVI   yLOG_note    ("stop, do not recurse as this is dir_last");
          } else {
             DEBUG_ENVI   yLOG_note    ("found a sub-directory that needs exploring");
-            rc2 = ENTRY__level_read (a_level + 1, x_curr, x_path, a_silent);
+            rc2 = ENTRY__level_read (x_curr, x_path, a_silent);
             DEBUG_ENVI   yLOG_value   ("recurse"   , rc);
             if (rc2 < 0) {
                DEBUG_ENVI   yLOG_note    ("hit a dir_never, erase entry");
@@ -879,10 +1049,6 @@ ENTRY__level_read       (int a_level, tPTRS *a_parent, char *a_path, char a_sile
       /*---(update cum)------------------*/
       DEBUG_ENVI   yLOG_note    ("add sizes and counts to mime");
       x_curr->parent->data->cum += x_data->cum;
-      ++(mime [rc].kept);
-      ++(mime [0 ].kept);
-      mime [rc].kbytes += x_curr->data->bytes;
-      mime [0 ].kbytes += x_curr->data->bytes;
       /*---(check silent)----------------*/
       DEBUG_ENVI   yLOG_note    ("check for silent treatment");
       if (a_silent == 'y') {
@@ -893,64 +1059,92 @@ ENTRY__level_read       (int a_level, tPTRS *a_parent, char *a_path, char a_sile
    }
    /*---(close)--------------------------*/
    closedir (x_dir);
+   DEBUG_ENVI   yLOG_complex ("tail child", "%s, %s, %dn, %dc", x_path, a_parent->data->name, a_parent->nchild, c);
    /*---(sort)---------------------------*/
-   rc = ySORT_troll (YSORT_NONE, YSORT_ASCEND, &(a_parent->sib_head), &(a_parent->sib_tail));
+   rc = ySORT_troll (YSORT_NONE, YSORT_ASCEND, &(a_parent->c_head), &(a_parent->c_tail));
    /*---(complete)-----------------------*/
    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
-tPTRS*       /*--(create base entry)----------------------[ ------ [ ------ ]-*/
-ENTRY__root             (tDRIVE *a_drive)
-{  /*---(local variables)--+-----------+-*/
-   int         rc          = 0;
-   tPTRS      *x_ptrs      = NULL;          /* current entry                  */
-   /*---(header)-------------------------*/
-   DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
-   /*---(create root)--------------------*/
-   rc = ENTRY_new (&x_ptrs, NULL);
-   DEBUG_ENVI   yLOG_point   ("root"      , x_ptrs);
-   /*---(assign drive)-------------------*/
-   strcpy (x_ptrs->data->name, a_drive->mpoint);
-   x_ptrs->data->drive = a_drive->ref;
-   /*---(fill in root entry)-------------*/
-   rc = ENTRY__populate (x_ptrs, my.mpoint);
-   if (rc > 0) {
-      ++(mime [rc].kept);
-      ++(mime [0 ].kept);
-      mime [rc].kbytes += x_ptrs->data->bytes;
-      mime [0 ].kbytes += x_ptrs->data->bytes;
-   }
-   /*---(complete)-----------------------*/
-   DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
-   return x_ptrs;
-}
 
-tPTRS*       /*--(create base entry)----------------------[ ------ [ ------ ]-*/
-DATA_empty         (tDRIVE *a_drive, tPTRS *a_root)
+
+/*====================------------------------------------====================*/
+/*===----                         main driver                          ----===*/
+/*====================------------------------------------====================*/
+static void      o___DRIVER__________________o (void) {;}
+
+/*> char         /+--(create base entry)----------------------[ ------ [ ------ ]-+/   <* 
+ *> ENTRY_root              (tPTRS **a_root, tDRIVE *a_drive)                          <* 
+ *> {  /+---(local variables)--+-----------+-+/                                        <* 
+ *>    char        rce         =  -10;                                                 <* 
+ *>    int         rc          =    0;                                                 <* 
+ *>    tPTRS      *x_root      = NULL;                                                 <* 
+ *>    /+---(header)-------------------------+/                                        <* 
+ *>    DEBUG_ENVI   yLOG_enter   (__FUNCTION__);                                       <* 
+ *>    /+---(defense)------------------------+/                                        <* 
+ *>    DEBUG_ENVI   yLOG_point   ("a_drive"   , a_drive);                              <* 
+ *>    --rce;  if (a_drive == NULL) {                                                  <* 
+ *>       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);                               <* 
+ *>       return rce;                                                                  <* 
+ *>    }                                                                               <* 
+ *>    DEBUG_ENVI   yLOG_point   ("a_root"    , a_root);                               <* 
+ *>    --rce;  if (a_root == NULL) {                                                   <* 
+ *>       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);                               <* 
+ *>       return rce;                                                                  <* 
+ *>    }                                                                               <* 
+ *>    /+---(create root)--------------------+/                                        <* 
+ *>    rc = ENTRY__new (&x_root, NULL, a_drive);                                        <* 
+ *>    DEBUG_ENVI   yLOG_value   ("new"       , rc);                                   <* 
+ *>    DEBUG_ENVI   yLOG_point   ("x_root"    , x_root);                               <* 
+ *>    --rce;  if (rc < 0 || x_root == NULL) {                                         <* 
+ *>       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);                               <* 
+ *>       return rce;                                                                  <* 
+ *>    }                                                                               <* 
+ *>    DEBUG_ENVI   yLOG_point   ("data"      , x_root->data);                         <* 
+ *>    --rce;  if (x_root->data == NULL) {                                             <* 
+ *>       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);                               <* 
+ *>       return rce;                                                                  <* 
+ *>    }                                                                               <* 
+ *>    /+---(fill in root entry)-------------+/                                        <* 
+ *>    rc = ENTRY__populate (x_root, a_drive->mpoint);                                 <* 
+ *>    DEBUG_ENVI   yLOG_value   ("populate"  , rc);                                   <* 
+ *>    --rce;  if (rc < 0) {                                                           <* 
+ *>       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);                               <* 
+ *>       return rce;                                                                  <* 
+ *>    }                                                                               <* 
+ *>    /+---(save back)----------------------+/                                        <* 
+ *>    *a_root = x_root;                                                               <* 
+ *>    /+---(complete)-----------------------+/                                        <* 
+ *>    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);                                       <* 
+ *>    return 0;                                                                       <* 
+ *> }                                                                                  <*/
+
+char         /*--(create base entry)----------------------[ ------ [ ------ ]-*/
+ENTRY_tail         (tDRIVE *a_drive, tPTRS *a_root)
 {  /*---(local variables)--+-----------+-*/
    char        rc          = 0;
    tPTRS      *x_ptrs      = NULL;          /* current entry                  */
    DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
-   rc = ENTRY_new (&x_ptrs, a_root);
+   rc = ENTRY_normal (&x_ptrs, a_root);
    DEBUG_ENVI   yLOG_point   ("(empty)"   , x_ptrs);
    DEBUG_ENVI   yLOG_point   ("parent"    , x_ptrs->parent);
    DEBUG_ENVI   yLOG_point   ("->data"    , x_ptrs->parent->data);
    DEBUG_ENVI   yLOG_info    ("->->name"  , x_ptrs->parent->data->name);
-   DEBUG_ENVI   yLOG_value   ("->->level" , x_ptrs->parent->data->level);
-   DEBUG_ENVI   yLOG_point   ("->tail"    , x_ptrs->parent->sib_tail);
-   DEBUG_ENVI   yLOG_point   ("->->data"  , x_ptrs->parent->sib_tail->data);
-   DEBUG_ENVI   yLOG_info    ("->->->name", x_ptrs->parent->sib_tail->data->name);
+   DEBUG_ENVI   yLOG_value   ("->->lvl"   , x_ptrs->parent->data->lvl);
+   DEBUG_ENVI   yLOG_point   ("->tail"    , x_ptrs->parent->c_tail);
+   DEBUG_ENVI   yLOG_point   ("->->data"  , x_ptrs->parent->c_tail->data);
+   DEBUG_ENVI   yLOG_info    ("->->->name", x_ptrs->parent->c_tail->data->name);
    strcpy (x_ptrs->data->name, "(empty)");
    x_ptrs->data->drive = a_drive->ref;
    x_ptrs->data->type  = ENTRY_DIR;
-   x_ptrs->data->level =   1;
+   x_ptrs->data->lvl   =   1;
    x_ptrs->data->bytes = a_drive->size - a_root->data->cum;
    x_ptrs->data->cum   = a_drive->size - a_root->data->cum;
    a_root->data->cum   = a_drive->size;
    /*---(complete)-----------------------*/
    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
-   return x_ptrs;
+   return 0;
 }
 
 tPTRS*       /*===[[ process a starting point ]]==========[ ------ [ ------ ]=*/
@@ -1024,6 +1218,109 @@ DATA_start         (
 
 
 /*====================------------------------------------====================*/
+/*===----                     data stucture walker                     ----===*/
+/*====================------------------------------------====================*/
+static void      o___WALKER__________________o (void) {;}
+
+ENTRY__walk_handler     (char a_trigger, tPTRS *a_curr, tPTRS *a_parent, char *a_path, char *a_full, void *a_callback)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rc          =    0;
+   tENTRY     *x_data      = NULL;
+   char      (*x_callback) (char a_serious, tENTRY *a_entry, char *a_path);
+   char        x_serious   =  '-';
+   /*---(prepare)------------------------*/
+   x_callback = a_callback;
+   x_data = a_curr->data;
+   if (x_data->lvl == 0)  sprintf (a_full, "%s"   ,         x_data->name);
+   else                   sprintf (a_full, "%s/%s", a_path, x_data->name);
+   /*---(callback)-----------------------*/
+   DEBUG_DATA   yLOG_complex ("entry"     , "%-20.20s, %2d, %p, %s, %s", x_data->name, x_data->lvl, a_parent, a_path, a_full);
+   switch (a_trigger) {
+   case '['  : 
+      x_serious = 'y';
+      break;
+   case '#' :
+      if (g_matched == g_target)  x_serious = 'y';
+      break;
+   }
+   rc = x_callback (x_serious, x_data, a_full);
+   ++g_looked;
+   /*---(check result)-------------------*/
+   if (x_serious == 'y' && rc == 1)  return 1;
+   if (rc == 1)  ++g_matched;
+   /*---(complete)-----------------------*/
+   return 0;
+}
+
+char
+ENTRY__walker            (char a_trigger, tPTRS *a_dir, char *a_path, void *a_callback)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   tPTRS      *x_curr      = NULL;
+   tENTRY     *x_data      = NULL;
+   char        x_path      [LEN_RECD];
+   char        x_full      [LEN_RECD];
+   int         c           =    0;
+   /*---(header)-------------------------*/
+   DEBUG_DATA   yLOG_enter   (__FUNCTION__);
+   DEBUG_DATA   yLOG_complex ("args"      , "%c, %2d, %s, %s", a_trigger, a_dir->data->lvl, a_dir->data->name, a_path);
+   /*---(check root as necessary)--------*/
+   if (a_dir == h_ptrs) {
+      rc = ENTRY__walk_handler (a_trigger, a_dir, NULL, a_path, x_full, a_callback);
+      DEBUG_DATA   yLOG_value   ("handler"   , rc);
+   }
+   /*---(spin through entries)-----------*/
+   DEBUG_DATA   yLOG_complex ("entry"     , "%3d of %3d for %s, %p", c, a_dir->nchild, a_dir->data->name, a_dir->c_head);
+   x_curr = a_dir->c_head;
+   while (x_curr != NULL && rc != 1) {
+      x_data = x_curr->data;
+      if (x_data != NULL) {
+         rc = ENTRY__walk_handler (a_trigger, x_curr, x_curr->parent, a_path, x_full, a_callback);
+         DEBUG_DATA   yLOG_value   ("handler"   , rc);
+         if (rc == 1) break;
+         /*---(dive on dirs)-------------*/
+         if (x_data->type == ENTRY_DIR && x_data->lvl < my.maxlevel) {
+            rc = RPTG_perms_dir (x_data->uid, x_data->own, x_data->gid, x_data->grp, x_data->oth);
+            if (rc > 0) {
+               rc = ENTRY__walker (a_trigger, x_curr, x_full, a_callback);
+               DEBUG_DATA   yLOG_value   ("walker"    , rc);
+               if (rc == 1) break;
+            }
+         }
+         /*---(done)---------------------*/
+      }
+      ++c;
+      DEBUG_DATA   yLOG_complex ("entry"     , "%3d of %3d for %s, %p", c, a_dir->nchild, a_dir->data->name, x_curr->s_next);
+      x_curr = x_curr->s_next;
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_DATA   yLOG_exit    (__FUNCTION__);
+   return rc;
+}
+
+char
+ENTRY_walk              (char a_trigger, void *a_callback)
+{
+   char        x_path      [LEN_RECD]  = "";
+   char        rc          =    0;
+   /*---(reset)--------------------------*/
+   g_looked   = 0;
+   g_matched  = 0;
+   g_found    = NULL;
+   strlcpy (g_path, "", LEN_RECD);
+   if (h_ptrs != NULL)  strlcpy (x_path, h_ptrs->data->name, LEN_RECD);
+   /*---(execute walk)-------------------*/
+   rc = ENTRY__walker (a_trigger, h_ptrs, x_path, a_callback);
+   /*---(complete)-----------------------*/
+   return rc;
+}
+
+
+
+/*====================------------------------------------====================*/
 /*===----                      unit testing                            ----===*/
 /*====================------------------------------------====================*/
 static void  o___UNIT_TEST_______o () { return; }
@@ -1041,8 +1338,8 @@ ENTRY__unit             (char *a_question, int n)
    strcpy  (unit_answer, "ENTRY            : question not understood");
    /*---(overall)------------------------*/
    if      (strcmp (a_question, "count"         ) == 0) {
-      x_curr = h_ptrs; while (x_curr != NULL) { ++x_fore; x_curr = x_curr->next; }
-      x_curr = t_ptrs; while (x_curr != NULL) { ++x_back; x_curr = x_curr->prev; }
+      x_curr = h_ptrs; while (x_curr != NULL) { ++x_fore; x_curr = x_curr->m_next; }
+      x_curr = t_ptrs; while (x_curr != NULL) { ++x_back; x_curr = x_curr->m_prev; }
       snprintf (unit_answer, LEN_FULL, "ENTRY count      : num=%4d, fore=%4d, back=%4d", n_ptrs, x_fore, x_back);
    }
    else if (strcmp (a_question, "entry"         ) == 0) {
@@ -1050,12 +1347,13 @@ ENTRY__unit             (char *a_question, int n)
       while (x_curr != NULL) {
          if (c == n)  break;
          ++c;
-         x_curr = x_curr->next;
+         x_curr = x_curr->m_next;
       }
       if (x_curr == NULL) 
          snprintf (unit_answer, LEN_FULL, "ENTRY entry (%2d) : no entry", n);
       else 
-         snprintf (unit_answer, LEN_FULL, "ENTRY entry (%2d) : %2d[%-20.20s]   %c %c   %c %-6.6s   %d %-10ld %-10ld   %ld", n,
+         snprintf (unit_answer, LEN_FULL, "ENTRY entry (%2d) : %-2d  %-2d %2d[%-20.20s]   %c %c   %c %-6.6s   %d %-6ld %-6ld   %ld", n,
+               x_curr->data->drive,x_curr->data->lvl  ,
                x_curr->data->len  , x_curr->data->name , 
                x_curr->data->type , x_curr->data->stype,
                x_curr->data->cat  , x_curr->data->ext  ,
@@ -1066,6 +1364,57 @@ ENTRY__unit             (char *a_question, int n)
    return unit_answer;
 }
 
+char
+TREE__unit_callback     (char a_serious, tENTRY *a_data, char *a_path)
+{
+   DEBUG_DATA   yLOG_complex ("entry"     , "%2d, %2d, %-20.20s", g_matched, g_target, a_data->name);
+   if (a_serious == 'y') {
+      g_found = a_data;
+      strlcpy (g_path, a_path, LEN_RECD);
+   }
+   return 1;
+}
+
+char*        /*-> unit test accessor -----------------[ light  [us.B60.2A3.F2]*/ /*-[01.0000.00#.#]-*/ /*-[--.---.---.--]-*/
+TREE__unit              (tPTRS *a_focus, char *a_question, int n)
+{
+   /*---(locals)-------------------------*/
+   char        rc          =    0;
+   tPTRS      *x_curr      = NULL;
+   short       x_fore      =    0;
+   short       x_back      =    0;
+   short       c           =    0;
+   char        t           [LEN_LABEL] = "";
+   /*---(parse location)-----------------*/
+   strcpy  (unit_answer, "TREE             : question not understood");
+   /*---(overall)------------------------*/
+   if      (strcmp (a_question, "nchild"        ) == 0) {
+      if (a_focus == NULL) {
+         snprintf (unit_answer, LEN_FULL, "TREE nchild      : no such parent");
+      } else {
+         x_curr = a_focus->c_head; while (x_curr != NULL) { ++x_fore; x_curr = x_curr->s_next; }
+         x_curr = a_focus->c_tail; while (x_curr != NULL) { ++x_back; x_curr = x_curr->s_prev; }
+         if (a_focus->nchild == 0) {
+            snprintf (unit_answer, LEN_FULL, "TREE nchild      : %2dn, %2df, %2db    [%-20s] [%-20s]", a_focus->nchild, x_fore, x_back, "-", "-");
+         } else {
+            snprintf (unit_answer, LEN_FULL, "TREE nchild      : %2dn, %2df, %2db    [%-20s] [%-20s]", a_focus->nchild, x_fore, x_back, a_focus->c_head->data->name, a_focus->c_tail->data->name);
+         }
+      }
+   }
+   else if (strcmp (a_question, "walk"          ) == 0) {
+      g_target = n;
+      rc = ENTRY_walk ('#', TREE__unit_callback);
+      if (rc < 1)   snprintf (unit_answer, LEN_FULL, "TREE walk   (%2d) : no such entry", n);
+      else          snprintf (unit_answer, LEN_FULL, "TREE walk   (%2d) : %-2d  %-2d %2d[%-20.20s]   %c %c   %c %-6.6s   [%.40s]", n,
+            g_found->drive, g_found->lvl  ,
+            g_found->len  , g_found->name , 
+            g_found->type , g_found->stype,
+            g_found->cat  , g_found->ext  ,
+            g_path);
+   }
+   /*---(complete)-----------------------*/
+   return unit_answer;
+}
 
 
 

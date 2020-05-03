@@ -24,8 +24,8 @@
 
 #define     P_VERMAJOR  "1.--, first major version in production"
 #define     P_VERMINOR  "1.1-, adding extensive unit testing"
-#define     P_VERNUM    "1.1c"
-#define     P_VERTXT    "fixed and tested entry functions, except starts"
+#define     P_VERNUM    "1.1d"
+#define     P_VERTXT    "filters and permission/access in place and unit tested"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -205,6 +205,7 @@
 #include    <string.h>       /* C_ANSI (34) strcpy, strchr, strcmp, strtok    */
 #include    <stdlib.h>       /* C_ANSI (81) exit, system, atoi, rand, malloc  */
 #include    <unistd.h>       /* LINUX  (82) getuid, chown, sleep, fork, chdir */
+#include    <errno.h>        /* LINUX  (--) errno                             */
 
 /*---(filesystems)--------------*/
 #include    <dirent.h>       /* POSIX  (11) opendir, readdir, alphasort       */
@@ -223,13 +224,16 @@
 #include    <yLOG.h>         /* CUSTOM : heatherly program logging            */
 #include    <ySTR.h>         /* CUSTOM : heatherly string handling            */
 #include    <ySORT.h>        /* CUSTOM : heatherly sorting and searching      */
+#include    <yREGEX.h>       /* CUSTOM : heatherly regular expressions        */
 
 
 
 
 /*---(struct typedefs)-------------------*/
+/*---(library simplifications)---------*/
 typedef struct dirent    tDIRENT;
 typedef struct FILE      tFILE;
+typedef struct tm        tTIME;
 typedef struct stat      tSTAT;
 
 typedef unsigned char    uchar;
@@ -237,6 +241,9 @@ typedef unsigned short   ushort;
 typedef long long        llong;
 
 
+typedef     struct     cDRIVE    tDRIVE;
+typedef     struct     cPTRS     tPTRS;
+typedef     struct     cENTRY    tENTRY;
 
 
 
@@ -253,7 +260,6 @@ typedef long long        llong;
 
 
 
-typedef     struct     cDRIVE    tDRIVE;
 struct cDRIVE {
    uchar       ref;
    char        host        [LEN_LABEL];
@@ -262,36 +268,35 @@ struct cDRIVE {
    char        mpoint      [LEN_FULL];
    char        type        [LEN_LABEL];
    llong       size;
-   int         written;                /* dir entry was written on            */
-   tDRIVE     *prev;
-   tDRIVE     *next;
+   int         written;                     /* dir entry was written on       */
+   tDRIVE     *m_prev;                      /* master list                    */
+   tDRIVE     *m_next;                      /* master list                    */
+   tENTRY     *root;                        /* root of mount poinet           */
 };
-/*> extern      tDRIVE     drives       [10];                                         <*/
 extern      tDRIVE    *h_drive;
 extern      tDRIVE    *t_drive;
 extern      short      n_drive;
 extern      short      u_drive;
 
 
+#define       ENTRY_REG      '-'
 #define       ENTRY_DIR      'd'
 #define       ENTRY_CDEV     'c'
 #define       ENTRY_BDEV     'b'
 #define       ENTRY_FIFO     'f'
 #define       ENTRY_SOCK     's'
-#define       ENTRY_REG      '-'
 #define       ENTRY_LINK     'l'
 #define       ENTRY_HUH      '?'
 #define       ENTRY_DEVICES  "dcbfs"
+#define       ENTRY_ALL      "-dcbfsl?"
+#define       ENTRY_OPTIONS  " --reg --dir --cdev --bdev --fifo --sock --link --unknown "
 
-#define       STYPE_NORM     '.'
+#define       STYPE_NORMAL   '-'
 #define       STYPE_LINK     '>'
-
-#define       DIR_NORMAL     '-'
-#define       DIR_SILENT     '~'
-#define       DIR_PASS       '('
-#define       DIR_LAST       ')'
-#define       DIR_NEVER      'X'
-#define       DIR_SYMLINK    '@'
+#define       STYPE_SILENT   '~'
+#define       STYPE_PASS     '('
+#define       STYPE_LAST     ')'
+#define       STYPE_NEVER    'X'
 
 #define       ASCII_BASIC    '-'
 #define       ASCII_UPPER    'A'
@@ -299,6 +304,8 @@ extern      short      u_drive;
 #define       ASCII_EXTEND   '#'
 #define       ASCII_SPACE    '>'
 #define       ASCII_CRAZY    'X'
+#define       ASCII_ALL      "-A+#>X"
+#define       ASCII_OPTIONS  " --upper --punct --extend --space --crazy --badname "
 
 #define       EXT_DIR        "d_dir"
 #define       EXT_CONF       "t_conf"
@@ -319,11 +326,17 @@ extern      short      u_drive;
 #define       EXT_UNKNOWN    "u_ext"
 #define       EXT_MYSTERY    "u_none"
 
-typedef     struct     cENTRY    tENTRY;
+#define       SIZES_ALL      "0123456789abcdefghi"
+#define       SIZES_OPTIONS  " --zb --sb --kb --mb --gb --tb --pb "
+
+#define       AGES_ALL       "jdwmqya"
+#define       AGES_OPTIONS   " --just --days --week --month --quarter --year --ancient "
+
 struct cENTRY {
    /*---(types)--------------------------*/
-   char        type;                   /* dir entry type                      */
-   char        stype;                  /* dir entry link/blocked              */
+   uchar       lvl;                    /* level/depth in tree                 */
+   char        type;                   /* entry type                          */
+   char        stype;                  /* entry link/blocked                  */
    /*---(perms)--------------------------*/
    ushort      uid;                    /* dir entry user id                   */
    char        own;                    /* dir entry permissions for user      */
@@ -345,26 +358,25 @@ struct cENTRY {
    char        cat;                    /* mime-like category                  */
    char        ext         [LEN_TERSE];/* mime-like extension                 */
    /*---(name)---------------------------*/
-   char        level;                  /* recursion level of entry            */
    uchar       ascii;                  /* quality of name                     */
    uchar       len;                    /* length of name                      */
    char        name        [LEN_HUND]; /* name                                */
 };
 
-typedef     struct     cPTRS     tPTRS;
 struct cPTRS {
    /*---(payload)------------------------*/
    tENTRY      *data;
-   /*---(parent/child connection)--------*/
+   /*---(parent connection)--------------*/
    tPTRS      *parent;                 /* actual containing dir entry         */
-   tPTRS      *sib_head;               /* first entry under a directory       */
-   tPTRS      *sib_tail;               /* last entry under a directory        */
-   tPTRS      *sib_next;               /* directory's doublly linked list     */
-   tPTRS      *sib_prev;               /* directory's doublly linked list     */
-   int         nchildren;              /* number of entries in directory      */
+   tPTRS      *s_next;                 /* siblings under same parent          */
+   tPTRS      *s_prev;                 /* siblings under same parent          */
+   /*---(child connections)--------------*/
+   tPTRS      *c_head;                 /* first entry under a directory       */
+   tPTRS      *c_tail;                 /* last entry under a directory        */
+   int         nchild;                 /* number of entries in directory      */
    /*---(oveall connection)--------------*/
-   tPTRS      *next;                   /* overall doublly linked list         */
-   tPTRS      *prev;                   /* overall doublly linked list         */
+   tPTRS      *m_next;                 /* master list of entries             */
+   tPTRS      *m_prev;                 /* master list of entries              */
    /*---(done)---------------------------*/
 };
 extern      tPTRS      *h_ptrs;
@@ -412,6 +424,9 @@ struct cBUCKET {
 #define     MIME_TEMP        'z'
 #define     MIME_OTHER       'u'
 #define     MIME_HUH         '?'
+#define     MIME_ALL         "avistbcpxdzu?"
+#define     MIME_OPTIONS     " --audio --video --image --source --text --base --crypt --prop --exec --dir --temp --other --huh "
+
 
 
 #define     MAX_MIME      500
@@ -428,7 +443,7 @@ struct cMIME {
    int         found;
    llong       fbytes;
 };
-extern      tMIME       mime [MAX_MIME];
+extern      tMIME       g_mime [MAX_MIME];
 extern      int         n_mime;
 
 
@@ -451,6 +466,12 @@ struct cGLOBAL {
    char        regex_rc;               /* regex return code                   */
    char        count;                  /* count rather than show results      */
    int         total;                  /* total matches                       */
+   /*---(filtering)----------------------*/
+   uchar       types       [LEN_LABEL];
+   uchar       mimes       [LEN_LABEL];
+   uchar       sizes       [LEN_LABEL];
+   uchar       ages        [LEN_LABEL];
+   uchar       ascii       [LEN_LABEL];
    /*---(search filters)-----------------*/
    int         limit;                  /* max number of finds                 */
    int         number;                 /* which entry to present              */
@@ -512,6 +533,14 @@ extern      tGLOBAL    my;
 #define     OPT_STATS           if (my.statistics   == 'y')
 
 
+
+extern int     g_target;
+extern int     g_looked;
+extern int     g_matched;
+extern tENTRY *g_found;
+extern char    g_path    [LEN_RECD];
+
+
 extern      char          unit_answer [LEN_FULL];
 
 
@@ -536,18 +565,31 @@ char        PROG__unit_end          (void);
 
 
 /*===[[ HELIOS_FILE.C ]]======================================================*/
-char        FWRITE_dir              (FILE *a_file, tPTRS *a_ptrs, int *a_count);
-char        FWRITE_all              (tPTRS  *a_ptrs);
-char        FREAD_all               (void);
+/*---(file)-----------------*/
+char        FILE__open              (FILE **a_file, char *a_name, char a_mode);
+char        FILE__close             (FILE **a_file);
+/*---(drives)---------------*/
+char        WRITE__drives           (FILE *a_file);
+char        READ__drives            (FILE *a_file);
+/*---(entries)--------------*/
+char        WRITE__entry            (FILE *a_file, tENTRY *a_entry, int *a_count);
+char        READ__entry             (FILE *a_file, int *a_count);
+/*---(directories)----------*/
+char        WRITE__dir              (FILE *a_file, tPTRS *a_dir, int *a_count);
+/*---(drivers)--------------*/
+char        WRITE_all               (char *a_name, int *a_count);
+char        READ_all                (char *a_name, int *a_count);
+/*---(reading)--------------*/
 char        FILE_commas             (llong a_number, char *a_string);
 char        FILE_uncommas           (char *a_string, llong *a_number);
 /*---(mime)-----------------*/
+char        MIME_init               (void);
 char        MIME_read               (void);
 char        MIME_write              (char a_dest, char a_space);
-char        MIME_find_cat           (cchar *a_ext, int *a_index, char *a_cat, long a_bytes);
+char        MIME_find_by_ext        (cchar *a_ext, int *a_index, char *a_cat, long a_bytes);
 char        MIME_tree               (void);
-char        MIME__clearall          (void);
-char*       MIME__unit              (char *a_question, int n);
+char        MIME_reset_to_zeros     (void);
+char*       MIME__unit              (char *a_question, char *a_ext, int n);
 /*---(config)---------------*/
 char        CONF__parse             (cchar *a_recd);
 char        CONF_read               (void);
@@ -557,29 +599,40 @@ char*       CONF__unit              (char *a_question, int n);
 
 /*===[[ HELIOS_ENTRY.C ]]=====================================================*/
 /*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
+/*---(support)--------------*/
+char        ENTRY__wipe             (tPTRS *a_curr);
+/*---(malloc)---------------*/
+char        ENTRY__new              (tPTRS **a_new, tPTRS *a_parent, tDRIVE *a_drive);
+char        ENTRY__free             (tPTRS **a_ptrs);
+/*---(simplify)-------------*/
+char        ENTRY_root              (tPTRS **a_new, tDRIVE *a_drive);
+char        ENTRY_fullroot          (tPTRS **a_new, tDRIVE *a_drive);
+char        ENTRY_normal            (tPTRS **a_new, tPTRS *a_parent);
+char        ENTRY_submount          (tPTRS **a_new, tPTRS *a_parent, tDRIVE *a_drive);
 /*---(program)--------------*/
 char        ENTRY_init              (void);
-char        ENTRY_wrap              (void);
-/*---(malloc)---------------*/
-char        ENTRY_new               (tPTRS **a_new, tPTRS *a_parent);
-char        ENTRY__free             (tPTRS **a_ptrs);
-char        ENTRY__wipe             (tENTRY *a_curr);
 char        ENTRY__purge            (void);
 char        ENTRY__dirclear         (tPTRS *a_from);
-/*---(support)--------------*/
+char        ENTRY_wrap              (void);
+/*---(checks)---------------*/
 char        ENTRY__name_check       (cchar *a_name, char *a_warn, uchar *a_len);
 char        ENTRY__type_check       (cchar *a_name, tSTAT *a_stat, uchar *a_stype, uchar *a_type);
 char        ENTRY__perms_check      (tSTAT *a_stat, ushort *a_uid, char *a_own, ushort *a_gid, char *a_grp, char *a_oth, char *a_super);
 char        ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_stype, char a_type, char *a_ext, char *a_cat, long a_bytes);
+/*---(populate)-------------*/
 int         ENTRY__populate         (tPTRS *a_ptrs, char *a_full);
-char        ENTRY__level_prep       (int a_level, tPTRS *a_parent, char *a_path, char *a_newpath);
-
-char        ENTRY__level_read       (int a_level, tPTRS  *a_ptrs, char *a_path, char a_ilent);
-
-tPTRS*      ENTRY__root        (tDRIVE *a_drive);
-tPTRS*      DATA_empty         (tDRIVE *a_drive, tPTRS *a_root);
+char        ENTRY_manual            (tENTRY *a_entry, char *a_name, char a_type, char a_stype, char a_cat, char *a_ext);
+/*---(levels)---------------*/
+char        ENTRY__level_prep       (tPTRS *a_parent, char *a_path, char *a_newpath);
+char        ENTRY__level_read       (tPTRS  *a_ptrs, char *a_path, char a_silent);
+/*---(?????)----------------*/
+char        ENTRY_tail              (tDRIVE *a_drive, tPTRS *a_root);
 tPTRS*      DATA_start         (char *a_path);
+/*---(walker)---------------*/
+char        ENTRY_walker            (char a_trigger, tPTRS *a_dir, char *a_path, void *a_callback);
+/*---(unit_test)------------*/
 char*       ENTRY__unit             (char *a_question, int n);
+char*       TREE__unit              (tPTRS *a_focus, char *a_question, int n);
 
 
 /*===[[ HELIOS_SORT.C ]]======================================================*/
@@ -595,18 +648,66 @@ char        api_ysort_init          (void);
 
 
 /*===[[ HELIOS_RPTG.C ]]======================================================*/
-char        RPTG_regex         (int a_level, tPTRS *a_ptrs, char *a_path);
-char        RPTG_dirtree       (int a_level, tPTRS *a_ptrs, char *a_path);
-char        RPTG_summ          (void);
+char        RPTG_init               (void);
+/*---(types)----------------*/
+char        RPTG_config_types_all   (void);
+char        RPTG_config_types_none  (void);
+char        RPTG_config_types_set   (uchar *a_types);
+char        RPTG_config_types_add   (uchar *a_option);
+char        RPTG_filter_type        (uchar a_type);
+/*---(mimes)----------------*/
+char        RPTG_config_mimes_all   (void);
+char        RPTG_config_mimes_none  (void);
+char        RPTG_config_mimes_add   (uchar *a_option);
+char        RPTG_config_mimes_set   (uchar *a_mimes);
+char        RPTG_filter_mime        (uchar a_mime);
+/*---(sizes)----------------*/
+char        RPTG_config_sizes_all   (void);
+char        RPTG_config_sizes_none  (void);
+char        RPTG_config_sizes_add   (uchar *a_option);
+char        RPTG_filter_size        (uchar a_size);
+/*---(ages)-----------------*/
+char        RPTG_config_ages_all    (void);
+char        RPTG_config_ages_none   (void);
+char        RPTG_config_ages_add    (uchar *a_option);
+char        RPTG_config_ages_set    (uchar *a_ages);
+char        RPTG_filter_age         (long a_days);
+/*---(ascii)----------------*/
+char        RPTG_config_ascii_all   (void);
+char        RPTG_config_ascii_none  (void);
+char        RPTG_config_ascii_add   (uchar *a_option);
+char        RPTG_config_ascii_set   (uchar *a_ascii);
+char        RPTG_filter_ascii       (uchar a_ascii);
+/*---(perms)----------------*/
+char        RPTG_perms_filter       (int a_uid, char a_own, int a_gid, char a_grp, char a_oth);
+char        RPTG_perms_dir          (int a_uid, char a_own, int a_gid, char a_grp, char a_oth);
+/*---(regex)----------------*/
+char        RPTG_regex_prep         (char *a_regex);
+char        RPTG_regex_filter       (char *a_string);
+
+
+/*---(walker)---------------*/
+char        RPTG__callback          (char a_serious, tENTRY *a_data, char *a_full);
+char        RPTG_walker             (char a_trigger);
+
+
+char        RPTG_regex              (int a_level, tPTRS *a_ptrs, char *a_path);
+char        RPTG_dirtree            (int a_level, tPTRS *a_ptrs, char *a_path);
+char        RPTG_summ               (void);
+char        RPTG__change_modtime    (char *a_file, int a_days);
+char        RPTG__create_file       (char a_how, char *a_src, char *a_dst, int a_days, int a_perms, char *a_own, char *a_grp);
+char*       RPTG__unit              (char *a_question, int n);
 
 char        DRIVE_init              (void);
 char        DRIVE_wrap              (void);
-char        DRIVE_append            (tDRIVE **a_drive);
+char        DRIVE_new               (tDRIVE **a_drive);
 char        DRIVE__remove           (tDRIVE **a_drive);
 char        DRIVE__purge            (void);
+char        DRIVE_manual            (tDRIVE **a_drive, uchar a_ref, char *a_host, char *a_serial, char *a_device, char *a_mpoint, char *a_type, llong a_size, int a_written);
 char        DRIVE__mtab             (cchar *a_mount, char *a_part, char *a_type);
 char        DRIVE__stats            (cchar *a_part, llong *a_size, char *a_serial);
-char        DRIVE_populate          (tDRIVE **a_drive, char *a_mount, long a_time);
+char        DRIVE__populate         (tDRIVE **a_drive, char *a_mount, long a_time);
+char        DRIVE_inventory         (void);
 char*       DRIVE__unit             (char *a_question, int n);
 
 

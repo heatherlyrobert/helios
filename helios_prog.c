@@ -153,13 +153,13 @@ PROG_version       (void)
 {
    char    t [20] = "";
 #if    __TINYC__ > 0
-   strncpy (t, "[tcc built]", 15);
+   strncpy (t, "[tcc built  ]", 15);
 #elif  __GNUC__  > 0
-   strncpy (t, "[gnu gcc  ]", 15);
+   strncpy (t, "[gnu gcc    ]", 15);
 #elif  __CBANG__  > 0
-   strncpy (t, "[cbang    ]", 15);
+   strncpy (t, "[cbang      ]", 15);
 #else
-   strncpy (t, "[unknown  ]", 15);
+   strncpy (t, "[unknown    ]", 15);
 #endif
    snprintf (verstring, 100, "%s   %s : %s", t, P_VERNUM, P_VERTXT);
    return verstring;
@@ -183,6 +183,7 @@ PROG_init          (void)
    DEBUG_PROG   yLOG_info     ("ySTR"    , ySTR_version    ());
    DEBUG_PROG   yLOG_info     ("yLOG"    , yLOGS_version   ());
    DEBUG_PROG   yLOG_info     ("ySORT"   , ySORT_version   ());
+   yLOG_stage   ('i');
    /*---(header)-------------------------*/
    DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
    /*---(default run-time options)-------*/
@@ -222,6 +223,7 @@ PROG_init          (void)
    /*---(others)-------------------------*/
    my.mpoint [0]   = '\0';
    ENTRY_init  ();
+   MIME_init   ();
    my.n_audio      =    0;
    my.n_video      =    0;
    my.n_image      =    0;
@@ -242,6 +244,8 @@ PROG_init          (void)
    t_drive = NULL;
    n_drive = 0;
    u_drive = 0;
+   /*---(reporting)----------------------*/
+   RPTG_init  ();
    /*---(database)-----------------------*/
    strncpy (my.database, FILE_DB, MAX_NAME);
    for (i = 0; i < MAX_DEPTH; ++i)  root_stack [i] == NULL;
@@ -287,10 +291,17 @@ PROG_args          (int argc, char *argv[])
          if (i + 1 < argc && argv [i + 1][0] == '/') 
             strncpy (my.database, argv [++i], MAX_NAME);
       }
+      /*---(filters)---------------------*/
+      else if (strcmp (a, "--types"        ) == 0 && i + 1 < argc)   RPTG_config_types_set (argv [++i]);
+      else if (strstr (ENTRY_OPTIONS    , a) != NULL)                RPTG_config_types_add (a);
+      else if (strcmp (a, "--mimes"        ) == 0 && i + 1 < argc)   RPTG_config_mimes_set (argv [++i]);
+      else if (strstr (MIME_OPTIONS     , a) != NULL)                RPTG_config_mimes_add (a);
+      else if (strstr (SIZES_OPTIONS    , a) != NULL)                RPTG_config_sizes_add (a);
+      else if (strcmp (a, "--ages"         ) == 0 && i + 1 < argc)   RPTG_config_ages_set  (argv [++i]);
+      else if (strstr (AGES_OPTIONS     , a) != NULL)                RPTG_config_ages_add  (a);
+      else if (strcmp (a, "--ascii"        ) == 0 && i + 1 < argc)   RPTG_config_ascii_set (argv [++i]);
+      else if (strstr (ASCII_OPTIONS    , a) != NULL)                RPTG_config_ascii_add (a);
       /*---(output control)--------------*/
-      else if (strcmp (a, "--quiet"        ) == 0 || strcmp (a, "-q") == 0)  ;
-      else if (strcmp (a, "--stdio"        ) == 0 || strcmp (a, "-s") == 0)  ;
-      else if (strcmp (a, "--null"         ) == 0 || strcmp (a, "-0") == 0)  ;
       else if (strcmp (a, "--verbose"      ) == 0 || strcmp (a, "-v") == 0)  my.verbose        = 'y';
       else if (strcmp (a, "--dump"         ) == 0)                           my.dump           = 'y';
       else if (strcmp (a, "--dirtree"      ) == 0)                           my.dirtree        = 'y';
@@ -346,20 +357,6 @@ PROG_args          (int argc, char *argv[])
             strncpy (my.find_mime, argv [++i], 10);
          }
       }
-      else if (strcmp (a, "--just"         ) == 0)  { my.find = 'y';  my.find_days     = 'j'; }
-      else if (strcmp (a, "--week"         ) == 0)  { my.find = 'y';  my.find_days     = 'w'; }
-      else if (strcmp (a, "--month"        ) == 0)  { my.find = 'y';  my.find_days     = 'm'; }
-      else if (strcmp (a, "--year"         ) == 0)  { my.find = 'y';  my.find_days     = 'y'; }
-      else if (strcmp (a, "--old"          ) == 0)  { my.find = 'y';  my.find_days     = 'o'; }
-      else if (strcmp (a, "--sb"           ) == 0)  { my.find = 'y';  my.find_size     = 's'; }
-      else if (strcmp (a, "--kb"           ) == 0)  { my.find = 'y';  my.find_size     = 'k'; }
-      else if (strcmp (a, "--mb"           ) == 0)  { my.find = 'y';  my.find_size     = 'm'; }
-      else if (strcmp (a, "--gb"           ) == 0)  { my.find = 'y';  my.find_size     = 'g'; }
-      else if (strcmp (a, "--punct"        ) == 0)  { my.find = 'y';  my.find_name     = 'p'; }
-      else if (strcmp (a, "--extend"       ) == 0)  { my.find = 'y';  my.find_name     = 'e'; }
-      else if (strcmp (a, "--space"        ) == 0)  { my.find = 'y';  my.find_name     = 's'; }
-      else if (strcmp (a, "--junk"         ) == 0)  { my.find = 'y';  my.find_name     = 'j'; }
-      else if (strcmp (a, "--badname"      ) == 0)  { my.find = 'y';  my.find_name     = 'b'; }
       /*---(regex search)----------------*/
       else if (strcmp (a, "--all"          ) == 0 || strcmp (a, "-A") == 0)  strncpy (my.regex, ".", MAX_REGEX);
       else if (strcmp (a, "--regex"        ) == 0)                           ;
@@ -431,7 +428,7 @@ PROG_begin         (void)
    my.gid    = getegid();
    DRIVE_init ();
    DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
-   DEBUG_TOPS   yLOG_break   ();
+   yLOG_stage   ('m');
    /*---(complete)-----------------------*/
    return 0;
 }
@@ -439,9 +436,9 @@ PROG_begin         (void)
 char                /* PURPOSE : shutdown program and free memory ------------*/
 PROG_end           (void)
 {
-   DRIVE_wrap ();
-   DEBUG_TOPS   yLOG_break   ();
+   yLOG_stage   ('w');
    DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
+   DRIVE_wrap ();
    if (my.regex_len > 0)  regfree (&(my.regex_comp));
    DEBUG_RPTG   yLOG_value   ("n_audio"   , my.n_audio);
    DEBUG_RPTG   yLOG_value   ("n_video"   , my.n_video);

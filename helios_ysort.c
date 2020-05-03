@@ -63,9 +63,9 @@ api_ysort__cursor       (uchar a_type, void *a_head, void *a_tail, void *a_beg, 
    /*---(update)-------------------------*/
    DEBUG_SORT   yLOG_schar   (a_action);
    switch (a_action) {
-   case '>' : if (x_beg != NULL) { x_new = x_beg->sib_next;   break; }
+   case '>' : if (x_beg != NULL) { x_new = x_beg->s_next;   break; }
    case ']' : x_new = (tPTRS *) a_tail;                       break;
-   case '<' : if (x_beg != NULL) { x_new = x_beg->sib_prev;   break; }
+   case '<' : if (x_beg != NULL) { x_new = x_beg->s_prev;   break; }
    case '[' : x_new = (tPTRS *) a_head;                       break;
    }
    /*---(save back)----------------------*/
@@ -131,14 +131,14 @@ api_ysort__unlinker     (uchar a_type, void **a_head, void **a_tail, void *a_two
    x_two    = (tPTRS *) a_two;
    /*---(unlink current from list)-------*/
    DEBUG_SORT   yLOG_note    ("unlink");
-   if (x_two->sib_next != NULL) x_two->sib_next->sib_prev = x_two->sib_prev;
-   else                         x_tail                    = x_two->sib_prev;
-   if (x_two->sib_prev != NULL) x_two->sib_prev->sib_next = x_two->sib_next;
-   else                         x_head                    = x_two->sib_next;
+   if (x_two->s_next != NULL) x_two->s_next->s_prev = x_two->s_prev;
+   else                       x_tail                = x_two->s_prev;
+   if (x_two->s_prev != NULL) x_two->s_prev->s_next = x_two->s_next;
+   else                       x_head                = x_two->s_next;
    /*---(ground pointers)----------------*/
    DEBUG_SORT   yLOG_note    ("ground pointers");
-   x_two->sib_next = NULL;
-   x_two->sib_prev = NULL;
+   x_two->s_next = NULL;
+   x_two->s_prev = NULL;
    /*---(save back)----------------------*/
    DEBUG_SORT   yLOG_note    ("save back");
    *a_head = x_head;
@@ -176,21 +176,21 @@ api_ysort__linker       (uchar a_type, void **a_head, void **a_tail, void *a_one
       if (x_head == NULL) {
          DEBUG_SORT   yLOG_note    ("add first");
          x_head           = x_two;
-         x_two->sib_prev  = NULL;
+         x_two->s_prev  = NULL;
       } else {
          DEBUG_SORT   yLOG_note    ("append to tail");
-         x_tail->sib_next = x_two;
-         x_two->sib_prev  = x_tail;
+         x_tail->s_next = x_two;
+         x_two->s_prev  = x_tail;
       }
       x_tail           = x_two;
-      x_two->sib_next  = NULL;
+      x_two->s_next  = NULL;
    } else {
       DEBUG_SORT   yLOG_note    ("insert before");
-      if (x_one->sib_prev != NULL)   x_one->sib_prev->sib_next = x_two;
-      else                           x_head                    = x_two;
-      x_two->sib_prev  = x_one->sib_prev;
-      x_two->sib_next  = x_one;
-      x_one->sib_prev  = x_two;
+      if (x_one->s_prev != NULL)   x_one->s_prev->s_next = x_two;
+      else                         x_head                = x_two;
+      x_two->s_prev  = x_one->s_prev;
+      x_two->s_next  = x_one;
+      x_one->s_prev  = x_two;
    }
    /*---(save back)----------------------*/
    DEBUG_SORT   yLOG_note    ("save back");
@@ -272,8 +272,8 @@ api_ysort__joiner       (void **a_bighead, void **a_bigtail, int *a_bigcount, vo
       DEBUG_SORT   yLOG_note    ("appending load");
       x_one = (tPTRS *) *a_bigtail;
       x_two = (tPTRS *) *a_subhead;
-      x_one->sib_next = x_two;
-      x_two->sib_prev = x_one;
+      x_one->s_next = x_two;
+      x_two->s_prev = x_one;
    }
    /*---(common actions)-----------------*/
    *a_bigtail   = *a_subtail;
@@ -282,7 +282,7 @@ api_ysort__joiner       (void **a_bighead, void **a_bigtail, int *a_bigcount, vo
    *a_subhead   = NULL;
    *a_subtail   = NULL;
    *a_subcount  = 0;
-   DEBUG_SORT   ysort_mock_printer (*a_bighead);
+   /*> DEBUG_SORT   ysort_mock_printer (*a_bighead);                                  <*/
    /*---(complete)-----------------------*/
    DEBUG_SORT   yLOG_exit    (__FUNCTION__);
    return 0;
