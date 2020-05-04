@@ -38,17 +38,18 @@ main               (int argc, char *argv[])
    } else if (my.statistics == 'y') {
       READ_all   (my.database, &c);
       RPTG_summ  ();
-   } else if (my.mime_table == 'y' && strcmp (my.regex, ".") == 0) {
+   } else if (my.mime_table == 'y' && strcmp (my.regex, "") == 0) {
       READ_all   (my.database, &c);
       MIME_write   ('s', ' ');
    } else if (my.dump == 'y') {
       READ_all   (my.database, &c);
    } else {
       READ_all   (my.database, &c);
-      if (my.path != NULL)  DATA_start (my.path);
-      RPTG_regex (1, h_ptrs, "");
-      if (my.count == 'y')  printf ("%d\n", my.total);
-      if (my.mime_table == 'y') MIME_write   ('s', ' ');
+      RPTG_walker (WALK_ALL);
+      /*> if (my.path != NULL)  DATA_start (my.path);                                 <* 
+       *> RPTG_regex (1, h_ptrs, "");                                                 <* 
+       *> if (my.count == 'y')  printf ("%d\n", my.total);                            <* 
+       *> if (my.mime_table == 'y') MIME_write   ('s', ' ');                          <*/
    }
    DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
    /*---(complete)-----------------------*/

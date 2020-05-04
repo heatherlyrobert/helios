@@ -388,6 +388,9 @@ RPTG_regex_prep         (char *a_regex)
    int         x_len       =    0;
    /*---(header)-------------------------*/
    DEBUG_RPTG   yLOG_enter   (__FUNCTION__);
+   /*---(prepare)------------------------*/
+   my.regex_len = 0;
+   strncpy (my.regex, "", MAX_REGEX);
    /*---(defense)------------------------*/
    DEBUG_RPTG   yLOG_point   ("a_regex"   , a_regex);
    --rce;  if (a_regex == NULL) {
@@ -402,6 +405,9 @@ RPTG_regex_prep         (char *a_regex)
       DEBUG_RPTG   yLOG_exit    (__FUNCTION__);
       return 1;
    }
+   /*---(save)---------------------------*/
+   strncpy (my.regex, a_regex, MAX_REGEX);
+   my.regex_len = x_len;
    /*---(compile)------------------------*/
    rc = yREGEX_comp (a_regex);
    DEBUG_RPTG   yLOG_value   ("comp"      , rc);
@@ -430,8 +436,14 @@ RPTG_regex_filter       (char *a_string)
       return rce;
    }
    DEBUG_RPTG   yLOG_info    ("a_string"  , a_string);
+   x_len = strlen (a_string);
+   DEBUG_RPTG   yLOG_value   ("x_len"     , x_len);
+   --rce;  if (x_len <= 0) {
+      DEBUG_RPTG   yLOG_exit    (__FUNCTION__);
+      return rce;
+   }
    /*---(filter by name)--------------*/
-   rc = yREGEX_exec (a_string);
+   rc = yREGEX_fast (a_string);
    DEBUG_INPT   yLOG_value   ("exec"      , rc);
    if (rc <= 0) {
       DEBUG_RPTG   yLOG_exit    (__FUNCTION__);
@@ -553,6 +565,8 @@ RPTG__callback    (char a_serious, tENTRY *a_data, char *a_full)
       g_found = a_data;
       strlcpy (g_path, a_full, LEN_RECD);
    }
+   /*---(complete)-----------------------*/
+   printf ("%s\n", a_full);
    /*---(complete)-----------------------*/
    return 1;
 }
@@ -798,9 +812,9 @@ RPTG_dirtree       (
    OPT_VERBOSE  printf ("%s\n", x_path);
    /*> printf ("%s%s\n", x_prefix, x_path);                                           <*/
    sprintf (x_temp, "%s%s", x_prefix, x_dir->name);
-   /*> FILE_commas (x_dir->cum, x_cum);                                               <*/
+   /*> FILE_commas (x_dir->bcum, x_cum);                                               <*/
    /*> printf  ("%-100.100s %14s\n", x_temp, x_cum);                                  <*/
-   printf  ("%-100.100s | %14ld\n", x_temp, x_dir->cum);
+   printf  ("%-100.100s | %14ld\n", x_temp, x_dir->bcum);
    /*---(check start path)---------------*/
    DEBUG_GRAF   yLOG_value   ("my.level"  , my.level);
    if (a_level <= my.level) {

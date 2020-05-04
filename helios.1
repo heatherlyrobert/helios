@@ -1,10 +1,15 @@
 .TH helios 1 2014-oct "linux" "heatherly custom tools manual"
 
 .SH NAME
-helios-phaeton (radiant) \- filesystem indexing and search services
+helios_phaeton \- filesystem indexing and search services
 
 .SH IMAGERY (see HERITAGE at bottom for more)
-shinning titan of the sun and clear sight, seeing and hearing everything
+drives the sun across the sky in a chariot pulled by winged horses
+
+.SH SUMMARY
+helios is a fast, clean, expanded, and traceable version of the classic,
+well-worn, and posix-defined locate, file indexing and searching command,
+with enhanced reporting, debugging, and integration points.
 
 .SH SYNOPSIS
 
@@ -28,132 +33,8 @@ which is a hard-link to provide the traditional locate interface
 .nf
 which is a hard-link to provide the traditional updatedb interface
 
-.SH SUMMARY
-helios is a fast, simplified, modernized, and technical version of the classic
-posix-defined locate, file search and indexing command.  helios will combine
-both locate and updatedb capability with deeper information, more downstream
-integration options, plus enhanced debugging, verbosity, and traceabilty.
 
-.SH PROBLEM and REWARDS (PR)
-files and directories within filesystems often go unmanaged, are misused,
-and atrophy badly over time.  the result is conflicting versions, confusing
-duplication, unfindable files, and excess storage waste.  given this, finding
-a specific file, particularly if not frequently used, in any filing system,
-whether physical or virtual, is a chore in the best of times.  directories can
-help organize files, but once multiple users, systems, and/or applications
-are introduced there are a number of alternate organization methods that
-can be used, each with strengths and weaknesses, but only one can ultimately
-be implemented.
 
-introduction of a solution should help...
-   -- better filing by enabling powerful global search (better org)
-   -- quickly find files by numerous methods (more productivity)
-   -- take pressure off drives by using file database (reduce wear)
-   -- drive organization improvements by seeing big picture (better org)
-   -- more quickly find unused and duplicate files (save space)
-   -- make me a smarter programmer by walking in the footsteps of giants
-   -- give much greater control and flexibility than packaged solutions
-   -- allow the program to better fit the traditional unix pipeline role
-   -- focus on low-power systems by offloading to batch processing
-
-.SH BACKSTORY
-locate is a well-worn, familiar, time-tested, and posix-defined application that
-provides dependable, basic, usable file indexing.  while there are many other
-theories on file organization and meta-data usage, locate is still the most
-pervasive, responsive, and commonly used by technical users.  many attempts
-have been made to replace it with real-time and glitzy interfaces required
-by modern desktop-only users, but locate is still here.
-
-the early developers of locate nailed it in the original by focusing on real
-and definate needs of folks that use the system frequently as well as the
-realities of low power systems.  they built the architecture around a batch
-update to the master index in order to keep system pressure down, request
-speed up, and wear on hard drives low.
-
-but, there are now many file search implementations available that add
-new features, additional capabilities, and integration with desktop tools.
-some of the new features are worthwhile, some are creaping featurism, and
-others are just to satisfy relatively ignorant desktop users.  i don't care
-if its easy for an idiot to use -- they don't use it anyway ;)
-
-the purpose of helios is to bring some updates to the architecture, give me
-a chance to learn some great skills by following in locate's footprints,
-and add some cool stuff to the search options.  additionally, i want it to
-integrate with visualization tools which can give me graphical analysis
-and navigation of the file system without needing glue-scripts.
-
-given my focus on technical users and the proven success of the locate
-interface, i will focus on the command line interface and keeping the
-backward compatability mostly in place.  this last part is so i can move
-between systems without too much distress ;)
-
-.SH OBJECTIVES and ALTERNATIVES (OA)
-objectives and ideas have been collected by reviewing tools that normally
-fit into the same functional area, including, locate, mlocate, slocate,
-baobab, filesight, kdirstat, windows explorer, and xdiskusage.  while all
-these tools do some very cool things, they are locked down and therefore i
-can't get a superset without glue-scripts and craziness.  this area is
-technically interesting enough that building my own version will be fun.
-
-helios will accept the following traditional locate requirements...
-   -- search a database rather than the file system itself (speed/wear)
-   -- update the database in batch as files almost never change (efficiency)
-   -- provide regular expression matching (always and skip other types)
-   -- allow for multiple potential databases for flexibility (--database)
-   -- provide ability to simply get count of matches (--count)
-   -- allow case-insensitive matching (--ignore-case)
-   -- provide ability to stop after a certain number of matches (--limit)
-   -- automatically focus on just the file names (--basename)
-   -- able to produce simple database statistics (--statistics)
-
-helios will NOT accept the following traditional locate requirements...
-   -- will not provide literal or gobbing searches (regex can do more)
-   -- will not allow for multiple simultaneous regex searches
-   -- will not allow check that file still exists at runtime (--existing)
-   -- will not search concatenated dir and file names (--wholename)
-   -- will not follow symlinks as its duplicate anyway (--follow)
-   -- will not provide an option for various list delimiters (--null)
-   -- will not update database with only new enteries (runs fast anyway)
-
-helios will also add several other requirements to enhance locate...
-   -- allow search depth to be limited to avoid run away detail (--depth)
-   -- can focus on a specific branch of the dir structure (--start)
-   -- add the ability to dump the entire database (--dump)
-   -- add the ability to reproduce the dir structure (--dirtree)
-   -- add ability to report on badly named files and directories
-   -- add ability to spot potentially duplicate files
-   -- ability to limit search to certain mime-like types and extensions
-   -- search for files below, near, or above a certain size
-   -- search for files updated before, during, or after certain times
-   -- automatically report on file and dir changes between updates
-   -- add ability to generate mime-type summary statistics
-
-helios will also add several enhancements to target database building...
-   -- ability to ignore specific directories altogether (dir_ignore)
-   -- ability to gather sizes, but not the dir itself (dir_stop)
-   -- ability to gather sizes below, but not entries below (dir_over)
-   -- ability to skip certain dir name where ever found (dir_never)
-   -- ability to merge databases across machines and networks
-
-helios will also keep some options only in one version of locate...
-   -- only allow a user to see dirs and files to which they have access
-
-finally, helios will not...
-   -- get involved in meta-data or tag searching (way too spotty)
-   -- provide any scripting to process files specially
-   -- call any external programs directly (use pipes and xargs)
-   -- provide any graphical viewing directly (use external tools)
-
-as always, applications running on my systems must...
-   -- stay focused, small, tight, reliable, and secure
-   -- forgo sloppy, kitchen-sink languages, like python, java, or perl
-   -- stay away from dependency on external code libraries, like boost
-   -- only use human maintainable, 7-bit safe, ascii streams (not database)
-   -- have dedicated, maintained, automated unit testing
-   -- provide either detailed reporting or logging for debugging
-   -- use secure communications between systems where required
-   -- clean, clean code so i can maintain after long absences
-   -- no international, multi-language, multi-byte support (freaking ever)
 
 .SH PATTERN
 the traditional locate application takes a literal search argument and searches
@@ -521,158 +402,6 @@ to find all files updated in the last two days...
 .nf
 .B $$ helios --just
 
-.SH DEBUGGING and LOGGING
-helios_debug uses the heatherly standard debugging model and options.  calling
-the program through any other executable name, such as helios or updatedb, will
-result in all logging requests through urgents being ignored.
-
-debugging urgents are processed at one time and before normal argument
-processing and therefore the order of urgents and arguments is almost never
-significant.  logging output is sent to a standard system logging directory.
-the use of any urgent will turn on logging output and set the @@tops urgent.
-
-.nf
-.B /var/yLOG/
-
-and, the file name follows the standard heatherly logging format.  any number
-of debugging output files may be kept as the name is always unique.
-
-.nf
-.B yy.mm.dd.hh.mm.ss.helios__________.ww.ulog
-   -- yy   last two digits of year
-   -- mm   month number 01-12
-   -- dd   day number 01-31
-   -- hh   hour number 00-23
-   -- mm   minute number 00-59
-   -- ss   second number 00-59
-   -- ww   week of the year number 00-53
-
-.B --- mass urgent setting -------------------------------
-
-.B @f, @@full
-.RS 8
-turn on all standard urgents
-.RE
-
-.B @k, @@kitchen
-.RS 8
-turn on all standard and custom urgents
-.RE
-
-.B @q, @@quiet
-.RS 8
-turn off all standard and custom urgents
-.RE
-
-.B @t, @@tops
-.RS 8
-log the general flow of the program
-.RE
-
-.B @s, @@summ
-.RS 8
-provide summary statistics and analytical output
-.RE
-
-.B --- startup and shutdown urgents ----------------------
-
-.B @a, @@args
-.RS 8
-log details of urgent and argument processing
-.RE
-
-.B @c, @@conf
-.RS 8
-log details of configuration file processing
-.RE
-
-.B @p, @@prog
-.RS 8
-log details of program setup and teardown
-.RE
-
-.B --- file processing urgents ---------------------------
-
-.B @i, @@inpt, @I, @@INPT
-.RS 8
-log details of input text file reading/parsing (caps means deeper)
-.RE
-
-.B @o, @@outp, @O, @@OUTP
-.RS 8
-log details of output text file writing (caps means deeper)
-.RE
-
-.B --- event handling urgents ----------------------------
-
-.B @l, @@loop
-.RS 8
-log details of main program loop
-.RE
-
-.B @u, @@user
-.RS 8
-log details of interactive user input processing
-.RE
-
-.B @z, @@apis
-.RS 8
-log details of interprocess communication channels
-.RE
-
-.B @x, @@sign
-.RS 8
-log details of operating system signal processing
-.RE
-
-.B @b, @@scrp
-.RS 8
-log details of batch script processing
-.RE
-
-.B @h, @@hist
-.RS 8
-log details of history, undo, and redo processing
-.RE
-
-.B --- processing urgents --------------------------------
-
-.B @g, @@graf
-.RS 8
-log details of graphics, drawing, and display
-.RE
-
-.B @d, @@data
-.RS 8
-log details of complex data structure handling
-.RE
-
-.B @e, @@envi, @E, @@ENVI
-.RS 8
-log details of environmental processing (caps means deeper)
-.RE
-
-.B --- helios-specific urgents ---------------------------
-
-.B @@sort
-.RS 8
-log details of directory and file sort operations
-.RE
-
-.B @@mine
-.RS 8
-log details of mimi type assignment
-.RE
-
-.B @@perms
-.RS 8
-log details of file permission and access
-.RE
-
-.B @@drive
-.RS 8
-log details of mountpoint and drive processing
-.RE
 
 .SH AUTHOR
 heatherlyrobert at gmail dot com

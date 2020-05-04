@@ -3,34 +3,6 @@
 
 
 
-/*
- *
- *
- * status of dir_normal means helios will recurce into all sub-directories
- * and record files, attributes, and sizes
- *
- * allowed verbs...
- *
- *    dir_silent  : instructs helios to recurse into, but not record names below
- *                  this level, not useful, just capture cumulative sizes
- *
- *    dir_pass    : instructs helios to not recurse into this path, due to
- *                  value, risk, technical, or security reasons
- *
- *    dir_last    : instructs helios to recurse into, but not below this path,
- *                  due to value, risk, technical, or security reasons
- *
- *    dir_never   : instructs helios to completely ignore ALL instances of
- *                  directories using this name (example .git)
- *
- *
- *    mountpoint  : provides helios with a default starting point for database
- *                  craetion and update
- *
- *
- */
-
-
 
 static char    s_name    [LEN_RECD]  = "";
 static int     s_level   = 0;
@@ -276,7 +248,7 @@ READ__drives       (FILE *a_file)
    }
    /*---(get count)----------------------*/
    x_bytes = fread  (&n, sizeof (uchar), 1, a_file);
-   DEBUG_OUTP   yLOG_value   ("read"      , x_bytes);
+   DEBUG_INPT   yLOG_value   ("read"      , x_bytes);
    DEBUG_INPT   yLOG_value   ("n"         , n);
    --rce;  if (n < 0 || n > 30) {
       DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
@@ -285,7 +257,7 @@ READ__drives       (FILE *a_file)
    /*---(get count)----------------------*/
    --rce;  for (i = 0; i < n; ++i) {
       x_bytes = fread  (&x_temp   , sizeof (tDRIVE), 1, a_file);
-      DEBUG_OUTP   yLOG_value   ("read"      , x_bytes);
+      DEBUG_INPT   yLOG_value   ("read"      , x_bytes);
       rc = DRIVE_manual (&x_drive, x_temp.ref, x_temp.host, x_temp.serial, x_temp.device, x_temp.mpoint, x_temp.type, x_temp.size, x_temp.written);
       DEBUG_INPT   yLOG_complex ("manual"    , "%2di, %4drc, %p", i, rc, x_drive);
       if (rc < 0 || x_drive == NULL) {
@@ -350,16 +322,16 @@ READ__entry             (FILE *a_file, int *a_count)
    tPTRS      *x_parent    = NULL;
    int         i           =    0;
    /*---(header)-------------------------*/
-   DEBUG_OUTP   yLOG_enter   (__FUNCTION__);
+   DEBUG_INPT   yLOG_enter   (__FUNCTION__);
    /*---(defense)------------------------*/
-   DEBUG_OUTP   yLOG_point   ("a_file"    , a_file);
+   DEBUG_INPT   yLOG_point   ("a_file"    , a_file);
    --rce;  if (a_file == NULL) {
-      DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_OUTP   yLOG_point   ("a_count"   , a_count);
+   DEBUG_INPT   yLOG_point   ("a_count"   , a_count);
    --rce;  if (a_count == NULL) {
-      DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
   /*---(malloc new data)----------------*/
@@ -367,19 +339,19 @@ READ__entry             (FILE *a_file, int *a_count)
       if (++x_tries > 3)  break;
       x_data = (tENTRY*) malloc (sizeof (tENTRY));
    }
-   DEBUG_OUTP   yLOG_value   ("x_tries"   , x_tries);
-   DEBUG_OUTP   yLOG_point   ("x_data"    , x_data);
+   DEBUG_INPT   yLOG_value   ("x_tries"   , x_tries);
+   DEBUG_INPT   yLOG_point   ("x_data"    , x_data);
    --rce;  if (x_data == NULL) {
-      DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(read data)----------------------*/
    clearerr (a_file);
    x_bytes = fread (x_data, sizeof (tENTRY), 1, a_file);
-   DEBUG_OUTP   yLOG_complex ("entry"     , "%4d, %d, %d, %d, %s", *a_count, x_bytes, ferror (a_file), errno, x_data->name);
+   DEBUG_INPT   yLOG_complex ("entry"     , "%4d, %d, %d, %d, %s", *a_count, x_bytes, ferror (a_file), errno, x_data->name);
    DEBUG_INPT   yLOG_value   ("x_bytes"   , x_bytes);
    --rce;  if (x_bytes <= 0) {
-      DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    DEBUG_INPT   yLOG_info    ("name"      , x_data->name);
@@ -399,16 +371,16 @@ READ__entry             (FILE *a_file, int *a_count)
    else                   x_parent = s_stack [s_level - 1];
    DEBUG_INPT   yLOG_point   ("x_parent"  , x_parent);
    --rce;  if (s_level != 0 && x_parent == NULL) {
-      DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(create new entry)---------------*/
    if (x_parent == NULL)  rc = ENTRY_root   (&x_new, h_drive);
    else                   rc = ENTRY_normal (&x_new, x_parent);
-   DEBUG_OUTP   yLOG_value   ("new"       , rc);
-   DEBUG_OUTP   yLOG_point   ("x_new"     , x_new);
+   DEBUG_INPT   yLOG_value   ("new"       , rc);
+   DEBUG_INPT   yLOG_point   ("x_new"     , x_new);
    --rce;  if (rc < 0 || x_new == NULL) {
-      DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(swap data elements)-------------*/
@@ -417,13 +389,13 @@ READ__entry             (FILE *a_file, int *a_count)
    /*---(update count)-------------------*/
    ++(*a_count);
    /*---(handle stack)-------------------*/
-   DEBUG_OUTP   yLOG_char    ("type"      , x_data->type);
+   DEBUG_INPT   yLOG_char    ("type"      , x_data->type);
    if (x_data->type == ENTRY_DIR) {
       s_stack [s_level] = x_new;
-      DEBUG_OUTP   yLOG_complex ("s_stack"   , "saving %p in position %d", x_new, s_level);
+      DEBUG_INPT   yLOG_complex ("s_stack"   , "saving %p in position %d", x_new, s_level);
    }
    /*---(complete)-----------------------*/
-   DEBUG_OUTP   yLOG_exit    (__FUNCTION__);
+   DEBUG_INPT   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
@@ -473,6 +445,9 @@ WRITE__dir         (FILE *a_file, tPTRS *a_parent, int *a_count)
                break;
             case STYPE_SILENT :
                DEBUG_OUTP   yLOG_note    ("dir_silent, do not recurse");
+               break;
+            case STYPE_AVOID  :
+               DEBUG_OUTP   yLOG_note    ("dir_avoid, do not recurse");
                break;
             case STYPE_PASS   :
                DEBUG_OUTP   yLOG_note    ("dir_pass, do not recurse");
@@ -632,10 +607,10 @@ READ_all           (char *a_name, int *a_count)
    rc = DRIVE__purge ();
    /*---(open)---------------------------*/
    rc = FILE__open (&x_file, a_name, 'r');
-   DEBUG_OUTP   yLOG_value   ("open"      , rc);
-   DEBUG_OUTP   yLOG_point   ("x_file"    , x_file);
+   DEBUG_INPT   yLOG_value   ("open"      , rc);
+   DEBUG_INPT   yLOG_point   ("x_file"    , x_file);
    --rce;  if (rc < 0 || x_file == NULL) {
-      DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(get drives)---------------------*/
@@ -652,10 +627,10 @@ READ_all           (char *a_name, int *a_count)
    }
    /*---(close)--------------------------*/
    rc = FILE__close (&x_file);
-   DEBUG_OUTP   yLOG_value   ("close"     , rc);
-   DEBUG_OUTP   yLOG_point   ("x_file"    , x_file);
+   DEBUG_INPT   yLOG_value   ("close"     , rc);
+   DEBUG_INPT   yLOG_point   ("x_file"    , x_file);
    --rce;  if (rc < 0 || x_file != NULL) {
-      DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(complete)-----------------------*/

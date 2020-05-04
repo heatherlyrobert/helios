@@ -1,0 +1,178 @@
+.TH helios 7 2010-Jan "linux" "heatherly custom tools manual"
+
+.SH NAME
+helios_phaeton \- decision rationale, objectives, and overview
+
+.SH IMAGERY (see HERITAGE at bottom for more)
+drives the sun across the sky in a chariot pulled by winged horses
+
+.SH SUMMARY
+helios is a fast, clean, expanded, and traceable version of the classic,
+well-worn, and posix-defined locate, file indexing and searching command,
+with enhanced reporting, debugging, and integration points.
+
+.SH SOFTWARE NICHE
+
+.B definition (d).
+file indexing and searching is a software niche that allows users to quickly
+find files across increasingly large and complicated file systems based on
+partial information.
+
+.B previous solution (p).
+directories and intelligent files names can be used to provide structure,
+but the passing of time, mutliple users, different systems, and erroding
+discipline tends to cause chaos.
+
+.B unaided result (u).
+files and directories often go unmanaged, are misused, and atrophy badly
+over time.  the result is conflicting versions, confusing duplication,
+unfindable files, and storage waste.
+
+.B software challenge (c).
+finding a specific file, particularly if not frequently used, can be a chore.
+any solution must make that much easier as well as provide invaluable aid to
+the cleanup process.
+
+.SH CURRENT SITUATION
+
+.B situation (S).
+modern systems universally allow searching for files to make systems more
+friendly.  the current standard is real-time search based on partial name
+and a directory starting point.
+
+.B general requirements (g).
+consistent across implementations...
+   -- search based on partial names, sometimes using wildcards
+   -- identify start directory and provide for recursion
+   -- follow security and permissions when displaying data
+   -- list matching files and their full paths
+
+.B variations (v).
+implementation-specific choicies...
+   -- command-line, terminal, or gui interface
+   -- batch, periodic, or real-time data file data
+   -- partial names, wildcarding, or regex support
+   -- additional characteristics for searching
+
+.B complication (C).
+while novice-friendly, technical users have a wide variety of needs that can
+only then be met by custom scripts or large, black-box software which they
+will then only use a small portion.
+
+.SH ROLE MODEL SYSTEM
+locate is a well-worn, familiar, time-tested, and posix-defined application
+that provides dependable, basic, usable file indexing.
+
+while there are many other theories on file organization and meta-data usage,
+locate is still the most pervasive, responsive, and commonly used by technical
+users.  many attempts have been made to replace it with real-time and glitzy
+interfaces required by modern desktop-only users, but locate is still here.
+
+the early developers of locate nailed it in the original by focusing on real
+and definate needs of folks that use the system frequently as well as the
+realities of low power systems.  they built the architecture around a batch
+update to the master index in order to keep system pressure down, request
+speed up, and wear on hard drives low.
+
+but, there are now many file search implementations available that add
+new features, additional capabilities, and integration with desktop tools.
+some of the new features are worthwhile, some are creaping featurism, and
+others are just to satisfy relatively ignorant desktop users.  i don't care
+if its easy for an idiot to use -- they don't use it anyway ;)
+
+the purpose of helios is to bring some updates to the architecture, give me
+a chance to learn some great skills by following in locate's footprints,
+and add some cool stuff to the search options.  additionally, i want it to
+integrate with visualization tools which can give me graphical analysis
+and navigation of the file system without needing glue-scripts.
+
+given my focus on technical users and the proven success of the locate
+interface, i will focus on the command line interface and keeping the
+backward compatability mostly in place.  this last part is so i can move
+between systems without too much distress ;)
+
+.SH SPECIFIC SOLUTION
+
+.B user-base/audience (u).
+technical, power users.  existing systems already serve the mouse-using chimps,
+touch-screen snot-gobblers, and novice users.  i need a hard-core solution
+that can be used anywhere, even off-line.
+
+.B core objectives (o)...
+   -- command line, not gui (broader use and better scripting)
+   -- search database rather than file system itself (speed/wear)
+   -- update database in batch as files rarely change (efficiency)
+   -- binary file, not database (low dependencies, high speed)
+   -- regular expression matching (more advanced and flexible)
+   -- config to allow skipping or avoiding certain areas (focus)
+   -- fullsome debugging and tracing (much easier maintenance)
+
+.B rejected objectives (r)...
+   -- not provide literal or gobbing searches (regex is better)
+   -- not allow for multiple simultaneous regex searches
+   -- not allow check that file still exists (--existing)
+   -- not search concatenated dir and file names (--wholename)
+   -- not follow symlinks as its duplicate anyway (--follow)
+   -- not provide allow alternate list delimiters (--null)
+   -- not update database with only new enteries (fast anyway)
+   -- not use meta-data or tag searching (way too spotty)
+   -- not provide any scripting to process files specially
+   -- not call external programs directly (use pipes and xargs)
+   -- not provide any graphical viewing (use external tools)
+
+.B additional objectives...
+   -- focus on a specific branch of the dir structure (--start)
+   -- search depth limits to avoid run away detail (--depth)
+   -- ability to dump the entire database (--dump)
+   -- ability to reproduce the dir structure (--dirtree)
+   -- ability to report on badly named files and directories
+   -- ability to spot potentially duplicate files
+   -- ability to limit search to certain mime-like types
+   -- search for files below, near, or above a certain size
+   -- search for files updated before, during, or after certain times
+   -- add ability to generate mime-type summary statistics
+   -- ability to simply get count of matches (--count)
+   -- abiltiy to stop after a certain number of matches (--limit)
+   -- automatically focus on just the file names (--basename)
+   -- able to produce simple database statistics (--statistics)
+
+.B benefits (b)...
+   -- better filing by enabling powerful global search (better org)
+   -- quickly find files by numerous methods (more productivity)
+   -- take pressure off drives by using file database (reduce wear)
+   -- drive organization improvements by seeing big picture
+   -- more quickly find unused and duplicate files (save space)
+   -- make me a smarter programmer by forcing me to learn
+   -- give much greater control and flexibility
+   -- allow the program to better fit the traditional unix pipeline
+   -- focus on low-power systems by offloading to batch processing
+
+.B drawbacks (d)...
+   -- custom solutions take time to develop
+   -- only standard on my systems
+   -- single maintainer so my workload goes up
+   -- hard to release my application to others (do not care)
+
+.B as always, applications running on my systems must...
+   -- stay focused, small, tight, reliable, and secure
+   -- forgo sloppy, kitchen-sink languages, like python, java, or perl
+   -- stay away from dependency on external code libraries, like boost
+   -- only use human maintainable, 7-bit safe, ascii streams
+   -- have dedicated, maintained, automated unit testing
+   -- provide either detailed reporting or logging for debugging
+   -- use secure communications between systems where required
+   -- clean, clean code so i can maintain after long absences
+   -- no international, multi-language, multi-byte support (ever)
+
+.SH SEE ALSO
+this documentation is layered to provide easier navigation.
+   helios (1), command line useage
+   helios (5), data file format and configuration
+   helios (7), decision rationale, objectives, and overview
+
+.SH AUTHOR
+jelloshrike at gmail dot com
+
+.SH COLOPHON
+this page is part of a documentation package meant to make use of the
+heatherly tools easier and faster.

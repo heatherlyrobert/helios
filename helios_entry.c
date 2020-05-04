@@ -68,9 +68,11 @@ ENTRY__wipe             (tPTRS *a_curr)
    /*---(times)--------------------------*/
    x_data->changed    =   0;
    /*---(sizes)--------------------------*/
-   x_data->bytes      =   0;
-   x_data->cum        =   0;
    x_data->size       =   0;
+   x_data->bytes      =   0;
+   x_data->bcum       =   0;
+   x_data->count      =   0;
+   x_data->ccum       =   0;
    /*---(categorization)-----------------*/
    x_data->cat        = MIME_HUH;
    strlcpy (x_data->ext, "-", LEN_TERSE);
@@ -771,12 +773,14 @@ ENTRY__populate         (tPTRS *a_ptrs, char *a_full)
    DEBUG_ENVI   yLOG_value   ("changed"   , x_data->changed);
    /*---(size)---------------------------*/
    x_data->bytes = st.st_size;
-   x_data->cum   = st.st_size;
+   x_data->bcum  = st.st_size;
    DEBUG_ENVI   yLOG_value   ("bytes"     , x_data->bytes);
    sprintf (s, "%d", st.st_size);
    x_data->size  = strlen (s);
    if (st.st_size < 1)  x_data->size = 0;
    DEBUG_ENVI   yLOG_value   ("exponent"  , x_data->size);
+   x_data->count = 1;
+   x_data->ccum  = 1;
    /*---(mime category)-------------------*/
    rc = ENTRY__mime_check (a_full, x_data->name, &st, x_data->stype, x_data->type, x_data->ext, &(x_data->cat), x_data->bytes);
    --rce; if (rc < 0) {
@@ -936,6 +940,9 @@ ENTRY__level_prep       (tPTRS *a_parent, char *a_path, char *a_newpath)
    if      (x_dir->lvl == 0) {
       DEBUG_ENVI   yLOG_note    ("root of this filesystem");
       sprintf (x_path, "%s"  , x_dir->name);
+   } else if (x_dir->lvl == 1 && strcmp (a_path, "/") == 0) {
+      DEBUG_ENVI   yLOG_note    ("top level");
+      sprintf (x_path, "/%s"  , x_dir->name);
    } else {
       DEBUG_ENVI   yLOG_note    ("below root");
       sprintf (x_path, "%s/%s", a_path, x_dir->name);
@@ -981,7 +988,7 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (x_parent->stype == STYPE_PASS || x_parent->stype == STYPE_NEVER) {
+   --rce;  if (x_parent->stype == STYPE_PASS) {
       DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
       return 0;
    }
@@ -1034,6 +1041,10 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
       if (x_data->type == ENTRY_DIR) {
          if        (x_data->stype   == STYPE_LINK) {
             DEBUG_ENVI   yLOG_note    ("stop, do not recurse on symlink directories");
+         } else if (x_data->stype   == STYPE_AVOID) {
+            DEBUG_ENVI   yLOG_note    ("stop, do not recurse as this is dir_avoid");
+         } else if (x_data->stype   == STYPE_NEVER) {
+            DEBUG_ENVI   yLOG_note    ("stop, do not recurse as this is dir_never");
          } else if (x_parent->stype == STYPE_LAST) {
             DEBUG_ENVI   yLOG_note    ("stop, do not recurse as this is dir_last");
          } else {
@@ -1046,13 +1057,14 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
             }
          }
       }
-      /*---(update cum)------------------*/
+      /*---(update cumulatives)----------*/
       DEBUG_ENVI   yLOG_note    ("add sizes and counts to mime");
-      x_curr->parent->data->cum += x_data->cum;
+      x_curr->parent->data->bcum += x_data->bcum;
+      x_curr->parent->data->ccum += x_data->ccum;
       /*---(check silent)----------------*/
       DEBUG_ENVI   yLOG_note    ("check for silent treatment");
-      if (a_silent == 'y') {
-         DEBUG_ENVI   yLOG_note    ("silent entry, deleting after recursing/totalling");
+      if (a_silent == 'y' || x_data->stype == STYPE_AVOID || x_data->stype == STYPE_NEVER) {
+         DEBUG_ENVI   yLOG_note    ("silent/avoid/never entry, deleting after recursing/totalling");
          ENTRY__free (&x_curr);
       }
       /*---(done)------------------------*/
@@ -1139,9 +1151,9 @@ ENTRY_tail         (tDRIVE *a_drive, tPTRS *a_root)
    x_ptrs->data->drive = a_drive->ref;
    x_ptrs->data->type  = ENTRY_DIR;
    x_ptrs->data->lvl   =   1;
-   x_ptrs->data->bytes = a_drive->size - a_root->data->cum;
-   x_ptrs->data->cum   = a_drive->size - a_root->data->cum;
-   a_root->data->cum   = a_drive->size;
+   x_ptrs->data->bytes = a_drive->size - a_root->data->bcum;
+   x_ptrs->data->bcum  = a_drive->size - a_root->data->bcum;
+   a_root->data->bcum  = a_drive->size;
    /*---(complete)-----------------------*/
    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
    return 0;
@@ -1232,22 +1244,38 @@ ENTRY__walk_handler     (char a_trigger, tPTRS *a_curr, tPTRS *a_parent, char *a
    /*---(prepare)------------------------*/
    x_callback = a_callback;
    x_data = a_curr->data;
-   if (x_data->lvl == 0)  sprintf (a_full, "%s"   ,         x_data->name);
-   else                   sprintf (a_full, "%s/%s", a_path, x_data->name);
+   if (x_data->lvl == 0) 
+      sprintf (a_full, "%s"   ,         x_data->name);
+   else if (x_data->lvl == 1 && a_parent != NULL && strcmp (a_parent->data->name, "/") == 0)
+      sprintf (a_full, "/%s"  ,         x_data->name);
+   else
+      sprintf (a_full, "%s/%s", a_path, x_data->name);
    /*---(callback)-----------------------*/
-   DEBUG_DATA   yLOG_complex ("entry"     , "%-20.20s, %2d, %p, %s, %s", x_data->name, x_data->lvl, a_parent, a_path, a_full);
+   DEBUG_DATA   yLOG_complex ("prep2call" , "%-20.20s, %2d, %p, %s, %s", x_data->name, x_data->lvl, a_parent, a_path, a_full);
    switch (a_trigger) {
-   case '['  : 
+   case WALK_ALL     : 
       x_serious = 'y';
       break;
-   case '#' :
+   case WALK_INDEXED :
       if (g_matched == g_target)  x_serious = 'y';
       break;
    }
    rc = x_callback (x_serious, x_data, a_full);
    ++g_looked;
    /*---(check result)-------------------*/
-   if (x_serious == 'y' && rc == 1)  return 1;
+   switch (a_trigger) {
+   case WALK_ALL     : 
+      if (rc == 1) {
+         DEBUG_DATA   yLOG_note    ("WALK_ALL mode, found one, continue on");
+      }
+      break;
+   case WALK_INDEXED :
+      if (x_serious == 'y' && rc == 1) {
+         DEBUG_DATA   yLOG_note    ("WALK_INDEXED mode, found, stopping");
+         return 1;
+      }
+      break;
+   }
    if (rc == 1)  ++g_matched;
    /*---(complete)-----------------------*/
    return 0;
@@ -1273,7 +1301,7 @@ ENTRY__walker            (char a_trigger, tPTRS *a_dir, char *a_path, void *a_ca
       DEBUG_DATA   yLOG_value   ("handler"   , rc);
    }
    /*---(spin through entries)-----------*/
-   DEBUG_DATA   yLOG_complex ("entry"     , "%3d of %3d for %s, %p", c, a_dir->nchild, a_dir->data->name, a_dir->c_head);
+   DEBUG_DATA   yLOG_complex ("ENTRY"     , "%3d of %3d for %s, %p", c, a_dir->nchild, a_dir->data->name, a_dir->c_head);
    x_curr = a_dir->c_head;
    while (x_curr != NULL && rc != 1) {
       x_data = x_curr->data;
@@ -1293,7 +1321,7 @@ ENTRY__walker            (char a_trigger, tPTRS *a_dir, char *a_path, void *a_ca
          /*---(done)---------------------*/
       }
       ++c;
-      DEBUG_DATA   yLOG_complex ("entry"     , "%3d of %3d for %s, %p", c, a_dir->nchild, a_dir->data->name, x_curr->s_next);
+      DEBUG_DATA   yLOG_complex ("ENTRY"     , "%3d of %3d for %s, %p", c, a_dir->nchild, a_dir->data->name, x_curr->s_next);
       x_curr = x_curr->s_next;
    }
    /*---(complete)-----------------------*/
@@ -1352,13 +1380,13 @@ ENTRY__unit             (char *a_question, int n)
       if (x_curr == NULL) 
          snprintf (unit_answer, LEN_FULL, "ENTRY entry (%2d) : no entry", n);
       else 
-         snprintf (unit_answer, LEN_FULL, "ENTRY entry (%2d) : %-2d  %-2d %2d[%-20.20s]   %c %c   %c %-6.6s   %d %-6ld %-6ld   %ld", n,
-               x_curr->data->drive,x_curr->data->lvl  ,
-               x_curr->data->len  , x_curr->data->name , 
-               x_curr->data->type , x_curr->data->stype,
-               x_curr->data->cat  , x_curr->data->ext  ,
-               x_curr->data->size , x_curr->data->bytes, x_curr->data->cum  ,
-               x_curr->data->changed);
+         snprintf (unit_answer, LEN_FULL, "ENTRY entry (%2d) : %-2d  %-2d %2d[%-20.20s]   %c %c   %c %-6.6s   %d %-6ld   %-6d %d", n,
+               x_curr->data->drive ,x_curr->data->lvl   ,
+               x_curr->data->len   , x_curr->data->name , 
+               x_curr->data->type  , x_curr->data->stype,
+               x_curr->data->cat   , x_curr->data->ext  ,
+               x_curr->data->size  , x_curr->data->bytes,
+               x_curr->data->count ,x_curr->data->ccum  );
    }
    /*---(complete)-----------------------*/
    return unit_answer;
@@ -1403,7 +1431,7 @@ TREE__unit              (tPTRS *a_focus, char *a_question, int n)
    }
    else if (strcmp (a_question, "walk"          ) == 0) {
       g_target = n;
-      rc = ENTRY_walk ('#', TREE__unit_callback);
+      rc = ENTRY_walk (WALK_INDEXED, TREE__unit_callback);
       if (rc < 1)   snprintf (unit_answer, LEN_FULL, "TREE walk   (%2d) : no such entry", n);
       else          snprintf (unit_answer, LEN_FULL, "TREE walk   (%2d) : %-2d  %-2d %2d[%-20.20s]   %c %c   %c %-6.6s   [%.40s]", n,
             g_found->drive, g_found->lvl  ,

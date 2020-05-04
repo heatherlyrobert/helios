@@ -2,13 +2,64 @@
 #include    "helios.h"       /* LOCAL  : main header                          */
 
 
+/*
+ *
+ *
+ * status of dir_normal means helios will recurce into all sub-directories
+ * and record files, attributes, and sizes
+ *
+ * allowed verbs...
+ *
+ *    dir_silent  : instructs helios to recurse into, but not record names below
+ *                  this level, not useful, just capture cumulative sizes
+ *
+ *    dir_avoid   : instructs helios to not record and not recurse into this
+ *    -             path, due to value, risk, technical, or security reasons
+ *    -
+ *    dir_pass    : instructs helios to record, but not recurse into this path,
+ *    -             due to value, risk, technical, or security reasons
+ *    -
+ *    dir_last    : instructs helios to recurse into, but not below this path,
+ *    -             due to value, risk, technical, or security reasons
+ *    -
+ *    dir_never   : instructs helios to completely ignore ALL instances of
+ *                  directories using this name (example .git)
+ *
+ *
+ *    mountpoint  : provides helios with a default starting point for database
+ *                  craetion and update
+ *
+ *
+ */
+
+
+char
+CONF__purge             (void)
+{
+   int         i           =    0;
+   for (i = 0; i < MAX_NODIR; ++i) {
+      g_nodir [i].type     = '-';
+      strlcpy (g_nodir [i].name, "", LEN_HUND);
+      g_nodir [i].len      =   0;
+   }
+   n_nodir = 0;
+   return 0;
+}
+
+char
+CONF_init               (void)
+{
+   CONF__purge ();
+   return 0;
+}
+
 
 /*====================------------------------------------====================*/
 /*===----                     read from file                           ----===*/
 /*====================------------------------------------====================*/
 static void  o___READING_________o () { return; }
 
-static uchar  s_verbs     [LEN_RECD] = " dir_silent dir_pass dir_last dir_never mountpoint ";
+static uchar  s_verbs     [LEN_RECD] = " dir_silent dir_avoid dir_pass dir_last dir_never mountpoint ";
 static uchar  s_field     [ 20][LEN_HUND];
 static uchar  s_nfield    = 0;
 
@@ -92,6 +143,9 @@ CONF__handle            (void)
       switch (s_field [0][4]) {
       case 's' : g_nodir [n_nodir].type = STYPE_SILENT;
                  DEBUG_CONF   yLOG_note    ("adding a silent type");
+                 break;
+      case 'a' : g_nodir [n_nodir].type = STYPE_AVOID;
+                 DEBUG_CONF   yLOG_note    ("adding an avoid type");
                  break;
       case 'p' : g_nodir [n_nodir].type = STYPE_PASS;
                  DEBUG_CONF   yLOG_note    ("adding a pass type");
@@ -252,9 +306,15 @@ CONF_find               (char *a_full, char *a_name, char *a_stype, char *a_sile
             rc = 1;
             break;
          }
+         /*---(avoid)--------------------*/
+         if (g_nodir [i].type == STYPE_AVOID) {
+            DEBUG_CONF    yLOG_note    ("found a dir_avoid rule");
+            rc = 1;
+            break;
+         }
          /*---(ignore)-------------------*/
          if (g_nodir [i].type == STYPE_PASS) {
-            DEBUG_CONF    yLOG_note    ("found a dir_past rule");
+            DEBUG_CONF    yLOG_note    ("found a dir_pass rule");
             rc = 1;
             break;
          }

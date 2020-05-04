@@ -24,8 +24,8 @@
 
 #define     P_VERMAJOR  "1.--, first major version in production"
 #define     P_VERMINOR  "1.1-, adding extensive unit testing"
-#define     P_VERNUM    "1.1d"
-#define     P_VERTXT    "filters and permission/access in place and unit tested"
+#define     P_VERNUM    "1.1e"
+#define     P_VERTXT    "basic updatedb and searching switched over to new logic"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -291,9 +291,14 @@ extern      short      u_drive;
 #define       ENTRY_ALL      "-dcbfsl?"
 #define       ENTRY_OPTIONS  " --reg --dir --cdev --bdev --fifo --sock --link --unknown "
 
+#define       WALK_ALL       '*'
+#define       WALK_FIRST     '1'
+#define       WALK_INDEXED   '#'
+
 #define       STYPE_NORMAL   '-'
 #define       STYPE_LINK     '>'
 #define       STYPE_SILENT   '~'
+#define       STYPE_AVOID    '['
 #define       STYPE_PASS     '('
 #define       STYPE_LAST     ')'
 #define       STYPE_NEVER    'X'
@@ -353,7 +358,9 @@ struct cENTRY {
    /*---(size)---------------------------*/
    char        size;                   /* exp of bytes                        */
    long        bytes;                  /* bytes in entry                      */
-   long        cum;                    /* bytes in entry and below            */
+   long        bcum;                   /* bytes in entry and below            */
+   short       count;                  /* number of entries in dir            */
+   int         ccum;                   /* number of below full branch         */
    /*---(categorization)-----------------*/
    char        cat;                    /* mime-like category                  */
    char        ext         [LEN_TERSE];/* mime-like extension                 */
@@ -460,10 +467,10 @@ struct cGLOBAL {
    int         gid;                    /* users group id                      */
    /*---(regex search)-------------------*/
    char        regex       [MAX_REGEX];/* regex text pattern                  */
-   char        regex_case;             /* ignore regex case                   */
+   /*> char        regex_case;             /+ ignore regex case                   +/   <*/
    int         regex_len;              /* regex text pattern length           */
    regex_t     regex_comp;             /* regex pattern compilied             */
-   char        regex_rc;               /* regex return code                   */
+   /*> char        regex_rc;               /+ regex return code                   +/   <*/
    char        count;                  /* count rather than show results      */
    int         total;                  /* total matches                       */
    /*---(filtering)----------------------*/
@@ -582,6 +589,7 @@ char        READ_all                (char *a_name, int *a_count);
 /*---(reading)--------------*/
 char        FILE_commas             (llong a_number, char *a_string);
 char        FILE_uncommas           (char *a_string, llong *a_number);
+
 /*---(mime)-----------------*/
 char        MIME_init               (void);
 char        MIME_read               (void);
@@ -590,7 +598,10 @@ char        MIME_find_by_ext        (cchar *a_ext, int *a_index, char *a_cat, lo
 char        MIME_tree               (void);
 char        MIME_reset_to_zeros     (void);
 char*       MIME__unit              (char *a_question, char *a_ext, int n);
+
 /*---(config)---------------*/
+char        CONF__purge             (void);
+char        CONF_init               (void);
 char        CONF__parse             (cchar *a_recd);
 char        CONF_read               (void);
 char        CONF_find               (char *a_full, char *a_name, char *a_stype, char *a_silent);

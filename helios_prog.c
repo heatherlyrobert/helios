@@ -215,15 +215,15 @@ PROG_init          (void)
    my.find_days    =  '-';
    my.find_size    =  '-';
    /*---(regex handling)-----------------*/
-   strncpy (my.regex, ".", MAX_REGEX);
-   my.regex_len    =    1;
-   my.regex_case   =  'y';
+   strncpy (my.regex, "", MAX_REGEX);
+   my.regex_len    =    0;
    my.count        =  '-';
    my.total        =    0;
    /*---(others)-------------------------*/
    my.mpoint [0]   = '\0';
    ENTRY_init  ();
    MIME_init   ();
+   CONF_init   ();
    my.n_audio      =    0;
    my.n_video      =    0;
    my.n_image      =    0;
@@ -246,6 +246,7 @@ PROG_init          (void)
    u_drive = 0;
    /*---(reporting)----------------------*/
    RPTG_init  ();
+   yREGEX_clear ();
    /*---(database)-----------------------*/
    strncpy (my.database, FILE_DB, MAX_NAME);
    for (i = 0; i < MAX_DEPTH; ++i)  root_stack [i] == NULL;
@@ -363,9 +364,8 @@ PROG_args          (int argc, char *argv[])
       else if (strcmp (a, "--regexp"       ) == 0 || strcmp (a, "-r") == 0)  ;
       else if (strcmp (a, "--basename"     ) == 0 || strcmp (a, "-b") == 0)  ;
       else if (strcmp (a, "--wholename"    ) == 0 || strcmp (a, "-w") == 0)  ;
-      else if (strcmp (a, "--ignore-case"  ) == 0 || strcmp (a, "-i") == 0)  my.regex_case     = '-';
-      else if (a[0] != '-') 
-         strncpy (my.regex, argv [i], MAX_REGEX);
+      /*> else if (strcmp (a, "--ignore-case"  ) == 0 || strcmp (a, "-i") == 0)  my.regex_case     = '-';   <*/
+      else if (a[0] != '-')    RPTG_regex_prep (a);
       /*---(not understood)--------------*/
       else {
          printf  ("option <<%s>> not understood or implemented\n", a);
@@ -402,7 +402,6 @@ PROG_args          (int argc, char *argv[])
    DEBUG_ARGS  yLOG_char    ("mimetree"  , my.mimetree);
    DEBUG_ARGS  yLOG_info    ("mpoint"    , my.mpoint);
    DEBUG_ARGS  yLOG_info    ("regex"     , my.regex);
-   DEBUG_ARGS  yLOG_char    ("regex_case", my.regex_case);
    DEBUG_ARGS  yLOG_value   ("limit"     , my.limit);
    /*---(complete)-----------------------*/
    DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
@@ -414,11 +413,11 @@ PROG_begin         (void)
 {
    DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
    api_ysort_init ();
-   my.regex_len = strlen (my.regex);
-   if (my.regex_case == 'y')  my.regex_rc  = regcomp (&(my.regex_comp), my.regex, REG_EXTENDED);
-   else                       my.regex_rc  = regcomp (&(my.regex_comp), my.regex, REG_EXTENDED | REG_ICASE);
-   DEBUG_PROG   yLOG_value   ("regex_rc"  , my.regex_rc);
-   if (my.regex_rc != 0) {
+   /*> my.regex_len = strlen (my.regex);                                                                           <* 
+    *> if (my.regex_case == 'y')  my.regex_rc  = regcomp (&(my.regex_comp), my.regex, REG_EXTENDED);               <* 
+    *> else                       my.regex_rc  = regcomp (&(my.regex_comp), my.regex, REG_EXTENDED | REG_ICASE);   <* 
+    *> DEBUG_PROG   yLOG_value   ("regex_rc"  , my.regex_rc);                                                      <*/
+   if (my.regex_len <= 0) {
       printf ("regex could not be compiled\n");
       DEBUG_TOPS   yLOG_note    ("regex could not be compiled");
       DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
@@ -426,7 +425,7 @@ PROG_begin         (void)
    }
    my.uid    = geteuid();
    my.gid    = getegid();
-   DRIVE_init ();
+   DRIVE_init   ();
    DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
    yLOG_stage   ('m');
    /*---(complete)-----------------------*/
@@ -439,7 +438,7 @@ PROG_end           (void)
    yLOG_stage   ('w');
    DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
    DRIVE_wrap ();
-   if (my.regex_len > 0)  regfree (&(my.regex_comp));
+   yREGEX_clear ();
    DEBUG_RPTG   yLOG_value   ("n_audio"   , my.n_audio);
    DEBUG_RPTG   yLOG_value   ("n_video"   , my.n_video);
    DEBUG_RPTG   yLOG_value   ("n_image"   , my.n_image);
