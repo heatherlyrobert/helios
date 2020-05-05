@@ -3,6 +3,11 @@
 
 
 
+static int   s_days    =   0;
+static char  s_age     = '-';
+static int   s_pos     =  -1;
+static int   s_len     =  -1;
+
 
 
 /*====================------------------------------------====================*/
@@ -18,6 +23,7 @@ RPTG_init           (void)
    RPTG_config_sizes_all  ();
    RPTG_config_ages_all   ();
    RPTG_config_ascii_all  ();
+   RPTG_config_col_none   ();
    return 0;
 }
 
@@ -27,7 +33,6 @@ RPTG_init           (void)
 /*===----                     type filter control                      ----===*/
 /*====================------------------------------------====================*/
 static void      o___TYPE____________________o (void) {;}
-
 
 char RPTG_config_types_all   (void) { strlcpy (my.types, ENTRY_ALL , LEN_LABEL); return 0; }
 char RPTG_config_types_none  (void) { strlcpy (my.types, "········", LEN_LABEL); return 0; }
@@ -258,13 +263,13 @@ RPTG_config_ages_add   (uchar *a_option)
    if (strlen (a_option) < 1)  return -2;
    if (strcmp (my.ages, AGES_ALL)  == 0)  RPTG_config_ages_none ();
    switch (a_option [2]) {
-   case 'j'  :  my.ages [0]  = 'j';  break;
-   case 'd'  :  my.ages [1]  = 'd';  break;
-   case 'w'  :  my.ages [2]  = 'w';  break;
-   case 'm'  :  my.ages [3]  = 'm';  break;
-   case 'q'  :  my.ages [4]  = 'q';   break;
-   case 'y'  :  my.ages [5]  = 'y';  break;
-   case 'a'  :  my.ages [6]  = 'a';  break;
+   case AGES_JUST    :  my.ages [0]  = AGES_JUST;     break;
+   case AGES_DAYS    :  my.ages [1]  = AGES_DAYS;     break;
+   case AGES_WEEK    :  my.ages [2]  = AGES_WEEK;     break;
+   case AGES_MONTH   :  my.ages [3]  = AGES_MONTH;    break;
+   case AGES_QUARTER :  my.ages [4]  = AGES_QUARTER;  break;
+   case AGES_YEAR    :  my.ages [5]  = AGES_YEAR;     break;
+   case AGES_ANCIENT :  my.ages [6]  = AGES_ANCIENT;  break;
    }
    return 0;
 }
@@ -290,18 +295,25 @@ char
 RPTG_filter_age         (long a_days)
 {
    if (a_days <= 1) {
+      s_age = AGES_JUST;
       if (my.ages [0] != (uchar) '·')  return 1;
    } else if (a_days <= 3) {
+      s_age = AGES_DAYS;
       if (my.ages [1] != (uchar) '·')  return 1;
    } else if (a_days <= 7) {
+      s_age = AGES_WEEK;
       if (my.ages [2] != (uchar) '·')  return 1;
    } else if (a_days <= 30) {
+      s_age = AGES_MONTH;
       if (my.ages [3] != (uchar) '·')  return 1;
    } else if (a_days <= 90) {
+      s_age = AGES_QUARTER;
       if (my.ages [4] != (uchar) '·')  return 1;
    } else if (a_days <= 365) {
+      s_age = AGES_YEAR;
       if (my.ages [5] != (uchar) '·')  return 1;
    } else {
+      s_age = AGES_ANCIENT;
       if (my.ages [6] != (uchar) '·')  return 1;
    }
    return 0;
@@ -380,7 +392,7 @@ RPTG_filter_ascii       (uchar a_ascii)
 static void      o___REGEX___________________o (void) {;}
 
 char
-RPTG_regex_prep         (char *a_regex)
+RPTG_regex_prep         (uchar *a_regex)
 {
    /*---(local variables)--+-----------+-*/
    char        rce         =    0;
@@ -421,7 +433,7 @@ RPTG_regex_prep         (char *a_regex)
 }
 
 char
-RPTG_regex_filter       (char *a_string)
+RPTG_regex_filter       (uchar *a_string)
 {
    /*---(local variables)--+-----------+-*/
    char        rce         =    0;
@@ -449,6 +461,7 @@ RPTG_regex_filter       (char *a_string)
       DEBUG_RPTG   yLOG_exit    (__FUNCTION__);
       return 0;
    }
+   rc = yREGEX_best (YREGEX_BEST, -1, &s_pos, &s_len, NULL, NULL);
    /*---(complete)-----------------------*/
    DEBUG_RPTG   yLOG_exit    (__FUNCTION__);
    return 1;
@@ -514,6 +527,98 @@ RPTG_perms_dir          (int a_uid, char a_own, int a_gid, char a_grp, char a_ot
 
 
 /*====================------------------------------------====================*/
+/*===----                       output types                           ----===*/
+/*====================------------------------------------====================*/
+static void      o___OUTPUT__________________o (void) {;}
+
+char RPTG_config_col_none    (void) { strlcpy (my.columns, "·······", LEN_LABEL); my.output = OUTPUT_NORMAL;  return 0; }
+
+char
+RPTG_config_columns      (uchar *a_option)
+{
+   int         x_len       =     0;
+   if (a_option == NULL)  return -1;
+   x_len = strlen (a_option);
+   if (strlen (a_option) <= 7)  return -2;
+   switch (a_option [7]) {
+   case COL_MIME   :  my.columns [0] = COL_MIME;      break;
+   case COL_AGES   :  my.columns [1] = COL_AGES;      break;
+   case COL_SIZE   :  my.columns [2] = COL_SIZE;      break;
+   case COL_LEVEL  :  my.columns [3] = COL_LEVEL;     break;
+   case COL_NAMING :  my.columns [4] = COL_NAMING;    break;
+   case COL_FIND   :  my.columns [5] = COL_FIND;      break;
+   }
+   my.output = OUTPUT_PREFIX;
+   return 0;
+}
+
+char
+RPTG_config_output       (uchar *a_option)
+{
+   int         x_len       =     0;
+   if (a_option == NULL)  return -1;
+   x_len = strlen (a_option);
+   if (strlen (a_option) < 1)  return -2;
+   RPTG_config_col_none ();
+   switch (a_option [2]) {
+   case 'n'  :  my.output = OUTPUT_NORMAL;      break;
+   case 'd'  :  my.output = OUTPUT_DETAIL;      break;
+   case 'a'  :  my.output = OUTPUT_ANALYSIS;    break;
+   case 'g'  :  my.output = OUTPUT_GYGES;       break;
+   case 'c'  :  my.output = OUTPUT_COUNT;       break;
+   case 's'  :  my.output = OUTPUT_SILENT;      break;
+   }
+   return 0;
+}
+
+char
+RPTG__line        (tENTRY *a_data, char *a_full)
+{
+   /*---(local variables)--+-----+-----+-*/
+   char        t           [LEN_HUND]  = "";
+   switch (my.output) {
+   case OUTPUT_NORMAL   :
+      printf ("%s\n", a_full);
+      break;
+   case OUTPUT_PREFIX   :
+      if (my.columns [0] != (uchar) '·')  printf ("%c  %-7.7s  ", a_data->cat, a_data->ext);
+      if (my.columns [1] != (uchar) '·')  printf ("%c  %-5d  "  , s_age, s_days);
+      if (my.columns [2] != (uchar) '·')  printf ("%d  %-10ld  ", a_data->size, a_data->bytes);
+      if (my.columns [3] != (uchar) '·')  printf ("%-3d  "      , a_data->lvl);
+      if (my.columns [4] != (uchar) '·')  printf ("%c  %-3d  "  , a_data->ascii, a_data->len);
+      if (my.columns [5] != (uchar) '·')  printf ("%3d %3d  "   , s_pos, s_len);
+      printf ("%s\n", a_full);
+      break;
+   case OUTPUT_DETAIL   :
+      printf ("%c  %c  %d  %d  %c  ", a_data->cat, s_age, a_data->size, a_data->lvl, a_data->ascii);
+      printf ("%s\n", a_full);
+      break;
+   case OUTPUT_ANALYSIS :
+      sprintf (t, "%-40.40s", a_data->name);
+      if (a_data->len > 39)  t [39] = '>';
+      printf ("%3d  %s  %3d %c"        , a_data->len, t, s_pos, a_data->ascii);
+      printf ("   %2d %c %c"           , a_data->lvl, a_data->type, a_data->stype);
+      printf ("   %4d %d %4d %d %d %c" , a_data->uid, a_data->own, a_data->gid, a_data->grp, a_data->oth, a_data->super);
+      printf ("   %2d %-8d %-8d"       , a_data->drive, a_data->inode, a_data->dnode);
+      printf ("   %-10d %-4d %c"       , a_data->changed, s_days, s_age);
+      printf ("   %d %-10ld %-10ld"    , a_data->size, a_data->bytes, a_data->bcum);
+      printf ("   %-6ld %-6ld"         , a_data->count, a_data->ccum);
+      printf ("   %c %-8.8s"           , a_data->cat  , a_data->ext);
+      printf ("   %3d %3d"             , s_pos, s_len);
+      printf ("   %s\n", a_full);
+      break;
+   case OUTPUT_GYGES    :
+      printf ("%s\n", a_full);
+      break;
+   case OUTPUT_SILENT   : case OUTPUT_COUNT    : default :
+      break;
+   }
+   return 0;
+}
+
+
+
+/*====================------------------------------------====================*/
 /*===----                        walker function                       ----===*/
 /*====================------------------------------------====================*/
 static void      o___WALKER__________________o (void) {;}
@@ -524,7 +629,6 @@ RPTG__callback    (char a_serious, tENTRY *a_data, char *a_full)
    /*---(local variables)--+-----------+-*/
    char        rce         =  -10;
    char        rc          =    0;
-   long        x_days      =    0;
    /*---(header)-------------------------*/
    DEBUG_DATA   yLOG_complex ("callback"  , "%p, %p", a_data, a_full);
    /*---(defense)------------------------*/
@@ -552,9 +656,9 @@ RPTG__callback    (char a_serious, tENTRY *a_data, char *a_full)
    rc = RPTG_filter_size  (a_data->size);
    DEBUG_DATA  yLOG_complex  ("mime"      , "%s, %d, %d", my.sizes, a_data->size , rc);
    if (rc <= 0)  return 0;
-   x_days = (my.runtime - a_data->changed) / (24 * 60 * 60);
-   rc = RPTG_filter_age   (x_days);
-   DEBUG_DATA  yLOG_complex  ("age"       , "%s, %d, %d", my.ages , x_days       , rc);
+   s_days = (my.runtime - a_data->changed) / (24 * 60 * 60);
+   rc = RPTG_filter_age   (s_days);
+   DEBUG_DATA  yLOG_complex  ("age"       , "%s, %d, %d", my.ages , s_days       , rc);
    if (rc <= 0)  return 0;
    rc = RPTG_filter_ascii (a_data->ascii);
    DEBUG_DATA  yLOG_complex  ("ascii"     , "%s, %c, %d", my.ascii, a_data->ascii, rc);
@@ -565,8 +669,8 @@ RPTG__callback    (char a_serious, tENTRY *a_data, char *a_full)
       g_found = a_data;
       strlcpy (g_path, a_full, LEN_RECD);
    }
-   /*---(complete)-----------------------*/
-   printf ("%s\n", a_full);
+   /*---(report out)---------------------*/
+   RPTG__line (a_data, a_full);
    /*---(complete)-----------------------*/
    return 1;
 }
@@ -641,7 +745,7 @@ RPTG_regex         (
    else if (a_level == 2)  sprintf (x_path, "/%s"  , x_dir->name);
    else                    sprintf (x_path, "%s/%s", a_path, x_dir->name);
    DEBUG_GRAF   yLOG_info    ("x_path"    , x_path);
-   OPT_VERBOSE  printf ("%s\n", x_path);
+   /*> OPT_VERBOSE  printf ("%s\n", x_path);                                          <*/
    /*---(check start path)---------------*/
    DEBUG_GRAF   yLOG_value   ("my.level"  , my.level);
    if (a_level <= my.level) {
@@ -809,7 +913,7 @@ RPTG_dirtree       (
    else if (a_level == 2)  sprintf (x_path, "/%s"  , x_dir->name);
    else                    sprintf (x_path, "%s/%s", a_path, x_dir->name);
    DEBUG_GRAF   yLOG_info    ("x_path"    , x_path);
-   OPT_VERBOSE  printf ("%s\n", x_path);
+   /*> OPT_VERBOSE  printf ("%s\n", x_path);                                          <*/
    /*> printf ("%s%s\n", x_prefix, x_path);                                           <*/
    sprintf (x_temp, "%s%s", x_prefix, x_dir->name);
    /*> FILE_commas (x_dir->bcum, x_cum);                                               <*/
@@ -1064,6 +1168,14 @@ RPTG__unit              (char *a_question, int n)
          strlcat (t, s, LEN_DESC);
       }
       snprintf (unit_answer, LEN_FULL, "RPTG ascii       :%s", t);
+   }
+   else if (strcmp (a_question, "output"        ) == 0) {
+      sprintf (t, " %c   ", my.output);
+      for (i = 0; i < strlen (my.columns); ++i) {
+         sprintf (s, " %c", my.columns [i]);
+         strlcat (t, s, LEN_DESC);
+      }
+      snprintf (unit_answer, LEN_FULL, "RPTG output      :%s", t);
    }
    else if (strcmp (a_question, "walk"          ) == 0) {
       g_target = n;

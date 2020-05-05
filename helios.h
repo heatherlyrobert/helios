@@ -24,8 +24,8 @@
 
 #define     P_VERMAJOR  "1.--, first major version in production"
 #define     P_VERMINOR  "1.1-, adding extensive unit testing"
-#define     P_VERNUM    "1.1e"
-#define     P_VERTXT    "basic updatedb and searching switched over to new logic"
+#define     P_VERNUM    "1.1f"
+#define     P_VERTXT    "build primary output formats, but not formally tested yet"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -303,6 +303,16 @@ extern      short      u_drive;
 #define       STYPE_LAST     ')'
 #define       STYPE_NEVER    'X'
 
+#define       AGES_JUST      'j'
+#define       AGES_DAYS      'd'
+#define       AGES_WEEK      'w'
+#define       AGES_MONTH     'm'
+#define       AGES_QUARTER   'q'
+#define       AGES_YEAR      'y'
+#define       AGES_ANCIENT   'a'
+#define       AGES_ALL       "jdwmqya"
+#define       AGES_OPTIONS   " --just --days --week --month --quarter --year --ancient "
+
 #define       ASCII_BASIC    '-'
 #define       ASCII_UPPER    'A'
 #define       ASCII_PUNCT    '+'
@@ -334,8 +344,6 @@ extern      short      u_drive;
 #define       SIZES_ALL      "0123456789abcdefghi"
 #define       SIZES_OPTIONS  " --zb --sb --kb --mb --gb --tb --pb "
 
-#define       AGES_ALL       "jdwmqya"
-#define       AGES_OPTIONS   " --just --days --week --month --quarter --year --ancient "
 
 struct cENTRY {
    /*---(types)--------------------------*/
@@ -455,6 +463,11 @@ extern      int         n_mime;
 
 
 struct cGLOBAL {
+   /*---(run control)--------------------*/
+   char        mode;                        /* run mode                       */
+   char        report;                      /* report type                    */
+   char        output;                      /* match report types             */
+   uchar       columns     [LEN_LABEL];     /* specific columns               */
    /*------------------------------------*/
    char        host        [LEN_DESC]; /* host name of current computer       */
    long        runtime;                /* run time for helios                 */
@@ -466,11 +479,9 @@ struct cGLOBAL {
    int         uid;                    /* users user id                       */
    int         gid;                    /* users group id                      */
    /*---(regex search)-------------------*/
-   char        regex       [MAX_REGEX];/* regex text pattern                  */
-   /*> char        regex_case;             /+ ignore regex case                   +/   <*/
+   uchar       regex       [MAX_REGEX];/* regex text pattern                  */
    int         regex_len;              /* regex text pattern length           */
    regex_t     regex_comp;             /* regex pattern compilied             */
-   /*> char        regex_rc;               /+ regex return code                   +/   <*/
    char        count;                  /* count rather than show results      */
    int         total;                  /* total matches                       */
    /*---(filtering)----------------------*/
@@ -534,10 +545,33 @@ typedef     struct     cGLOBAL      tGLOBAL;
 extern      tGLOBAL    my;
 
 
-#define     OPT_UPDATE          if (my.update       == 'y')
-#define     OPT_VERBOSE         if (my.verbose      == 'y')
-#define     OPT_MIME            if (my.mime_table   == 'y')
-#define     OPT_STATS           if (my.statistics   == 'y')
+/*---(running modes)------------------*/
+#define     MODE_UPDATE         'u'
+#define     MODE_SEARCH         's'
+#define     MODE_REPORT         'r'
+/*---(reporting options)--------------*/
+#define     RPT_MATCHES         '-'
+#define     RPT_DIRTREE         'D'
+#define     RPT_MIMESUM         'm'
+#define     RPT_MIMETREE        'M'
+#define     RPT_DATABASE        's'
+/*---(output columns)-----------------*/
+#define     OUTPUT_SILENT       '-'
+#define     OUTPUT_NORMAL       'n'
+#define     OUTPUT_PREFIX       'p'
+#define     OUTPUT_DETAIL       'd'
+#define     OUTPUT_ANALYSIS     'a'
+#define     OUTPUT_GYGES        'g'
+#define     OUTPUT_COUNT        'c'
+#define     OUTPUT_OPTIONS      " --silent --normal --detail --analysis --gyges --count --indent "
+/*---(column options)-----------------*/
+#define     COL_MIME            'm'
+#define     COL_AGES            'a'
+#define     COL_SIZE            's'
+#define     COL_LEVEL           'l'
+#define     COL_NAMING          'n'
+#define     COL_FIND            'f'
+#define     COL_OPTIONS         " --show-mime --show-age --show-size --show-level --show-naming --show-find "
 
 
 
@@ -693,10 +727,12 @@ char        RPTG_filter_ascii       (uchar a_ascii);
 char        RPTG_perms_filter       (int a_uid, char a_own, int a_gid, char a_grp, char a_oth);
 char        RPTG_perms_dir          (int a_uid, char a_own, int a_gid, char a_grp, char a_oth);
 /*---(regex)----------------*/
-char        RPTG_regex_prep         (char *a_regex);
-char        RPTG_regex_filter       (char *a_string);
-
-
+char        RPTG_regex_prep         (uchar *a_regex);
+char        RPTG_regex_filter       (uchar *a_string);
+/*---(output)---------------*/
+char        RPTG_config_col_none    (void);
+char        RPTG_config_columns     (uchar *a_option);
+char        RPTG_config_output      (uchar *a_option);
 /*---(walker)---------------*/
 char        RPTG__callback          (char a_serious, tENTRY *a_data, char *a_full);
 char        RPTG_walker             (char a_trigger);

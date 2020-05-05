@@ -186,6 +186,10 @@ PROG_init          (void)
    yLOG_stage   ('i');
    /*---(header)-------------------------*/
    DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
+   /*---(runtime control)----------------*/
+   my.mode         = MODE_SEARCH;
+   my.report       = RPT_MATCHES;
+   my.output       = OUTPUT_NORMAL;
    /*---(default run-time options)-------*/
    strcpy (my.host     , "-"      );
    my.runtime      = time (NULL);
@@ -303,21 +307,23 @@ PROG_args          (int argc, char *argv[])
       else if (strcmp (a, "--ascii"        ) == 0 && i + 1 < argc)   RPTG_config_ascii_set (argv [++i]);
       else if (strstr (ASCII_OPTIONS    , a) != NULL)                RPTG_config_ascii_add (a);
       /*---(output control)--------------*/
-      else if (strcmp (a, "--verbose"      ) == 0 || strcmp (a, "-v") == 0)  my.verbose        = 'y';
-      else if (strcmp (a, "--dump"         ) == 0)                           my.dump           = 'y';
-      else if (strcmp (a, "--dirtree"      ) == 0)                           my.dirtree        = 'y';
-      else if (strcmp (a, "--mimetree"     ) == 0)                           my.mimetree       = 'y';
-      else if (strcmp (a, "--count"        ) == 0 || strcmp (a, "-c") == 0)  my.count          = 'y';
-      else if (strcmp (a, "--mime-table"   ) == 0)                           my.mime_table     = 'y';
-      else if (strcmp (a, "--statistics"   ) == 0 || strcmp (a, "-S") == 0)  my.statistics     = 'y';
+      else if (strstr (OUTPUT_OPTIONS   , a) != NULL)                RPTG_config_output    (a);
+      /*> else if (strcmp (a, "--verbose"      ) == 0 || strcmp (a, "-v") == 0)  my.verbose        = 'y';   <* 
+       *> else if (strcmp (a, "--dump"         ) == 0)                           my.dump           = 'y';   <* 
+       *> else if (strcmp (a, "--dirtree"      ) == 0)                           my.dirtree        = 'y';   <* 
+       *> else if (strcmp (a, "--mimetree"     ) == 0)                           my.mimetree       = 'y';   <* 
+       *> else if (strcmp (a, "--count"        ) == 0 || strcmp (a, "-c") == 0)  my.count          = 'y';   <* 
+       *> else if (strcmp (a, "--mime-table"   ) == 0)                           my.mime_table     = 'y';   <* 
+       *> else if (strcmp (a, "--statistics"   ) == 0 || strcmp (a, "-S") == 0)  my.statistics     = 'y';   <*/
       /*---(output control)--------------*/
-      else if (strcmp (a, "--show-cat"     ) == 0)                           my.show_cat       = 'y';
-      else if (strcmp (a, "--show-mime"    ) == 0)                           my.show_mime      = 'y';
-      else if (strcmp (a, "--show-days"    ) == 0)                           my.show_days      = 'y';
-      else if (strcmp (a, "--show-size"    ) == 0)                           my.show_size      = 'y';
-      else if (strcmp (a, "--show-bytes"   ) == 0)                           my.show_bytes     = 'y';
-      else if (strcmp (a, "--show-level"   ) == 0)                           my.show_level     = 'y';
-      else if (strcmp (a, "--show-ascii"   ) == 0)                           my.show_ascii     = 'y';
+      else if (strstr (COL_OPTIONS      , a) != NULL)                RPTG_config_columns   (a);
+      /*> else if (strcmp (a, "--show-cat"     ) == 0)                           my.show_cat       = 'y';   <* 
+       *> else if (strcmp (a, "--show-mime"    ) == 0)                           my.show_mime      = 'y';   <* 
+       *> else if (strcmp (a, "--show-days"    ) == 0)                           my.show_days      = 'y';   <* 
+       *> else if (strcmp (a, "--show-size"    ) == 0)                           my.show_size      = 'y';   <* 
+       *> else if (strcmp (a, "--show-bytes"   ) == 0)                           my.show_bytes     = 'y';   <* 
+       *> else if (strcmp (a, "--show-level"   ) == 0)                           my.show_level     = 'y';   <* 
+       *> else if (strcmp (a, "--show-ascii"   ) == 0)                           my.show_ascii     = 'y';   <*/
       /*---(processing control)----------*/
       else if (strcmp (a, "--nmap"         ) == 0 || strcmp (a, "-m") == 0)  ;
       else if (strcmp (a, "--existing"     ) == 0 || strcmp (a, "-e") == 0)  ;
@@ -470,6 +476,7 @@ PROG__unit_quiet     (void)
    yURG_urgs   (1, x_args);
    PROG_args   (1, x_args);
    PROG_begin  ();
+   my.output == OUTPUT_SILENT;
    return 0;
 }
 
@@ -483,6 +490,7 @@ PROG__unit_loud      (void)
    yURG_urgs   (x_argc, x_args);
    PROG_args   (x_argc, x_args);
    PROG_begin  ();
+   my.output == OUTPUT_SILENT;
    return 0;
 }
 
