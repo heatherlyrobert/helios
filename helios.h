@@ -24,8 +24,8 @@
 
 #define     P_VERMAJOR  "1.--, first major version in production"
 #define     P_VERMINOR  "1.1-, adding extensive unit testing"
-#define     P_VERNUM    "1.1f"
-#define     P_VERTXT    "build primary output formats, but not formally tested yet"
+#define     P_VERNUM    "1.1h"
+#define     P_VERTXT    "reading and finding mime entries is significantly upgraded and tested"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -261,6 +261,7 @@ typedef     struct     cENTRY    tENTRY;
 
 
 struct cDRIVE {
+   /*---(base)-----------------*/
    uchar       ref;
    char        host        [LEN_LABEL];
    char        serial      [LEN_LABEL];
@@ -269,9 +270,18 @@ struct cDRIVE {
    char        type        [LEN_LABEL];
    llong       size;
    int         written;                     /* dir entry was written on       */
+   /*---(stats)----------------*/
+   int         n_seen;                      /* number seen on drive           */
+   llong       b_seen;                      /* bytes seen on drive            */
+   int         n_kept;                      /* number made into entries       */
+   llong       b_kept;                      /* bytes of entries               */
+   int         n_found;                     /* number in last find            */
+   llong       b_found;                     /* bytes in last find             */
+   /*---(links)----------------*/
    tDRIVE     *m_prev;                      /* master list                    */
    tDRIVE     *m_next;                      /* master list                    */
    tENTRY     *root;                        /* root of mount poinet           */
+   /*---(done)-----------------*/
 };
 extern      tDRIVE    *h_drive;
 extern      tDRIVE    *t_drive;
@@ -290,10 +300,12 @@ extern      short      u_drive;
 #define       ENTRY_DEVICES  "dcbfs"
 #define       ENTRY_ALL      "-dcbfsl?"
 #define       ENTRY_OPTIONS  " --reg --dir --cdev --bdev --fifo --sock --link --unknown "
+#define       ENTRY_NEGS     " --noreg --nodir --nocdev --nobdev --nofifo --nosock --nolink --nounknown "
 
 #define       WALK_ALL       '*'
 #define       WALK_FIRST     '1'
 #define       WALK_INDEXED   '#'
+#define       WALK_UPTO      '-'
 
 #define       STYPE_NORMAL   '-'
 #define       STYPE_LINK     '>'
@@ -302,6 +314,7 @@ extern      short      u_drive;
 #define       STYPE_PASS     '('
 #define       STYPE_LAST     ')'
 #define       STYPE_NEVER    'X'
+#define       STYPE_BADS     "[X"
 
 #define       AGES_JUST      'j'
 #define       AGES_DAYS      'd'
@@ -312,6 +325,7 @@ extern      short      u_drive;
 #define       AGES_ANCIENT   'a'
 #define       AGES_ALL       "jdwmqya"
 #define       AGES_OPTIONS   " --just --days --week --month --quarter --year --ancient "
+#define       AGES_NEGS      " --nojust --nodays --noweek --nomonth --noquarter --noyear --noancient "
 
 #define       ASCII_BASIC    '-'
 #define       ASCII_UPPER    'A'
@@ -321,6 +335,7 @@ extern      short      u_drive;
 #define       ASCII_CRAZY    'X'
 #define       ASCII_ALL      "-A+#>X"
 #define       ASCII_OPTIONS  " --upper --punct --extend --space --crazy --badname "
+#define       ASCII_NEGS     " --noupper --nopunct --noextend --nospace --nocrazy --nobadname "
 
 #define       EXT_DIR        "d_dir"
 #define       EXT_CONF       "t_conf"
@@ -338,11 +353,19 @@ extern      short      u_drive;
 #define       EXT_SLINK      "s_link"
 #define       EXT_ULINK      "u_link"
 #define       EXT_BACKUP     "b_tilde"
-#define       EXT_UNKNOWN    "u_ext"
-#define       EXT_MYSTERY    "u_none"
+#define       EXT_UNKNOWN    "o_ext"
+#define       EXT_MYSTERY    "o_none"
+#define       EXT_MANUAL     "manual"
+#define       EXT_OHIDDEN    "o_hidden"
+#define       EXT_XHIDDEN    "x_hidden"
+#define       EXT_GIT        "o_git"
+#define       EXT_PORTAGE    "o_portage"
+#define       EXT_KERNEL     "o_kernel"
+#define       EXT_CACHE      "o_cache"
 
 #define       SIZES_ALL      "0123456789abcdefghi"
 #define       SIZES_OPTIONS  " --zb --sb --kb --mb --gb --tb --pb "
+#define       SIZES_NEGS     " --nozb --nosb --nokb --nomb --nogb --notb --nopb "
 
 
 struct cENTRY {
@@ -426,6 +449,7 @@ struct cBUCKET {
 
 
 /*---(content)--------------*/
+#define     MIME_TOTAL       'T'
 #define     MIME_AUDIO       'a'
 #define     MIME_VIDEO       'v'
 #define     MIME_IMAGE       'i'
@@ -436,11 +460,12 @@ struct cBUCKET {
 #define     MIME_PROP        'p'
 #define     MIME_EXEC        'x'
 #define     MIME_DIR         'd'
-#define     MIME_TEMP        'z'
-#define     MIME_OTHER       'u'
+#define     MIME_JUNK        'j'
+#define     MIME_OTHER       'o'
 #define     MIME_HUH         '?'
-#define     MIME_ALL         "avistbcpxdzu?"
-#define     MIME_OPTIONS     " --audio --video --image --source --text --base --crypt --prop --exec --dir --temp --other --huh "
+#define     MIME_ALL         "avistbcpxdjo?"
+#define     MIME_OPTIONS     " --audio --video --image --source --text --base --crypt --prop --exec --dir --junk --other --huh "
+#define     MIME_NEGS        " --noaudio --novideo --noimage --nosource --notext --nobase --nocrypt --noprop --noexec --nodir --nojunk --noother --nohuh "
 
 
 
@@ -451,12 +476,12 @@ struct cMIME {
    char        cat;
    char        desc        [LEN_DESC];
    char        like;
-   int         seen;
-   llong       sbytes;
-   int         kept;
-   llong       kbytes;
-   int         found;
-   llong       fbytes;
+   int         n_seen;
+   llong       b_seen;
+   int         n_kept;
+   llong       b_kept;
+   int         n_found;
+   llong       b_found;
 };
 extern      tMIME       g_mime [MAX_MIME];
 extern      int         n_mime;
@@ -468,12 +493,14 @@ struct cGLOBAL {
    char        report;                      /* report type                    */
    char        output;                      /* match report types             */
    uchar       columns     [LEN_LABEL];     /* specific columns               */
+   uchar       pub;                         /* allow only public findings     */
+   char        headers;                     /* format output as report        */
+   char        lineno;                      /* format with line numbers       */
    /*------------------------------------*/
    char        host        [LEN_DESC]; /* host name of current computer       */
    long        runtime;                /* run time for helios                 */
    int         maxlevel;               /* maximum recursion on entry gather   */          
    char        conf;                   /* whether to process conf file        */
-   char        conf_file   [LEN_PATH]; /* alternate configuration file        */
    char        updatedb;               /* update mode flag (y/-)              */
    char        verbose;                /* show dirs as traversing             */
    int         uid;                    /* users user id                       */
@@ -485,11 +512,15 @@ struct cGLOBAL {
    char        count;                  /* count rather than show results      */
    int         total;                  /* total matches                       */
    /*---(filtering)----------------------*/
-   uchar       types       [LEN_LABEL];
-   uchar       mimes       [LEN_LABEL];
-   uchar       sizes       [LEN_LABEL];
-   uchar       ages        [LEN_LABEL];
-   uchar       ascii       [LEN_LABEL];
+   uchar       types       [LEN_LABEL];     /* filter on entry type           */
+   uchar       mimes       [LEN_LABEL];     /* filter on mime categories      */
+   uchar       sizes       [LEN_LABEL];     /* filter on entry byte size      */
+   uchar       ages        [LEN_LABEL];     /* filter on entry age/days       */
+   uchar       ascii       [LEN_LABEL];     /* filter on name quality         */
+   uchar       super;                       /* filter for both suid/guid      */
+   uchar       ext         [LEN_TERSE];     /* filter specific extension      */
+   int         r_uid;                       /* filter uid                     */
+   int         r_gid;                       /* filter gid                     */
    /*---(search filters)-----------------*/
    int         limit;                  /* max number of finds                 */
    int         number;                 /* which entry to present              */
@@ -508,9 +539,12 @@ struct cGLOBAL {
    int         level;                  /* begin search at this level          */
    char        dirtree;                /* display directory tree              */
    char        mimetree;               /* display mime-based tree             */
-   char        mpoint      [LEN_DESC]; /* mountpoint to inventory             */
+   char        mpoint      [LEN_FULL]; /* mountpoint to inventory             */
    short       drive;                  /* currently processed drive           */
-   char        database    [LEN_PATH]; /* alternative database                */
+   char        file_conf   [LEN_PATH]; /* alternative mime file               */
+   char        file_mime   [LEN_PATH]; /* alternative mime file               */
+   char        file_data   [LEN_PATH]; /* alternative database                */
+   char        begin       [LEN_PATH]; /* starting point for database         */
    /*---(mime type processing)-----------*/
    int         mime_exe;               /* mime index for executable           */
    int         mime_other;             /* mime index for unlabeled            */
@@ -525,20 +559,6 @@ struct cGLOBAL {
    char        show_bytes;             /* show file bytes in regex output     */
    char        show_level;             /* show file level in regex output     */
    char        show_ascii;             /* show file name quality        */
-   /*---(statistics)---------------------*/
-   int         n_audio;
-   int         n_video;
-   int         n_image;
-   int         n_code;
-   int         n_ascii;
-   int         n_dbase;
-   int         n_crypt;
-   int         n_prop;
-   int         n_exec;
-   int         n_temp;
-   int         n_dir;
-   int         n_other;
-   int         n_huh;
    /*---(done)---------------------------*/
 };
 typedef     struct     cGLOBAL      tGLOBAL;
@@ -571,7 +591,10 @@ extern      tGLOBAL    my;
 #define     COL_LEVEL           'l'
 #define     COL_NAMING          'n'
 #define     COL_FIND            'f'
-#define     COL_OPTIONS         " --show-mime --show-age --show-size --show-level --show-naming --show-find "
+#define     COL_TYPE            't'
+#define     COL_PERMS           'p'
+#define     COL_DRIVE           'd'
+#define     COL_OPTIONS         " --show-mime --show-age --show-size --show-level --show-naming --show-find --show-type --show-perms --show-drive "
 
 
 
@@ -624,14 +647,44 @@ char        READ_all                (char *a_name, int *a_count);
 char        FILE_commas             (llong a_number, char *a_string);
 char        FILE_uncommas           (char *a_string, llong *a_number);
 
-/*---(mime)-----------------*/
+
+
+/*===[[ HELIOS_MIME.C ]]======================================================*/
+/*---(mass)-----------------*/
+char        MIME_reset_all          (void);
+char        MIME_reset_found        (void);
+char        MIME__purge             (void);
+/*---(program)--------------*/
 char        MIME_init               (void);
+/*---(action)---------------*/
+char        MIME__action            (uchar *a_ext, int *a_cindex, int *a_mindex, uchar *a_cat, char a_action, llong a_bytes);
+char        MIME_get_index          (uchar *a_ext, int *a_cindex, int *a_mindex);
+char        MIME_add_seen           (uchar *a_ext, uchar *a_cat, llong a_bytes);
+char        MIME_add_kept           (uchar *a_ext, llong a_bytes);
+char        MIME_add_found          (uchar *a_ext, llong a_bytes);
+char        MIME_add_man            (uchar *a_ext, uchar *a_cat, long a_bytes);
+/*---(helpers)--------------*/
+uchar       MIME_cat_abbr           (int c);
+uchar      *MIME_cat_name           (int c);
+uchar       MIME_mime_cat           (int m);
+uchar      *MIME_mime_ext           (int m);
+/*---(input)----------------*/
+char        MIME__parse_essential   (char *a_recd, char *a_flag, char **s);
 char        MIME_read               (void);
+/*---(output)---------------*/
 char        MIME_write              (char a_dest, char a_space);
-char        MIME_find_by_ext        (cchar *a_ext, int *a_index, char *a_cat, long a_bytes);
+/*---(locate)---------------*/
+/*> char        MIME__find_match        (cchar *a_ext, int *a_index, char *a_cat);    <*/
+/*> char        MIME_find_by_ext        (cchar *a_ext, cchar *a_name, int *a_index, char *a_cat, long a_bytes);   <*/
+/*> char        MIME_find_man           (cchar *a_ext, uchar *a_cat, long a_bytes);   <*/
+/*---(reporting)------------*/
 char        MIME_tree               (void);
-char        MIME_reset_to_zeros     (void);
+char        MIME_all                (void);
+char        MIME_found              (void);
+/*---(unit_test)------------*/
 char*       MIME__unit              (char *a_question, char *a_ext, int n);
+
+
 
 /*---(config)---------------*/
 char        CONF__purge             (void);
@@ -668,13 +721,14 @@ char        ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat
 int         ENTRY__populate         (tPTRS *a_ptrs, char *a_full);
 char        ENTRY_manual            (tENTRY *a_entry, char *a_name, char a_type, char a_stype, char a_cat, char *a_ext);
 /*---(levels)---------------*/
-char        ENTRY__level_prep       (tPTRS *a_parent, char *a_path, char *a_newpath);
+char        ENTRY__level_prep       (tPTRS *a_parent, char *a_path, char *a_newpath, char *a_begin);
 char        ENTRY__level_read       (tPTRS  *a_ptrs, char *a_path, char a_silent);
 /*---(?????)----------------*/
 char        ENTRY_tail              (tDRIVE *a_drive, tPTRS *a_root);
-tPTRS*      DATA_start         (char *a_path);
+char        ENTRY_start             (void);
+/*> tPTRS*      DATA_start              (char *a_path);                               <*/
 /*---(walker)---------------*/
-char        ENTRY_walker            (char a_trigger, tPTRS *a_dir, char *a_path, void *a_callback);
+char        ENTRY_walk              (char a_trigger, void *a_callback);
 /*---(unit_test)------------*/
 char*       ENTRY__unit             (char *a_question, int n);
 char*       TREE__unit              (tPTRS *a_focus, char *a_question, int n);
@@ -699,33 +753,41 @@ char        RPTG_config_types_all   (void);
 char        RPTG_config_types_none  (void);
 char        RPTG_config_types_set   (uchar *a_types);
 char        RPTG_config_types_add   (uchar *a_option);
-char        RPTG_filter_type        (uchar a_type);
+char        RPTG_filter_type        (uchar a_type, uchar a_stype);
 /*---(mimes)----------------*/
 char        RPTG_config_mimes_all   (void);
 char        RPTG_config_mimes_none  (void);
 char        RPTG_config_mimes_add   (uchar *a_option);
+char        RPTG_config_mimes_sub   (uchar *a_option);
 char        RPTG_config_mimes_set   (uchar *a_mimes);
-char        RPTG_filter_mime        (uchar a_mime);
+char        RPTG_filter_mime        (uchar a_cat, uchar *a_ext);
 /*---(sizes)----------------*/
 char        RPTG_config_sizes_all   (void);
 char        RPTG_config_sizes_none  (void);
 char        RPTG_config_sizes_add   (uchar *a_option);
+char        RPTG_config_sizes_sub   (uchar *a_option);
 char        RPTG_filter_size        (uchar a_size);
 /*---(ages)-----------------*/
 char        RPTG_config_ages_all    (void);
 char        RPTG_config_ages_none   (void);
 char        RPTG_config_ages_add    (uchar *a_option);
+char        RPTG_config_ages_sub    (uchar *a_option);
 char        RPTG_config_ages_set    (uchar *a_ages);
 char        RPTG_filter_age         (long a_days);
 /*---(ascii)----------------*/
 char        RPTG_config_ascii_all   (void);
 char        RPTG_config_ascii_none  (void);
 char        RPTG_config_ascii_add   (uchar *a_option);
+char        RPTG_config_ascii_sub   (uchar *a_option);
 char        RPTG_config_ascii_set   (uchar *a_ascii);
 char        RPTG_filter_ascii       (uchar a_ascii);
 /*---(perms)----------------*/
 char        RPTG_perms_filter       (int a_uid, char a_own, int a_gid, char a_grp, char a_oth);
 char        RPTG_perms_dir          (int a_uid, char a_own, int a_gid, char a_grp, char a_oth);
+/*---(super)----------------*/
+char        RPTG_config_super_off   (void);
+char        RPTG_config_super_on    (void);
+char        RPTG_filter_super       (uchar a_super);
 /*---(regex)----------------*/
 char        RPTG_regex_prep         (uchar *a_regex);
 char        RPTG_regex_filter       (uchar *a_string);
@@ -733,6 +795,13 @@ char        RPTG_regex_filter       (uchar *a_string);
 char        RPTG_config_col_none    (void);
 char        RPTG_config_columns     (uchar *a_option);
 char        RPTG_config_output      (uchar *a_option);
+/*---(reporting-------------*/
+char        RPTG__title             (void);
+char        RPTG__break             (char a_force);
+char        RPTG__columns           (char a_force);
+char        RPTG__line              (tENTRY *a_data, char *a_full);
+char        RPTG_driver             (tENTRY *a_data, char *a_full);
+char        RPTG_footer             (void);
 /*---(walker)---------------*/
 char        RPTG__callback          (char a_serious, tENTRY *a_data, char *a_full);
 char        RPTG_walker             (char a_trigger);
@@ -745,7 +814,13 @@ char        RPTG__change_modtime    (char *a_file, int a_days);
 char        RPTG__create_file       (char a_how, char *a_src, char *a_dst, int a_days, int a_perms, char *a_own, char *a_grp);
 char*       RPTG__unit              (char *a_question, int n);
 
+char        DRIVE__mtab_read        (void);
+char        DRIVE_mtab_find         (cchar *a_path, tDRIVE **a_drive, char *a_mtab, char *a_follow, char *a_device, char *a_type);
 char        DRIVE_init              (void);
+char        DRIVE__action           (char n, char a_action, llong a_bytes, tDRIVE **a_drive);
+char        DRIVE_add_seen          (char a_ref, llong a_bytes);
+char        DRIVE_add_kept          (char a_ref, llong a_bytes);
+char        DRIVE_add_found         (char a_ref, llong a_bytes);
 char        DRIVE_wrap              (void);
 char        DRIVE_new               (tDRIVE **a_drive);
 char        DRIVE__remove           (tDRIVE **a_drive);
@@ -753,8 +828,9 @@ char        DRIVE__purge            (void);
 char        DRIVE_manual            (tDRIVE **a_drive, uchar a_ref, char *a_host, char *a_serial, char *a_device, char *a_mpoint, char *a_type, llong a_size, int a_written);
 char        DRIVE__mtab             (cchar *a_mount, char *a_part, char *a_type);
 char        DRIVE__stats            (cchar *a_part, llong *a_size, char *a_serial);
-char        DRIVE__populate         (tDRIVE **a_drive, char *a_mount, long a_time);
+char        DRIVE_populate          (tDRIVE **a_drive, char *a_mount, long a_time, char *a_index);
 char        DRIVE_inventory         (void);
+char        DRIVE_list              (void);
 char*       DRIVE__unit             (char *a_question, int n);
 
 

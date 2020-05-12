@@ -108,7 +108,7 @@ CONF__parse             (cchar *a_recd)
    p = strtok_r (x_recd, q, &r);
    for (i = 0; i < 20; ++i) {
       if (p == NULL)  break;
-      ySTR_trim (p, ySTR_BOTH);
+      strltrim (p, ySTR_BOTH, LEN_HUND);
       strncpy (s_field [i], p, LEN_HUND);
       DEBUG_CONF   yLOG_complex ("field"     , "%2d, %2d[%s]", i, strlen (s_field [i]), s_field [i]);
       ++s_nfield;
@@ -198,11 +198,11 @@ CONF_read          (void)
       return 0;
    }
    /*---(open configuration)-------------*/
-   DEBUG_CONF   yLOG_info    ("conf_file" , my.conf_file);
-   f_conf = fopen (my.conf_file, "r");
+   DEBUG_CONF   yLOG_info    ("file_conf" , my.file_conf);
+   f_conf = fopen (my.file_conf, "r");
    DEBUG_CONF   yLOG_point   ("file point", f_conf);
    --rce;  if (f_conf == NULL) {
-      printf ("fatal, helios configuration file %s could not be openned\n", my.conf_file);
+      printf ("fatal, helios configuration file %s could not be openned\n", my.file_conf);
       DEBUG_CONF   yLOG_note    ("failed to open file");
       DEBUG_CONF   yLOG_exit    (__FUNCTION__);
       return rce;

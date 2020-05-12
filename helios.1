@@ -1,7 +1,7 @@
 .TH helios 1 2014-oct "linux" "heatherly custom tools manual"
 
 .SH NAME
-helios_phaeton \- filesystem indexing and search services
+helios-phaeton (locate) filesystem indexing and search services
 
 .SH IMAGERY (see HERITAGE at bottom for more)
 drives the sun across the sky in a chariot pulled by winged horses
@@ -13,50 +13,220 @@ with enhanced reporting, debugging, and integration points.
 
 .SH SYNOPSIS
 
-.B helios [ARGUMENTS] [PATTERN]
+.B helios [ARGUMENTS] [REGEX]
 .nf
 which is the primary production version
 
-.B helios_debug [URGENTS] [ARGUMENTS] [PATTERN]
+.B helios_debug [URGENTS] [ARGUMENTS] [REGEX]
 .nf
 which can perform all helios actions, but with debugging and tracing
 
-.B helios_update [ARGUMENTS]
-.nf
-which is a hard-link to "helios --updatedb"
+.B updatedb and locate
+are hardlinked to helios
 
-.B locate [ARGUMENTS] [PATTERN]
-.nf
-which is a hard-link to provide the traditional locate interface
+.SH USER/AUDIENCE
+helios is not intended for general audiences.  while it can replace any
+other file indexing and searching, it is not intended to do so on typical
+user systems.  this is a tool built for power-users and provides no real
+concessions for anyone else.
+ 
+.SH REGEX PATTERN
+helios uses a single extended regular expression, full stop.  there are no
+options to use literals or gobbing.  none.
 
-.B updatedb [ARGUMENTS]
-.nf
-which is a hard-link to provide the traditional updatedb interface
+.B --all
+, this option is the same as leaving the regex blank
 
+since helios uses my custom regex library, anything beyond the basic
+posix-defined standard may be implemented slightly differently.  please review
+yREGEX for help in that regard.
 
+.SH SECURITY and PERMISSIONS
+helios will not present any files or directories to which the user does not
+have access.
 
+.B --super
+, will filter for suid and guid programs
 
-.SH PATTERN
-the traditional locate application takes a literal search argument and searches
-for that text anywhere within each filename.  to search for a regular expression
-you used the "--regex" or "--regexp" option.  finally, traditionally locate
-would allow multiple patterns to be searched for simultaneously.  sometimes
-options were included to allow and/or links between patterns, but not a mix
-of both.
+.B --uid <#>
+, will filter for specific uid
 
-helios interprets all patterns as extended regular expressions.  end of story.
-regular expressions are the real power of searches and making them the default
-is appropriate for technical users.  i can understand keeping it literal for
-novice users, but helios is not written for them.
+.B --gid <#>
+, will filter for specific gid
 
-helios accepts only a single search pattern.  until i have a consistent and
-common use case for multiple patterns, i will consider this one creeping
-featurism.  for the few times this is necessary, use multiple runs and "uniq"
-to get a final list.  keep it as simple as possible.
+security information is retained from when the file was reviewed.  it is
+possible that permissions could be updated since last update.  this is a
+recognized trade-off to allow fast, off-line reviews.
 
-but, in order to search for categories of data, the regular expression will
-default to all records.  in this case, the user can also explicitly call
-helios with the --all option.
+.SH OUTPUT FORMATS (optional)
+by default, helios returns a list of fully qualified files (like locate).
+but, there are other output formats depending on the need.
+
+.B --normal
+, default, locate format
+
+.B --silent
+, no results presented
+
+.B --count
+, only indicate how many matches, no other output
+
+.B prepend
+a couple columns in front of name
+  --show-mime           mime category and extention
+  --show-ages           age category and days since update
+  --show-size           size category and bytes
+  --show-level          depth in directory tree
+  --show-naming         name quality category and length
+  --show-find           regex match position and length
+  --show-perms          security/permission information
+
+.B --detail
+, present major categorizations
+
+.B --analysis
+, is a very extensive data dump
+
+.B --gyges
+, is same as --analysis, but delimited for gyges
+
+.SH OUTPUT TWEAKS (optional)
+these two flags change the output from a simple list to a more formatted report.
+
+.B --headers
+, provides column headers, spacing, and titles
+
+.B --lineno
+, provides line numbers
+
+.SH SEQUENCE FILTERS (optional)
+these flags do simple adjustments to avoid needing "head" or "tail" to
+a pipeline.
+
+.B --limit <#>
+, only shows the first <#> matching items
+
+.B --number <#>
+, only shows the <#>'th matching item
+
+.B --first
+, shows very first matching item
+
+.SH STRUCTURE FILTERS (optional)
+searches can be honed in by specifying a start point, other than root, and a
+maximum recursion depth from the start.
+
+.B --start <dir>
+, begin matching at the indicated dir and recurse down
+
+.B --depth <#>
+, will not go lower than absolute level <#>
+
+.SH FILE TYPE FILTERS (optional)
+the file types are direct matches to the stat() function results.  the
+default is for all to be shown.  the first positive request (on), will
+first turn all options off.
+
+.B turning on and off.
+  --reg   , --noreg       regular files      (r)
+  --dir   , --nodir       directories        (b)
+  --cdev  , --nocdev      character devices  (c)
+  --bdev  , --nobdev      block devices      (b)
+  --fifo  , --nofifo      fifo and pipe      (f)
+  --sock  , --nosock      sockets            (s)
+  --link  , --nolink      symbolic links     (l)
+
+.B forcing the whole set.
+  --types <chars>  where chars are the one-char abbrev shown above
+
+.SH MIME FILTERS (optional)
+the mime categories are custom defined by me.  the work the same as file types
+only they limit by type of content.  they are all turned on by default.
+
+.B turning on and off.
+  --audio , --noaudio     audio and music         (a)
+  --video , --novideo     video and movies        (v)
+  --image , --noimage     image and pictures      (i)
+  --source, --nosource    source code             (s)
+  --text  , --notext      ascii text              (t)
+  --base  , --nobase      database                (b)
+  --crypt , --nocrypt     compressed/encrypted    (c)
+  --prop  , --noprop      propietary              (p)
+  --exec  , --noexec      executable              (x)
+  --junk  , --nojunk      backup, swap, and temp  (j)
+  --other , --noother     unmatched/unknown       (o)
+  --huh   , --nohuh       beyond handling         (?)
+
+.B forcing the whole set.
+  --mimes <chars>  where chars are the one-char abbrev shown above
+
+.SH SIZE FILTERS (optional)
+the size categories are custom defined by me.  the work the same as file types
+only they limit by magnitude.  they are all turned on by default.
+
+.B turning on and off.
+  --zb, --nozb   zero bytes                (z)
+  --sb, --nosb   small        1b - 999b    (s)
+  --kb, --nokb   kilobytes    1k - 999k    (k)
+  --mb, --nomb   megabytes    1m - 999m    (m)
+  --gb, --nogb   gigabytes    1g - 999g    (g)
+  --tb, --notb   terabytes    1t - 999t    (t)
+  --pb, --nopb   petabytes    1p+          (p)
+
+.B forcing the whole set.
+  --sizes <chars>  where chars are the one-char abbrev shown above
+
+.SH AGE FILTERS (optional)
+the age categories are custom defined by me.  the work the same as file types
+only they limit time.  they are all turned on by default.
+
+.B turning on.
+  --just   , --nojust       0 to 24 hours   (j)
+  --days   , --nodays       1  - 3   days   (d)
+  --week   , --noweek       4  - 7   days   (w)
+  --month  , --nomonth      8  - 30  days   (m)
+  --quarter, --noquarter    31 - 90  days   (q)
+  --year   , --noyear       91 - 365 days   (y)
+  --ancient, --noancient    > 365 days      (a)
+
+.B forcing the whole set.
+  --ages <chars>  where chars are the one-char abbrev shown above
+
+.SH NAMING FILTERS (optional)
+the naming categories are custom defined by me.  the work the same as file
+types only they limit file name quality.  they are all turned on by default.
+names are assigned only one category, upgraded to the most extreme problem.
+
+.B turning on.
+  --basic  , --nobasic    basic alphanum        [a-z0-9_.]        (b)
+  --upper  , --noupper    ... plus upper        ... [A-Z]         (u)
+  --punct  , --nopunct    ... plus puntuation   ... [-:;()[]+]    (p)
+  --extend , --noextend   visible ascii chars   >  32 and <= 127  (e)
+  --space  , --nospace    ... plus spaces       >= 32 and <= 127  (s)
+  --crazy  , --nocrazy    any and all chars     ascii 0 to 255    (c)
+
+.B forcing the whole set.
+  --naming <chars>  where chars are the one-char abbrev shown above
+
+.B seeing all issues
+  --badname, --nobadname    turn on all isssues
+ 
+.SH CREATE THE DATABASE
+helios stores all directory and file data in an off-line binary database
+for later searching.  this database is typically updated every night using
+a scheduler.
+
+.B --updatedb
+, rebuilds the database with latest configuration
+
+.B --start <dir>
+, sets the maximum recursion to review/save files
+
+.B --depth <#>
+, sets absolute maximum recursion to review/save files
+
+also, please review helios (5) to understand how configuration helps prune
+unneeded detail from data, such as linux distribution files, temp dirs, etc.
 
 .SH SEARCH OUTPUT
 the results of a search are presented as a list of filenames with absolute
@@ -64,164 +234,9 @@ paths to make accessing the files as easy as possible.  these filenames can
 be also piped into another shell command, substituted into a command argument
 using $(locate ...), or sent to an application as desired.
 
-.SH SEARCH OUTPUT OPTIONS
-searches can be limited in scope by using the following two options...
 
-.B --start <path>
-.RS 8
-sets the start point for searching to better target results.
-.RE
 
-.B --depth <n>
-.RS 8
-sets the maximum search depth for searches to <n> levels.
-.RE
 
-results can be filtered by using the following options...
-
-.B --cat <c>
-.RS 8
-only shows files in the mime-like category <c>.
-.RE
-
-.B --mime <s>
-.RS 8
-only shows files with the mime-like type of <s>.
-.RE
-
-.B --just
-.RS 8
-only shows files updated in the last two days.
-.RE
-
-.B --week
-.RS 8
-only shows files updated in the last week (7 days).
-.RE
-
-.B --month
-.RS 8
-only shows files updated in the last month (30 days).
-.RE
-
-.B --year
-.RS 8
-only shows files updated in the last year (365 days).
-.RE
-
-.B --old
-.RS 8
-only shows files NOT updated in the last year (more than 365 days).
-.RE
-
-.B --sb
-.RS 8
-only shows files with 0 to 999 bytes.
-.RE
-
-.B --kb
-.RS 8
-only shows files with 1k to 999kb.
-.RE
-
-.B --mb
-.RS 8
-only shows files with 1m to 999mb.
-.RE
-
-.B --gb
-.RS 8
-only shows files over 1gb.
-.RE
-
-.B --badname
-.RS 8
-shows files whose name includes non-standard characters.
-.RE
-
-.B --punct
-.RS 8
-shows files whose name includes extra punctuation, but not worse.
-.RE
-
-.B --extend
-.RS 8
-shows files whose name includes extended punctuation, but not worse.
-.RE
-
-.B --space
-.RS 8
-shows files whose name includes spaces, but not worse.
-.RE
-
-.B --junk
-.RS 8
-shows files whose name includes unprintable characters.
-.RE
-
-search results can be supplemented using the following options...
-
-.B --show-cat
-.RS 8
-prepends the mime-like file category to help organization.
-.RE
-
-.B --show-mime
-.RS 8
-prepends the mime-like file type to help organization.
-.RE
-
-.B --show-days
-.RS 8
-prepends the number of days since last update before file name.
-.RE
-
-.B --show-size
-.RS 8
-prepends the number of digits in the byte size.
-.RE
-
-.B --show-bytes
-.RS 8
-prepends the actual size in bytes.
-.RE
-
-.B --show-level
-.RS 8
-prepends the search depth at which the file was found.
-.RE
-
-.B --show-ascii
-.RS 8
-prepends the name quality rating.
-.RE
-
-results can also be altered using the following options...
-
-.B -c, --count
-.RS 8
-shows the count of the results rather than the detailed results.
-.RE
-
-.B -n, --limit <n>
-.RS 8
-only shows the first <n> matching items rather than the whole list.
-.RE
-
-.B --first
-.RS 8
-only shows the very first matching item (same as --limit 1).
-.RE
-
-.B --number <n>
-.RS 8
-only shows the <n>'th matching item rather than the whole list.
-.RE
-
-.B -i, --ignore-case
-.RS 8
-causes the regular expression to be case-insensitive.
-.RE
 
 .SH ALTERNATIVE OUTPUT
 in some cases helios can be asked to produce something other than search
@@ -266,7 +281,7 @@ search the drive partion indicated in the --mpoint argument.
 partition mount point for processing.
 .RE
 
-.B --depth <n>
+.B --depth <#>
 .RS 8
 sets the maximum processing level for database creation.
 .RE

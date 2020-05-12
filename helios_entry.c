@@ -24,6 +24,10 @@ tENTRY *g_found   = NULL;
 char    g_path    [LEN_RECD] = "";
 
 
+static tENTRY *s_start   = NULL;
+static char    g_spath   [LEN_RECD] = "";
+
+
 /*====================------------------------------------====================*/
 /*===----                       small support                          ----===*/
 /*====================------------------------------------====================*/
@@ -356,6 +360,12 @@ ENTRY_init              (void)
    t_ptrs             = NULL;
    n_ptrs             = 0;
    n_ptrs_ever        = 0;
+   /*---(searching)----------------------*/
+   g_target   = 0;
+   g_looked   = 0;
+   g_matched  = 0;
+   g_found    = NULL;
+   strlcpy (g_path, "", LEN_RECD);
    /*---(complete)-----------------------*/
    DEBUG_ENVI   yLOG_sexit   (__FUNCTION__);
    return 0;
@@ -585,6 +595,7 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
    char       *p           = NULL;
    int         x_len       = 0;
    int         i           = 0;
+   char       *x_final     = NULL;
    /*---(header)-------------------------*/
    DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
    /*---(defense)------------------------*/
@@ -615,7 +626,7 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
       case   ENTRY_SOCK   :  p = EXT_SLINK;      break;
       default             :  p = EXT_ULINK;      break;
       }
-      rc = MIME_find_by_ext (p, &x_index, &x_cat, a_bytes);
+      rc = MIME_add_seen (p, &x_cat, a_bytes);
    } else if (strchr (ENTRY_DEVICES, a_type) != NULL) {
       DEBUG_ENVI   yLOG_note    ("device entry");
       switch (a_type) {
@@ -625,27 +636,56 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
       case   ENTRY_FIFO   :  p = EXT_FIFO;       break;
       case   ENTRY_SOCK   :  p = EXT_SOCK;       break;
       }
-      rc = MIME_find_by_ext (p, &x_index, &x_cat, a_bytes);
+      rc = MIME_add_seen (p, &x_cat, a_bytes);
    } else if (x_name [x_len - 1] == '~') {
       DEBUG_ENVI   yLOG_note    ("backup/cache entry");
       p  = EXT_BACKUP;
-      rc = MIME_find_by_ext (p, &x_index, &x_cat, a_bytes);
+      rc = MIME_add_seen (p, &x_cat, a_bytes);
+   }
+   /*---(check for git)-------------------*/
+   else if (strstr (a_full, "/.git") != NULL) {
+      rc = MIME_add_seen (EXT_GIT, &x_cat, a_bytes);
+      DEBUG_RPTG   yLOG_value   ("find"      , rc);
+      if (rc == 0)  p = EXT_GIT;
+   }
+   /*---(gentoo)--------------------------*/
+   else if (strncmp (a_full, "/usr/portage/"    , 13) == 0) {
+      rc = MIME_add_seen (EXT_PORTAGE, &x_cat, a_bytes);
+      DEBUG_RPTG   yLOG_value   ("portage"   , rc);
+      if (rc == 0)  p = EXT_PORTAGE;
+   } else if (strncmp (a_full, "/var/tmp/portage/", 17) == 0) {
+      rc = MIME_add_seen (EXT_PORTAGE, &x_cat, a_bytes);
+      DEBUG_RPTG   yLOG_value   ("portage"   , rc);
+      if (rc == 0)  p = EXT_PORTAGE;
+   } else if (strncmp (a_full, "/var/db/pkg/"     , 12) == 0) {
+      rc = MIME_add_seen (EXT_PORTAGE, &x_cat, a_bytes);
+      DEBUG_RPTG   yLOG_value   ("portage"   , rc);
+      if (rc == 0)  p = EXT_PORTAGE;
+   } else if (strncmp (a_full, "/usr/src/"        ,  9) == 0) {
+      rc = MIME_add_seen (EXT_KERNEL , &x_cat, a_bytes);
+      DEBUG_RPTG   yLOG_value   ("kernel"    , rc);
+      if (rc == 0)  p = EXT_KERNEL;
+   } else if (strncmp (a_full, "/var/cache/"      , 11) == 0) {
+      rc = MIME_add_seen (EXT_CACHE  , &x_cat, a_bytes);
+      DEBUG_RPTG   yLOG_value   ("kernel"    , rc);
+      if (rc == 0)  p = EXT_CACHE;
    }
    /*---(get suffix extention)------------*/
    else {
       for (i = 0; i <= 2; ++i) {
          p = strrchr (x_name, '.');
          DEBUG_RPTG   yLOG_complex ("check ."   , "%d %p", i, p);
-         if (p == NULL || p == x_name) {  /* bad or hidden file indicator */
+         if (p == NULL || p == x_name) {  /* bad or hidden indicator */
             x_len = 0;
             p     = NULL;
             break;
          }
          x_len = strlen (p + 1);
          DEBUG_RPTG   yLOG_complex ("testing"   , "%d[%s]", x_len, p + 1);
-         if (x_len <= 7) {
+         if (x_len <= 9) {
+            if (i == 0)  x_final = p + 1;
             DEBUG_RPTG   yLOG_snote   (p + 1);
-            rc = MIME_find_by_ext (p + 1, &x_index, &x_cat, a_bytes);
+            rc = MIME_add_seen (p + 1, &x_cat, a_bytes);
             DEBUG_RPTG   yLOG_value   ("find"      , rc);
             if (rc == 0) {
                ++p;
@@ -655,15 +695,34 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
          p [0] = '\0';
       }
    }
+   /*---(check for single word)-----------*/
+   if (p == NULL && i == 0) {
+      rc = MIME_add_seen (a_name, &x_cat, a_bytes);
+      DEBUG_RPTG   yLOG_value   ("whole"    , rc);
+      if (rc == 0)  p = a_name;
+   }
+   /*---(check for hidden)----------------*/
+   if (x_cat == MIME_HUH && x_name [0] == '.') {
+      rc = MIME_add_seen (EXT_OHIDDEN, &x_cat, a_bytes);
+      DEBUG_RPTG   yLOG_value   (EXT_OHIDDEN, rc);
+      if (rc == 0)  p = EXT_OHIDDEN;
+   }
+   /*---(check for manuals)---------------*/
+   if (x_cat == MIME_HUH && x_final != NULL) {
+      rc = MIME_add_man (x_final, &x_cat, a_bytes);
+      DEBUG_RPTG   yLOG_value   (EXT_MANUAL, rc);
+      if (rc == 0)  p = EXT_MANUAL;
+   }
    /*---(override for executables)--------*/
-   if (x_cat == MIME_HUH ||  p == EXT_RLINK) {
+   if (x_cat == MIME_HUH ||  p == EXT_OHIDDEN ||  p == EXT_RLINK) {
       if (  (x_stat.st_mode & S_IXUSR)  ||
             (x_stat.st_mode & S_IXGRP)  ||
             (x_stat.st_mode & S_IXOTH))  {
          DEBUG_ENVI   yLOG_note    ("executable entry");
-         if (p == EXT_RLINK)  p  = EXT_ELINK;
-         else                 p  = EXT_EXEC;
-         rc = MIME_find_by_ext (p, &x_index, &x_cat, a_bytes);
+         if      (p == EXT_RLINK)    p  = EXT_ELINK;
+         else if (p == EXT_OHIDDEN)  p  = EXT_XHIDDEN;
+         else                        p  = EXT_EXEC;
+         rc = MIME_add_seen (p, &x_cat, a_bytes);
       }
    }
    /*---(file the rest properly)----------*/
@@ -671,15 +730,16 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
       if (strncmp (a_full, "/etc/", 5) == 0) {
          DEBUG_ENVI   yLOG_note    ("configuration entry");
          p  = EXT_CONF;
-         rc = MIME_find_by_ext (p, &x_index, &x_cat, a_bytes);
+         rc = MIME_add_seen (p, &x_cat, a_bytes);
+         DEBUG_RPTG   yLOG_value   ("portage"   , rc);
       } else if (x_len > 0 && x_len <= 7) {
          DEBUG_ENVI   yLOG_note    ("other entry");
          p  = EXT_UNKNOWN;
-         rc = MIME_find_by_ext (p, &x_index, &x_cat, a_bytes);
+         rc = MIME_add_seen (p, &x_cat, a_bytes);
       } else {
          DEBUG_ENVI   yLOG_note    ("unknown entry");
          p  = EXT_MYSTERY;
-         rc = MIME_find_by_ext (p, &x_index, &x_cat, a_bytes);
+         rc = MIME_add_seen (p, &x_cat, a_bytes);
       }
    }
    /*---(save_back)----------------------*/
@@ -709,7 +769,7 @@ ENTRY__populate         (tPTRS *a_ptrs, char *a_full)
    tSTAT       st;                          /* file stats                     */
    tSTAT       st2;                         /* file stats                     */
    char        c           = ' ';           /* generic char                   */
-   char        s           [500];           /* generic string                 */
+   char        s           [LEN_LABEL];     /* generic string                 */
    int         rci         = 0;             /* return code as integer         */
    int         i           = 0;             /* generic iterator               */
    char       *p           = NULL;
@@ -775,9 +835,9 @@ ENTRY__populate         (tPTRS *a_ptrs, char *a_full)
    x_data->bytes = st.st_size;
    x_data->bcum  = st.st_size;
    DEBUG_ENVI   yLOG_value   ("bytes"     , x_data->bytes);
-   sprintf (s, "%d", st.st_size);
+   sprintf (s, "%ld", x_data->bytes);
    x_data->size  = strlen (s);
-   if (st.st_size < 1)  x_data->size = 0;
+   if (x_data->bytes < 1)  x_data->size = 0;
    DEBUG_ENVI   yLOG_value   ("exponent"  , x_data->size);
    x_data->count = 1;
    x_data->ccum  = 1;
@@ -886,7 +946,7 @@ ENTRY__find             (tPTRS *a_dir, char *a_name, tPTRS **a_found)
 }
 
 char
-ENTRY__level_prep       (tPTRS *a_parent, char *a_path, char *a_newpath)
+ENTRY__level_prep       (tPTRS *a_parent, char *a_path, char *a_newpath, char *a_begin)
 {  /*---(local variables)--+-----+-----+-*/
    char        rce         =  -10;
    tENTRY     *x_dir       = NULL;
@@ -951,6 +1011,22 @@ ENTRY__level_prep       (tPTRS *a_parent, char *a_path, char *a_newpath)
    DEBUG_ENVI   yLOG_complex ("path"      , "%d[%s]", x_len, x_path);
    /*---(save back)-----------------------*/
    if (a_newpath != NULL)  strlcpy (a_newpath, x_path, LEN_PATH);
+   /*---(check begin)---------------------*/
+   if (strcmp (my.path, "") != 0) {
+      if (strncmp (my.path, x_path, strlen (my.path)) == 0) {
+         DEBUG_ENVI   yLOG_note    ("--start fulfilled, record everything");
+         *a_begin = 'y';
+      } else if (strncmp (my.path, x_path, x_len) == 0) {
+         DEBUG_ENVI   yLOG_note    ("on path of --start, record this directory only");
+         *a_begin = 'd';
+      } else {
+         DEBUG_ENVI   yLOG_note    ("not on path of --start, record nothing");
+         *a_begin = '-';
+      }
+   } else {
+      DEBUG_ENVI   yLOG_note    ("no --start used, record nothing");
+      *a_begin = 'y';
+   }
    /*---(complete)------------------------*/
    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
    return 0;
@@ -958,25 +1034,35 @@ ENTRY__level_prep       (tPTRS *a_parent, char *a_path, char *a_newpath)
 
 char         /*===[[ gather entries in dir ]]=============[ ------ [ ------ ]=*/
 ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
-{  /*---(local variables)--+-----------+-*/
+{  /*---(local variables)--+-----+-----+-*/
    char        rce         =  -10;
    int         rc          =    0;
    int         rc2         =    0;
    DIR        *x_dir       = NULL;          /* directory pointer              */
+   tDRIVE     *x_drive     = NULL;
    tDIRENT    *x_entry     = NULL;          /* directory entry                */
    tENTRY     *x_parent    = NULL;          /* directory data                 */
    tPTRS      *x_curr      = NULL;          /* current entry                  */
    tENTRY     *x_data      = NULL;          /* current entry                  */
-   int         c           = 0;
+   int         c           =    0;
    char        x_path      [LEN_PATH];
    char        x_full      [500];
+   char        x_begin     =  'y';
+   char        x_follow    =  '-';
+   char        x_index     =   -1;
    /*---(header)-------------------------*/
    DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
    DEBUG_ENVI   yLOG_complex ("args"      , "%p, %p, %c", a_parent, a_path, a_silent);
    /*---(defense)------------------------*/
-   rc = ENTRY__level_prep (a_parent, a_path, x_path);
+   rc = ENTRY__level_prep (a_parent, a_path, x_path, &x_begin);
    DEBUG_ENVI   yLOG_value   ("prep"      , rc);
    --rce;  if (rc < 0) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_ENVI   yLOG_value   ("x_begin"   , rc);
+   --rce;  if (x_begin == '-' || a_parent->data->stype == STYPE_LINK) {
+      DEBUG_ENVI   yLOG_note    ("dir does not fall on --start path do not recurse");
       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -989,10 +1075,29 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
       return rce;
    }
    --rce;  if (x_parent->stype == STYPE_PASS) {
+      DEBUG_ENVI   yLOG_note    ("dir_pass, get out and retain");
       DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
       return 0;
    }
+   --rce;  if (strchr (STYPE_BADS, x_parent->stype) != NULL) {
+      DEBUG_ENVI   yLOG_note    ("dir_avoid or dir_ignore, get out and remove");
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
    DEBUG_ENVI   yLOG_complex ("head child", "%s, %s, %dn, %dc", x_path, a_parent->data->name, a_parent->nchild, c);
+   /*---(add drive if needed)------------*/
+   rc = DRIVE_mtab_find (x_path, &x_drive, NULL, &x_follow, NULL, NULL);
+   DEBUG_ENVI   yLOG_complex ("mtab"      , "%p, %c, %d", x_drive, x_follow, rc);
+   --rce;  if (rc == 1) {
+      if (x_follow == '-') {
+         DEBUG_ENVI   yLOG_note    ("not marked to follow (artificial)");
+         DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+         return rce;
+      }
+      if (x_drive == NULL)  rc = DRIVE_populate (&x_drive, x_path, my.runtime, &x_index);
+      x_parent->drive = x_drive->ref;
+   }
+   x_drive = x_parent->drive;
    /*---(open directory)-----------------*/
    x_dir = opendir (x_path);
    --rce;  if (x_dir == NULL) {
@@ -1005,7 +1110,7 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
    --rce; while (1) {
       /*---(read)------------------------*/
       x_entry = readdir (x_dir);
-      DEBUG_ENVI   yLOG_point   ("x_entry"   , x_entry);
+      DEBUG_ENVI   yLOG_point   ("X_ENTRY"   , x_entry);
       if (x_entry == NULL)                      break;
       /*---(filter)----------------------*/
       if (x_entry->d_name   == NULL)            continue;
@@ -1027,7 +1132,7 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
       /*---(get name saved)--------------*/
       strncpy (x_data->name, x_entry->d_name, MAX_NAME - 1);
       x_data->lvl   = x_curr->parent->data->lvl + 1;
-      x_data->drive = x_curr->parent->data->drive;
+      x_data->drive = x_drive;
       /*---(get attributes)--------------*/
       if (strcmp ("/", x_parent->name) == NULL) 
          sprintf (x_full, "/%s"  , x_entry->d_name);
@@ -1039,7 +1144,7 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
       if (rc < 0) continue;
       /*---(recurse directories)---------*/
       if (x_data->type == ENTRY_DIR) {
-         if        (x_data->stype   == STYPE_LINK) {
+         if        (x_begin != 'd' && x_data->stype   == STYPE_LINK) {
             DEBUG_ENVI   yLOG_note    ("stop, do not recurse on symlink directories");
          } else if (x_data->stype   == STYPE_AVOID) {
             DEBUG_ENVI   yLOG_note    ("stop, do not recurse as this is dir_avoid");
@@ -1052,7 +1157,8 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
             rc2 = ENTRY__level_read (x_curr, x_path, a_silent);
             DEBUG_ENVI   yLOG_value   ("recurse"   , rc);
             if (rc2 < 0) {
-               DEBUG_ENVI   yLOG_note    ("hit a dir_never, erase entry");
+               DEBUG_ENVI   yLOG_note    ("dir_never or dir_avoid, no totals, erase entry");
+               ENTRY__free (&x_curr);
                continue;
             }
          }
@@ -1064,8 +1170,21 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
       /*---(check silent)----------------*/
       DEBUG_ENVI   yLOG_note    ("check for silent treatment");
       if (a_silent == 'y' || x_data->stype == STYPE_AVOID || x_data->stype == STYPE_NEVER) {
-         DEBUG_ENVI   yLOG_note    ("silent/avoid/never entry, deleting after recursing/totalling");
+         DEBUG_ENVI   yLOG_note    ("dir_silent entry, deleting after recursing/totalling");
          ENTRY__free (&x_curr);
+      }
+      if (x_begin != 'y') {
+         if (x_data->type == ENTRY_DIR && x_begin != 'd') {
+            DEBUG_ENVI   yLOG_note    ("dir falls outside --start <dir>");
+            ENTRY__free (&x_curr);
+         }
+         else if (x_data->type != ENTRY_DIR) {
+            DEBUG_ENVI   yLOG_note    ("file/non-dir falls outside --start <dir>");
+            ENTRY__free (&x_curr);
+         }
+      }
+      if (x_curr != NULL) {
+         MIME_add_kept (x_data->ext, x_data->bytes);
       }
       /*---(done)------------------------*/
    }
@@ -1159,73 +1278,134 @@ ENTRY_tail         (tDRIVE *a_drive, tPTRS *a_root)
    return 0;
 }
 
-tPTRS*       /*===[[ process a starting point ]]==========[ ------ [ ------ ]=*/
-DATA_start         (
-      /*---(formal parameters)+-------------+---------------------------------*/
-      char       *a_path      )             /* full path of directory to scan */
-{  /*---(local variables)--+-----------+-*/
-   char        rce         = -10;           /* return code for errors         */
-   tPTRS      *x_ptrs      = NULL;          /* current entry                  */
-   char        x_path      [MAX_NAME];      /* strtok working copy            */
-   char       *p           = NULL;          /* strtok current pointer         */
-   char       *q           = "/";           /* strtok delimiters              */
-   char       *s           = NULL;          /* strtok context                 */
+char
+ENTRY__callback   (char a_serious, tENTRY *a_data, char *a_full)
+{
+   /*---(local variables)--+-----------+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
    /*---(header)-------------------------*/
-   DEBUG_ARGS   yLOG_enter   (__FUNCTION__);
+   DEBUG_DATA   yLOG_complex ("_callback" , "%p, %p", a_data, a_full);
    /*---(defense)------------------------*/
-   DEBUG_ARGS   yLOG_note    ("get rocking");
-   DEBUG_ARGS   yLOG_point   ("a_path"    , a_path);
-   --rce;  if (a_path == NULL) {
-      DEBUG_ARGS   yLOG_note    ("start path NULL, return");
-      DEBUG_ARGS   yLOG_exit    (__FUNCTION__);
+   --rce;  if (a_data == NULL) {
       return rce;
    }
-   DEBUG_ARGS   yLOG_info    ("a_path"    , a_path);
-   --rce;  if (a_path [0] != '/') {
-      DEBUG_ARGS   yLOG_note    ("start path not absolute, return");
-      DEBUG_ARGS   yLOG_exit    (__FUNCTION__);
+   --rce;  if (a_full == NULL) {
       return rce;
    }
-   /*---(root)---------------------------*/
-   x_ptrs = h_ptrs;
-   --rce;  if (x_ptrs->data == NULL) {
-      DEBUG_ARGS   yLOG_note    ("root does not have data, return");
-      DEBUG_ARGS   yLOG_exit    (__FUNCTION__);
+   /*---(filter non-dirs)----------------*/
+   if (a_data->type != ENTRY_DIR)       return 0;
+   /*---(check for path)-----------------*/
+   if (my.path [0] != a_full [0])       return 0;
+   if (strcmp (my.path, a_full) != 0)   return 0;
+   strlcpy (g_spath, a_full, LEN_RECD);
+   DEBUG_DATA   yLOG_complex ("final"     , "%s, %s, %s", a_data->name, a_full, g_spath);
+   /*---(complete)-----------------------*/
+   return 1;
+}
+
+char
+ENTRY_start             (void)
+{
+   /*---(local variables)--+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   /*---(header)-------------------------*/
+   DEBUG_DATA   yLOG_enter   (__FUNCTION__);
+   /*---(prepare)------------------------*/
+   s_start = NULL;
+   strlcpy (g_spath, "", LEN_RECD);
+   /*---(defense)------------------------*/
+   if (strcmp (my.path, "") == 0) {
+      DEBUG_DATA   yLOG_exit    (__FUNCTION__);
+      return 0;
+   }
+   DEBUG_DATA   yLOG_info    ("my.path"  , my.path);
+   --rce;  if (my.path [0] != '/') {
+      fprintf (stderr, "ERROR, start directory [--start %s] not absolute, ie, doesn't begin with '/'\n", my.path);
+      DEBUG_DATA   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (x_ptrs->data->name == NULL) {
-      DEBUG_ARGS   yLOG_note    ("root does not have a name, return");
-      DEBUG_ARGS   yLOG_exit    (__FUNCTION__);
+   /*---(find)---------------------------*/
+   rc = ENTRY_walk (WALK_FIRST, ENTRY__callback);
+   /*---(error handling)-----------------*/
+   --rce;  if (rc <= 0) {
+      fprintf (stderr, "ERROR, start directory [--start %s] not found in database\n", my.path);
+      DEBUG_DATA   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
-   }
-   --rce;  if (strcmp (x_ptrs->data->name, "/") != 0) {
-      DEBUG_ARGS   yLOG_note    ("root not /, return");
-      DEBUG_ARGS   yLOG_exit    (__FUNCTION__);
-      return rce;
-   }
-   my.level = 0;
-   root_stack [my.level] = x_ptrs;
-   /*---(process)------------------------*/
-   strcpy   (x_path, a_path + 1);
-   p = strtok_r (x_path, q, &s);
-   --rce;
-   while (p != NULL) {
-      DEBUG_ENVI   yLOG_info    ("segment"   , p);
-      /*> x_ptrs = DATA_find (x_ptrs, p);                                             <*/
-      DEBUG_ENVI   yLOG_point   ("x_ptrs"    , x_ptrs);
-      if (x_ptrs == NULL) {
-         DEBUG_ARGS   yLOG_note    ("segment not found, return");
-         DEBUG_ARGS   yLOG_exit    (__FUNCTION__);
-         return rce;
-      }
-      ++my.level;
-      root_stack [my.level] = x_ptrs;
-      p = strtok_r (NULL  , q, &s);
    }
    /*---(complete)-----------------------*/
-   DEBUG_ARGS   yLOG_exit    (__FUNCTION__);
-   return x_ptrs;
+   DEBUG_DATA   yLOG_exit    (__FUNCTION__);
+   return rc;
 }
+
+/*> tPTRS*       /+===[[ process a starting point ]]==========[ ------ [ ------ ]=+/            <* 
+ *> DATA_start         (                                                                        <* 
+ *>       /+---(formal parameters)+-------------+---------------------------------+/            <* 
+ *>       char       *a_path      )             /+ full path of directory to scan +/            <* 
+ *> {  /+---(local variables)--+-----------+-+/                                                 <* 
+ *>    char        rce         = -10;           /+ return code for errors         +/            <* 
+ *>    tPTRS      *x_ptrs      = NULL;          /+ current entry                  +/            <* 
+ *>    char        x_path      [MAX_NAME];      /+ strtok working copy            +/            <* 
+ *>    char       *p           = NULL;          /+ strtok current pointer         +/            <* 
+ *>    char       *q           = "/";           /+ strtok delimiters              +/            <* 
+ *>    char       *s           = NULL;          /+ strtok context                 +/            <* 
+ *>    /+---(header)-------------------------+/                                                 <* 
+ *>    DEBUG_ARGS   yLOG_enter   (__FUNCTION__);                                                <* 
+ *>    /+---(defense)------------------------+/                                                 <* 
+ *>    DEBUG_ARGS   yLOG_note    ("get rocking");                                               <* 
+ *>    DEBUG_ARGS   yLOG_point   ("a_path"    , a_path);                                        <* 
+ *>    --rce;  if (a_path == NULL) {                                                            <* 
+ *>       DEBUG_ARGS   yLOG_note    ("start path NULL, return");                                <* 
+ *>       DEBUG_ARGS   yLOG_exit    (__FUNCTION__);                                             <* 
+ *>       return rce;                                                                           <* 
+ *>    }                                                                                        <* 
+ *>    DEBUG_ARGS   yLOG_info    ("a_path"    , a_path);                                        <* 
+ *>    --rce;  if (a_path [0] != '/') {                                                         <* 
+ *>       DEBUG_ARGS   yLOG_note    ("start path not absolute, return");                        <* 
+ *>       DEBUG_ARGS   yLOG_exit    (__FUNCTION__);                                             <* 
+ *>       return rce;                                                                           <* 
+ *>    }                                                                                        <* 
+ *>    /+---(root)---------------------------+/                                                 <* 
+ *>    x_ptrs = h_ptrs;                                                                         <* 
+ *>    --rce;  if (x_ptrs->data == NULL) {                                                      <* 
+ *>       DEBUG_ARGS   yLOG_note    ("root does not have data, return");                        <* 
+ *>       DEBUG_ARGS   yLOG_exit    (__FUNCTION__);                                             <* 
+ *>       return rce;                                                                           <* 
+ *>    }                                                                                        <* 
+ *>    --rce;  if (x_ptrs->data->name == NULL) {                                                <* 
+ *>       DEBUG_ARGS   yLOG_note    ("root does not have a name, return");                      <* 
+ *>       DEBUG_ARGS   yLOG_exit    (__FUNCTION__);                                             <* 
+ *>       return rce;                                                                           <* 
+ *>    }                                                                                        <* 
+ *>    --rce;  if (strcmp (x_ptrs->data->name, "/") != 0) {                                     <* 
+ *>       DEBUG_ARGS   yLOG_note    ("root not /, return");                                     <* 
+ *>       DEBUG_ARGS   yLOG_exit    (__FUNCTION__);                                             <* 
+ *>       return rce;                                                                           <* 
+ *>    }                                                                                        <* 
+ *>    my.level = 0;                                                                            <* 
+ *>    root_stack [my.level] = x_ptrs;                                                          <* 
+ *>    /+---(process)------------------------+/                                                 <* 
+ *>    strcpy   (x_path, a_path + 1);                                                           <* 
+ *>    p = strtok_r (x_path, q, &s);                                                            <* 
+ *>    --rce;                                                                                   <* 
+ *>    while (p != NULL) {                                                                      <* 
+ *>       DEBUG_ENVI   yLOG_info    ("segment"   , p);                                          <* 
+ *>       /+> x_ptrs = DATA_find (x_ptrs, p);                                             <+/   <* 
+ *>       DEBUG_ENVI   yLOG_point   ("x_ptrs"    , x_ptrs);                                     <* 
+ *>       if (x_ptrs == NULL) {                                                                 <* 
+ *>          DEBUG_ARGS   yLOG_note    ("segment not found, return");                           <* 
+ *>          DEBUG_ARGS   yLOG_exit    (__FUNCTION__);                                          <* 
+ *>          return rce;                                                                        <* 
+ *>       }                                                                                     <* 
+ *>       ++my.level;                                                                           <* 
+ *>       root_stack [my.level] = x_ptrs;                                                       <* 
+ *>       p = strtok_r (NULL  , q, &s);                                                         <* 
+ *>    }                                                                                        <* 
+ *>    /+---(complete)-----------------------+/                                                 <* 
+ *>    DEBUG_ARGS   yLOG_exit    (__FUNCTION__);                                                <* 
+ *>    return x_ptrs;                                                                           <* 
+ *> }                                                                                           <*/
 
 
 
@@ -1253,7 +1433,7 @@ ENTRY__walk_handler     (char a_trigger, tPTRS *a_curr, tPTRS *a_parent, char *a
    /*---(callback)-----------------------*/
    DEBUG_DATA   yLOG_complex ("prep2call" , "%-20.20s, %2d, %p, %s, %s", x_data->name, x_data->lvl, a_parent, a_path, a_full);
    switch (a_trigger) {
-   case WALK_ALL     : 
+   case WALK_ALL     : case WALK_FIRST : case WALK_UPTO :
       x_serious = 'y';
       break;
    case WALK_INDEXED :
@@ -1269,9 +1449,22 @@ ENTRY__walk_handler     (char a_trigger, tPTRS *a_curr, tPTRS *a_parent, char *a
          DEBUG_DATA   yLOG_note    ("WALK_ALL mode, found one, continue on");
       }
       break;
+   case WALK_FIRST   : 
+      if (rc == 1) {
+         DEBUG_DATA   yLOG_note    ("WALK_FIRST mode, found, stopping");
+         s_start = a_curr;
+         return 1;
+      }
+      break;
    case WALK_INDEXED :
       if (x_serious == 'y' && rc == 1) {
-         DEBUG_DATA   yLOG_note    ("WALK_INDEXED mode, found, stopping");
+         DEBUG_DATA   yLOG_note    ("WALK_INDEXED mode, found index, stopping");
+         return 1;
+      }
+      break;
+   case WALK_UPTO    :
+      if (g_matched == g_target) {
+         DEBUG_DATA   yLOG_note    ("WALK_UPTO mode, found enough, stopping");
          return 1;
       }
       break;
@@ -1299,6 +1492,17 @@ ENTRY__walker            (char a_trigger, tPTRS *a_dir, char *a_path, void *a_ca
    if (a_dir == h_ptrs) {
       rc = ENTRY__walk_handler (a_trigger, a_dir, NULL, a_path, x_full, a_callback);
       DEBUG_DATA   yLOG_value   ("handler"   , rc);
+   }
+   /*---(spin through entries)-----------*/
+   if (my.pub == 'y') {
+      if (strcmp (a_path, "/home/member") == 0) {
+         DEBUG_DATA   yLOG_exit    (__FUNCTION__);
+         return 0;
+      }
+      if (strcmp (a_path, "/root") == 0) {
+         DEBUG_DATA   yLOG_exit    (__FUNCTION__);
+         return 0;
+      }
    }
    /*---(spin through entries)-----------*/
    DEBUG_DATA   yLOG_complex ("ENTRY"     , "%3d of %3d for %s, %p", c, a_dir->nchild, a_dir->data->name, a_dir->c_head);
@@ -1334,15 +1538,30 @@ ENTRY_walk              (char a_trigger, void *a_callback)
 {
    char        x_path      [LEN_RECD]  = "";
    char        rc          =    0;
+   tPTRS      *x_begin     = NULL;
+   /*---(header)-------------------------*/
+   DEBUG_DATA   yLOG_enter   (__FUNCTION__);
    /*---(reset)--------------------------*/
    g_looked   = 0;
    g_matched  = 0;
    g_found    = NULL;
    strlcpy (g_path, "", LEN_RECD);
-   if (h_ptrs != NULL)  strlcpy (x_path, h_ptrs->data->name, LEN_RECD);
    /*---(execute walk)-------------------*/
-   rc = ENTRY__walker (a_trigger, h_ptrs, x_path, a_callback);
+   DEBUG_DATA   yLOG_point   ("h_ptrs"    , h_ptrs);
+   DEBUG_DATA   yLOG_point   ("s_start"   , s_start);
+   if (s_start != NULL) {
+      DEBUG_DATA   yLOG_note    ("start has been identified");
+      x_begin = s_start;
+      strlcpy (x_path, g_spath, LEN_RECD);
+   } else if (h_ptrs != NULL) {
+      DEBUG_DATA   yLOG_note    ("no start, use head");
+      x_begin = h_ptrs;
+      strlcpy (x_path, h_ptrs->data->name, LEN_RECD);
+   }
+   DEBUG_DATA   yLOG_info    ("x_path"    , x_path);
+   rc = ENTRY__walker (a_trigger, x_begin, x_path, a_callback);
    /*---(complete)-----------------------*/
+   DEBUG_DATA   yLOG_exit    (__FUNCTION__);
    return rc;
 }
 
@@ -1386,7 +1605,7 @@ ENTRY__unit             (char *a_question, int n)
                x_curr->data->type  , x_curr->data->stype,
                x_curr->data->cat   , x_curr->data->ext  ,
                x_curr->data->size  , x_curr->data->bytes,
-               x_curr->data->count ,x_curr->data->ccum  );
+               x_curr->data->count , x_curr->data->ccum  );
    }
    /*---(complete)-----------------------*/
    return unit_answer;

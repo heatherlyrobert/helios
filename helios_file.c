@@ -22,64 +22,64 @@ FILE__check             (char *a_name, char a_mode)
    int         rci         =    0;
    tSTAT       st;
    /*---(header)-------------------------*/
-   DEBUG_INPT   yLOG_enter   (__FUNCTION__);
+   DEBUG_FILE   yLOG_enter   (__FUNCTION__);
    /*---(prepare)------------------------*/
    strlcpy (s_name, "", LEN_RECD);
    /*---(defense)------------------------*/
-   DEBUG_INPT   yLOG_point   ("a_name"    , a_name);
+   DEBUG_FILE   yLOG_point   ("a_name"    , a_name);
    --rce;  if (a_name == NULL) {
-      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_INPT   yLOG_info    ("a_name"    , a_name);
+   DEBUG_FILE   yLOG_info    ("a_name"    , a_name);
    /*---(get the file information)-------*/
    rci = lstat (a_name, &st);
-   DEBUG_ENVI   yLOG_value   ("lstat"     , rci);
+   DEBUG_FILE   yLOG_value   ("lstat"     , rci);
    --rce; if (rci < 0) {
       if (a_mode == 'r') {
-         DEBUG_ENVI   yLOG_note    ("file does not exist, can not read");
-         DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
+         DEBUG_FILE   yLOG_note    ("file does not exist, can not read");
+         DEBUG_FILE   yLOG_exit    (__FUNCTION__);
          return rce;
       }
-      DEBUG_ENVI   yLOG_note    ("writing database to a brand new file");
-      DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
+      DEBUG_FILE   yLOG_note    ("writing data to a brand new file");
+      DEBUG_FILE   yLOG_exit    (__FUNCTION__);
       return 0;
    } else {
       if (a_mode == 'w') {
-         DEBUG_ENVI   yLOG_note    ("file exists, writing over existing file");
+         DEBUG_FILE   yLOG_note    ("file exists, writing over existing file");
       }
    }
    /*---(check regular file)-------------*/
    if (S_ISREG (st.st_mode)) {
-      DEBUG_ENVI   yLOG_note    ("database is a regular file, perfect");
+      DEBUG_FILE   yLOG_note    ("refers to a regular file, perfect");
    }
    /*---(check symlink)------------------*/
    else if (S_ISLNK (st.st_mode)) {
-      DEBUG_ENVI   yLOG_note    ("database can not be a symlink to another file");
-      DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
+      DEBUG_FILE   yLOG_note    ("file can not be a symlink to another file");
+      DEBUG_FILE   yLOG_exit    (__FUNCTION__);
       return rce;
    }
    else  {
       if      (S_ISDIR (st.st_mode)) {
-         DEBUG_ENVI   yLOG_note    ("database is a directory, not allowwed");
+         DEBUG_FILE   yLOG_note    ("file is a directory, not allowwed");
       } else if (S_ISCHR (st.st_mode)) {
-         DEBUG_ENVI   yLOG_note    ("database is a char dev, not allowwed");
+         DEBUG_FILE   yLOG_note    ("file is a char dev, not allowwed");
       } else if (S_ISBLK (st.st_mode)) {
-         DEBUG_ENVI   yLOG_note    ("database is a block dev, not allowwed");
+         DEBUG_FILE   yLOG_note    ("file is a block dev, not allowwed");
       } else if (S_ISFIFO(st.st_mode)) {
-         DEBUG_ENVI   yLOG_note    ("database is a fifo/pipe, not allowwed");
+         DEBUG_FILE   yLOG_note    ("file is a fifo/pipe, not allowwed");
       } else if (S_ISSOCK(st.st_mode)) {
-         DEBUG_ENVI   yLOG_note    ("database is a socket, not allowwed");
+         DEBUG_FILE   yLOG_note    ("file is a socket, not allowwed");
       } else  {
-         DEBUG_ENVI   yLOG_note    ("database is not recognized, not allowwed");
+         DEBUG_FILE   yLOG_note    ("file is not recognized, not allowwed");
       }
-      DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
+      DEBUG_FILE   yLOG_exit    (__FUNCTION__);
       return rce;
    }
    /*---(save name)----------------------*/
    strlcpy (s_name, a_name, LEN_RECD);
    /*---(complete)-----------------------*/
-   DEBUG_INPT   yLOG_exit    (__FUNCTION__);
+   DEBUG_FILE   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
@@ -91,58 +91,58 @@ FILE__open              (FILE **a_file, char *a_name, char a_mode)
    char        rc          =    0;
    char        x_mode      [LEN_LABEL] = "";
    /*---(header)-------------------------*/
-   DEBUG_INPT   yLOG_enter   (__FUNCTION__);
+   DEBUG_FILE   yLOG_enter   (__FUNCTION__);
    /*---(defense)------------------------*/
-   DEBUG_INPT   yLOG_point   ("a_file"    , a_file);
+   DEBUG_FILE   yLOG_point   ("a_file"    , a_file);
    --rce;  if (a_file == NULL) {
-      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_INPT   yLOG_point   ("*a_file"   , *a_file);
+   DEBUG_FILE   yLOG_point   ("*a_file"   , *a_file);
    --rce;  if (*a_file != NULL) {
-      DEBUG_INPT   yLOG_note    ("file pointer in use, must leave alone");
-      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_FILE   yLOG_note    ("file pointer in use, must leave alone");
+      DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_INPT   yLOG_point   ("a_name"    , a_name);
+   DEBUG_FILE   yLOG_point   ("a_name"    , a_name);
    --rce;  if (a_name == NULL) {
-      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_INPT   yLOG_info    ("a_name"    , a_name);
+   DEBUG_FILE   yLOG_info    ("a_name"    , a_name);
    /*---(set mode)-----------------------*/
-   DEBUG_INPT   yLOG_char    ("a_mode"    , a_mode);
+   DEBUG_FILE   yLOG_char    ("a_mode"    , a_mode);
    --rce;  switch (a_mode) {
    case 'r' :
-      DEBUG_INPT   yLOG_note    ("open as read-binary");
+      DEBUG_FILE   yLOG_note    ("open as read-binary");
       strlcpy (x_mode, "rb", LEN_LABEL);
       break;
    case 'w' :
-      DEBUG_INPT   yLOG_note    ("open as write-binary");
+      DEBUG_FILE   yLOG_note    ("open as write-binary");
       strlcpy (x_mode, "wb", LEN_LABEL);
       break;
    default  :
-      DEBUG_INPT   yLOG_note    ("mode not understood");
-      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_FILE   yLOG_note    ("mode not understood");
+      DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(check)--------------------------*/
    rc = FILE__check (a_name, a_mode);
-   DEBUG_INPT   yLOG_value   ("check"     , rc);
+   DEBUG_FILE   yLOG_value   ("check"     , rc);
    --rce;  if (rc < 0) {
-      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(open)---------------------------*/
    *a_file = fopen (a_name, x_mode);
-   DEBUG_INPT   yLOG_point   ("*a_file"   , *a_file);
+   DEBUG_FILE   yLOG_point   ("*a_file"   , *a_file);
    --rce;  if (*a_file == NULL) {
-      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_INPT   yLOG_note    ("file successfullly openned");
+   DEBUG_FILE   yLOG_note    ("file successfullly openned");
    /*---(complete)-----------------------*/
-   DEBUG_INPT   yLOG_exit    (__FUNCTION__);
+   DEBUG_FILE   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
@@ -153,25 +153,25 @@ FILE__close             (FILE **a_file)
    char        rce         =  -10;
    char        rc          =    0;
    /*---(header)-------------------------*/
-   DEBUG_INPT   yLOG_enter   (__FUNCTION__);
+   DEBUG_FILE   yLOG_enter   (__FUNCTION__);
    /*---(defense)------------------------*/
-   DEBUG_INPT   yLOG_point   ("a_file"    , a_file);
+   DEBUG_FILE   yLOG_point   ("a_file"    , a_file);
    --rce;  if (a_file == NULL) {
-      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    yLOG_point   ("*a_file"   , *a_file);
    --rce;  if (*a_file == NULL) {
-      DEBUG_INPT   yLOG_note    ("file pointer grounded, nothing to do");
-      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_FILE   yLOG_note    ("file pointer grounded, nothing to do");
+      DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(close)--------------------------*/
    fflush (*a_file);
    rc = fclose (*a_file);
-   DEBUG_INPT   yLOG_value   ("close"     , rc);
+   DEBUG_FILE   yLOG_value   ("close"     , rc);
    --rce;  if (rc < 0) {
-      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(permissions)--------------------*/
@@ -180,7 +180,7 @@ FILE__close             (FILE **a_file)
    strlcpy (s_name, "", LEN_RECD);
    *a_file = NULL;
    /*---(complete)-----------------------*/
-   DEBUG_INPT   yLOG_exit    (__FUNCTION__);
+   DEBUG_FILE   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
@@ -534,6 +534,7 @@ WRITE_all          (char *a_name, int *a_count)
    int         x_count     = 0;
    tDRIVE     *x_drive     = NULL;
    long        x_end       =    0;
+   char        t           [LEN_LABEL];
    /*---(header)-------------------------*/
    DEBUG_OUTP   yLOG_enter   (__FUNCTION__);
    /*---(defense)------------------------*/
@@ -582,7 +583,8 @@ WRITE_all          (char *a_name, int *a_count)
    /*---(close)--------------------------*/
    x_end  = time (NULL);
    printf ("# ran for %ld secs\n", x_end - my.runtime);
-   printf ("# wrote %d recs\n", x_count);
+   FILE_commas (x_count, t);
+   printf ("# wrote %s recs\n", t);
    /*---(save back)----------------------*/
    if (a_count != NULL)  *a_count = x_count;
    /*---(complete)-----------------------*/
@@ -669,7 +671,8 @@ FILE_percents      (long a_number, long a_total, char *a_string)
 char
 FILE_commas        (llong a_number, char *a_string)
 {
-   strl4comma (a_number, a_string, 0, 'c', '-', LEN_LABEL);
+   if (a_number == 0)  strlcpy (a_string, "-", LEN_LABEL);
+   else  strl4comma (a_number, a_string, 0, 'c', '-', LEN_LABEL);
    return 0;
 }
 
@@ -677,8 +680,12 @@ char
 FILE_uncommas      (char *a_string, llong *a_number)
 {
    double     x_val;
+   /*> if (strcmp (strltrim (a_string, ySTR_BOTH, LEN_LABEL), "-") == 0)  x_val = 0;   <* 
+    *> else                              strl2comma (a_string, &x_val, LEN_LABEL);     <*/
    strl2comma (a_string, &x_val, LEN_LABEL);
+   DEBUG_INPT   yLOG_double ("x_val"     , x_val);
    *a_number = x_val;
+   DEBUG_INPT   yLOG_llong   ("a_number"  , *a_number);
    return 0;
 }
 
