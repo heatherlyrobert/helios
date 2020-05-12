@@ -24,8 +24,8 @@
 
 #define     P_VERMAJOR  "1.--, first major version in production"
 #define     P_VERMINOR  "1.1-, adding extensive unit testing"
-#define     P_VERNUM    "1.1h"
-#define     P_VERTXT    "reading and finding mime entries is significantly upgraded and tested"
+#define     P_VERNUM    "1.1i"
+#define     P_VERTXT    "writing mime file is significantly upgraded and tested"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -595,6 +595,9 @@ extern      tGLOBAL    my;
 #define     COL_PERMS           'p'
 #define     COL_DRIVE           'd'
 #define     COL_OPTIONS         " --show-mime --show-age --show-size --show-level --show-naming --show-find --show-type --show-perms --show-drive "
+/*---(destinations)-------------------*/
+#define     DEST_FILE           'f'
+#define     DEST_STDOUT         's'
 
 
 
@@ -630,7 +633,7 @@ char        PROG__unit_end          (void);
 
 /*===[[ HELIOS_FILE.C ]]======================================================*/
 /*---(file)-----------------*/
-char        FILE__open              (FILE **a_file, char *a_name, char a_mode);
+char        FILE_open               (FILE **a_file, char *a_name, char a_mode);
 char        FILE__close             (FILE **a_file);
 /*---(drives)---------------*/
 char        WRITE__drives           (FILE *a_file);
@@ -672,7 +675,12 @@ uchar      *MIME_mime_ext           (int m);
 char        MIME__parse_essential   (char *a_recd, char *a_flag, char **s);
 char        MIME_read               (void);
 /*---(output)---------------*/
-char        MIME_write              (char a_dest, char a_space);
+char        MIME__write_clear       (void);
+char        MIME__write_title       (FILE *f, char a_type);
+char        MIME__write_line        (FILE *f, char a_type, uchar *a_name, uchar a_cat, uchar *a_desc, uchar a_like, int a_nseen, llong a_bseen, int a_nkept, llong a_bkept);
+char        MIME__write_columns     (FILE *f, char a_type);
+char        MIME__write_category    (FILE *f, char a_type, char a_cat);
+char        MIME_write              (char a_type);
 /*---(locate)---------------*/
 /*> char        MIME__find_match        (cchar *a_ext, int *a_index, char *a_cat);    <*/
 /*> char        MIME_find_by_ext        (cchar *a_ext, cchar *a_name, int *a_index, char *a_cat, long a_bytes);   <*/

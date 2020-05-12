@@ -817,7 +817,7 @@ DRIVE_inventory         (void)
    }
    /*---(write mime file)----------------*/
    yLOG_stage ('8');
-   rc = MIME_write ('m' , '');
+   rc = MIME_write ('f');
    DEBUG_ENVI   yLOG_value   ("mime"      , rc);
    --rce;  if (rc < 0) {
       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);

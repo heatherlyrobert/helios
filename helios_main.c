@@ -41,7 +41,7 @@ main               (int argc, char *argv[])
       RPTG_summ  ();
    } else if (my.mime_table == 'y' && strcmp (my.regex, "") == 0) {
       READ_all   (my.file_data, &c);
-      MIME_write   ('s', ' ');
+      MIME_write   ('s');
    } else if (my.dump == 'y') {
       READ_all   (my.file_data, &c);
    } else {

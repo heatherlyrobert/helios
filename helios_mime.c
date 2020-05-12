@@ -29,6 +29,12 @@ static int         s_ncat = 0;
 
 
 
+static char  s_head    [LEN_RECD]  = "";
+static char  s_cols    [LEN_RECD]  = "";
+static char  s_recd    [LEN_RECD]  = "";
+
+
+
 /*====================------------------------------------====================*/
 /*===----                        mass changes                          ----===*/
 /*====================------------------------------------====================*/
@@ -227,7 +233,7 @@ MIME__action            (uchar *a_ext, int *a_cindex, int *a_mindex, uchar *a_ca
    --rce;  switch (a_action) {
    case '-'  : 
       break;
-   case 's'  : 
+   case DEST_STDOUT  : 
       DEBUG_STATS  yLOG_snote   ("seen");
       s_cats [0].n_seen  += x_inc;
       s_cats [c].n_seen  += x_inc;
@@ -557,7 +563,7 @@ MIME_read          (void)
    /*---(purge the tables)---------------*/
    MIME__purge ();
    /*---(open)---------------------------*/
-   rc = FILE__open (&f, my.file_mime, 'r');
+   rc = FILE_open  (&f, my.file_mime, 'r');
    DEBUG_INPT   yLOG_value   ("open"      , rc);
    DEBUG_INPT   yLOG_point   ("f"         , f);
    --rce;  if (rc < 0 || f == NULL) {
@@ -612,14 +618,156 @@ MIME_read          (void)
 static void  o___OUTPUT__________o () { return; }
 
 char
-MIME_rptg_head     (FILE *a_mime, char a_space, char a_cat)
+MIME__write_clear       (void)
 {
-   /*---(locals)-----------+-----------+-*/
+   strlcpy (s_head, "", LEN_RECD);
+   strlcpy (s_cols, "", LEN_RECD);
+   strlcpy (s_recd, "", LEN_RECD);
+   return 0;
+}
+
+char
+MIME__write_title       (FILE *f, char a_type)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   /*---(default)------------------------*/
+   strlcpy (s_head, "", LEN_RECD);
+   /*---(spacing)------------------------*/
+   --rce;  switch (a_type) {
+   case DEST_FILE   :
+      fprintf (f, "#!/usr/local/bin/helios\n");
+      fprintf (f, "#   HELIOS-PHAETON (locate) -- filesystem searching and indexing services\n");
+      fprintf (f, "#   mime configuration file\n");
+      break;
+   case DEST_STDOUT :
+      fprintf (f, "HELIOS-PHAETON (locate) -- filesystem searching and indexing services\n");
+      fprintf (f, "report : mime type summary\n");
+      break;
+   default  :
+      return rce;
+      break;
+   }
+   return 0;
+}
+
+char
+MIME__write_line        (FILE *f, char a_type, uchar *a_name, uchar a_cat, uchar *a_desc, uchar a_like, int a_nseen, llong a_bseen, int a_nkept, llong a_bkept)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        s           =  ' ';
+   char        t           [LEN_RECD]  = "";
+   char        c           [LEN_LABEL] = "";
+   char        p           [LEN_LABEL] = "";
+   /*---(default)------------------------*/
+   strlcpy (s_recd, "", LEN_RECD);
+   /*---(defense)------------------------*/
+   --rce;  if (a_name == NULL)    return rce;
+   /*---(spacing)------------------------*/
+   --rce;  switch (a_type) {
+   case DEST_FILE   : s = '';           break;
+   case DEST_STDOUT : s = '§';            break;
+   default  : return rce;         break;
+   }
+   /*---(prefix)-------------------------*/
+   sprintf (t, "%-10.10s %c %c %c %-40.40s %c %c %c ",
+         a_name, s, a_cat , s, a_desc, s, a_like, s);
+   strlcat (s_recd, t, LEN_RECD);
+   /*---(internal spacer)----------------*/
+   sprintf (t, "   ");
+   strlcat (s_recd, t, LEN_RECD);
+   /*---(seen count)---------------------*/
+   FILE_commas   (a_nseen, c);
+   FILE_percents (a_nseen, s_cats [0].n_seen, p);
+   sprintf (t, "%10.10s %c %3.3s %c ", c, s, p, s);
+   strlcat (s_recd, t, LEN_RECD);
+   /*---(seen bytes)---------------------*/
+   FILE_commas   (a_bseen, c);
+   FILE_percents (a_bseen, s_cats [0].b_seen, p);
+   sprintf (t, "%18.18s %c %3.3s %c ", c, s, p, s);
+   strlcat (s_recd, t, LEN_RECD);
+   /*---(internal spacer)----------------*/
+   sprintf (t, "   ");
+   strlcat (s_recd, t, LEN_RECD);
+   /*---(kept count)---------------------*/
+   FILE_commas   (a_nkept, c);
+   FILE_percents (a_nkept, s_cats [0].n_kept, p);
+   sprintf (t, "%10.10s %c %3.3s %c ", c, s, p, s);
+   strlcat (s_recd, t, LEN_RECD);
+   /*---(kept bytes)---------------------*/
+   FILE_commas   (a_bkept, c);
+   FILE_percents (a_bkept, s_cats [0].b_kept, p);
+   sprintf (t, "%18.18s %c %3.3s %c ", c, s, p, s);
+   strlcat (s_recd, t, LEN_RECD);
+   /*---(internal spacer)----------------*/
+   sprintf (t, "   ");
+   strlcat (s_recd, t, LEN_RECD);
+   /*---(seen vs kept)-------------------*/
+   FILE_percents (a_nkept, a_nseen, c);
+   FILE_percents (a_bkept, a_bseen, p);
+   sprintf (t, "  %3.3s %c %3.3s %c ", c, s, p, s);
+   strlcat (s_recd, t, LEN_RECD);
+   /*---(write)--------------------------*/
+   if (f != NULL)   fprintf (f, "%s\n", s_recd);
+   /*---(complete)-----------------------*/
+   return 0;
+}
+
+char
+MIME__write_columns     (FILE *f, char a_type)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        s           =  ' ';
+   char        t           [LEN_RECD]  = "";
+   /*---(default)------------------------*/
+   strlcpy (s_cols, "", LEN_RECD);
+   /*---(spacing)------------------------*/
+   --rce;  switch (a_type) {
+   case DEST_FILE   : s = '';           break;
+   case DEST_STDOUT : s = '§';            break;
+   default  : return rce;         break;
+   }
+   /*---(prefix)-------------------------*/
+   sprintf (t, "#-ext----- %c t %c ---desc--------------------------------- %c l %c ",
+         s, s, s, s);
+   strlcat (s_cols, t, LEN_RECD);
+   /*---(internal spacer)----------------*/
+   sprintf (t, "   ");
+   strlcat (s_cols, t, LEN_RECD);
+   /*---(seen)---------------------------*/
+   sprintf (t, "---seen--- %c pct %c ---seen-bytes----- %c pct %c ", s, s, s, s);
+   strlcat (s_cols, t, LEN_RECD);
+   /*---(internal spacer)----------------*/
+   sprintf (t, "   ");
+   strlcat (s_cols, t, LEN_RECD);
+   /*---(kept)---------------------------*/
+   sprintf (t, "---kept--- %c pct %c ---kept-bytes----- %c pct %c ", s, s, s, s);
+   strlcat (s_cols, t, LEN_RECD);
+   /*---(internal spacer)----------------*/
+   sprintf (t, "   ");
+   strlcat (s_cols, t, LEN_RECD);
+   /*---(seen vs kept--------------------*/
+   sprintf (t, "  cnt %c siz %c ", s, s);
+   strlcat (s_cols, t, LEN_RECD);
+   /*---(write)--------------------------*/
+   if (f != NULL)   fprintf (f, "\n%s\n", s_cols);
+   /*---(complete)-----------------------*/
+   return 0;
+}
+
+char
+MIME__write_category    (FILE *f, char a_type, char a_cat)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
    int         i           =   0;
    int         n           =   0;
-   char        x_comma     [20];
-   char        x_percent   [20];
-   char        t           [LEN_HUND];
+   char        x           [LEN_TERSE] = "";
+   char        t           [LEN_RECD]  = "";
+   /*---(default)------------------------*/
+   strlcpy (s_head, "", LEN_RECD);
    /*---(find)---------------------------*/
    for (i = 0; i < s_ncat; ++i) {
       if (s_cats [i].cat == 0    )  break;
@@ -627,159 +775,92 @@ MIME_rptg_head     (FILE *a_mime, char a_space, char a_cat)
       n = i;
       break;
    }
-   if (n < 0)  n = 0;
-   /*---(print category)--------------*/
-   fprintf (a_mime, "\n\n\n");
+   --rce;  if (n < 0)    return rce;
+   /*---(type spacing)-------------------*/
+   if (a_type == DEST_FILE)  strlcpy (x, "====", LEN_TERSE);
+   /*---(heading bar)--------------------*/
    sprintf (t, "[[ %s ]]==================================", s_cats [n].name);
-   fprintf (a_mime, "#===%-16.16s==============================================]   [===============================================]   [===============================================]\n",
-         t);
-   fprintf (a_mime, "%-10.10s %c %c %c %-40.40s %c %c %c   ",
-         s_cats [n].name    , a_space, s_cats [n].cat     , a_space,
-         s_cats [n].desc    , a_space, '-'                , a_space);
-   FILE_commas   (s_cats [n].n_seen  , x_comma  );
-   FILE_percents (s_cats [n].n_seen  , s_cats [0].n_seen  , x_percent);
-   fprintf (a_mime, "%10.10s %c %3.3s %c "   , x_comma, a_space, x_percent, a_space);
-   FILE_commas   (s_cats [n].b_seen, x_comma  );
-   FILE_percents (s_cats [n].b_seen, s_cats [0].b_seen  , x_percent);
-   fprintf (a_mime, "%18.18s %c %3.3s %c   "   , x_comma, a_space, x_percent, a_space);
-   FILE_commas   (s_cats [n].n_kept  , x_comma  );
-   FILE_percents (s_cats [n].n_kept  , s_cats [0].n_kept  , x_percent);
-   fprintf (a_mime, "%10.10s %c %3.3s %c "   , x_comma, a_space, x_percent, a_space);
-   FILE_commas   (s_cats [n].b_kept, x_comma  );
-   FILE_percents (s_cats [n].b_kept, s_cats [0].b_kept  , x_percent);
-   fprintf (a_mime, "\n");
-   /*---(headers)------------------------*/
-   if (a_cat != MIME_TOTAL) {
-      fprintf (a_mime, "\n");
-      fprintf (a_mime, "#-ext----- %c t %c ---desc--------------------------------- %c l %c   ", a_space, a_space, a_space, a_space);
-      fprintf (a_mime, "---seen--- %c pct %c ---seen-bytes----- %c pct %c   "                  , a_space, a_space, a_space, a_space);
-      fprintf (a_mime, "---kept--- %c pct %c ---kept-bytes----- %c pct %c "                    , a_space, a_space, a_space, a_space);
-      fprintf (a_mime, "\n");
+   sprintf (s_head, "#===%-16.16s==========================================%s]    [===========================================%s]    [===========================================%s]", t, x, x, x);
+   if (a_type == DEST_FILE)  strlcpy (x, "==", LEN_TERSE);
+   sprintf (t, "    [===========%s]", x);
+   strlcat (s_head, t, LEN_RECD);
+   /*---(write)--------------------------*/
+   if (f != NULL) {
+      fprintf (f, "\n\n\n%s\n", s_head);
    }
+   /*---(detailed line)------------------*/
+   MIME__write_line (f, a_type, s_cats [n].name, a_cat, s_cats [n].desc, '-', s_cats [n].n_seen, s_cats [n].b_seen, s_cats [n].n_kept, s_cats [n].b_kept);
+   /*---(columns)------------------------*/
+   if (a_cat != MIME_TOTAL)    MIME__write_columns (f, a_type);
    /*---(complete)-----------------------*/
    return 0;
 }
 
-/*---(mime sub totals)----------------*/
-/*> static long s_nseen     = 0;                                                      <* 
- *> static long s_bseen     = 0;                                                      <* 
- *> static long s_nkept     = 0;                                                      <* 
- *> static long s_bkept     = 0;                                                      <* 
- *> static long s_nfound    = 0;                                                      <* 
- *> static long s_bfound    = 0;                                                      <*/
-
-/*> char                                                                                          <* 
- *> MIME_subfoot       (FILE *a_mime, char a_space)                                               <* 
- *> {                                                                                             <* 
- *>    /+---(locals)-----------+-----------+-+/                                                   <* 
- *>    char        x_comma     [20];                                                              <* 
- *>    char        x_percent   [20];                                                              <* 
- *>    /+---(lead)---------------------------+/                                                   <* 
- *>    fprintf (a_mime, "   total   %c   %c                                          %c   %c ",   <* 
- *>          a_space, a_space, a_space, a_space);                                                 <* 
- *>    /+---(seen part)----------------------+/                                                   <* 
- *>    FILE_commas   (s_nseen                    , x_comma  );                                    <* 
- *>    FILE_percents (s_nseen         , s_cats [0].n_seen  , x_percent);                          <* 
- *>    fprintf (a_mime, "%10.10s %c %3.3s %c "   , x_comma, a_space, x_percent, a_space);         <* 
- *>    FILE_commas   (s_bseen                    , x_comma  );                                    <* 
- *>    FILE_percents (s_bseen         , s_cats [0].b_seen  , x_percent);                          <* 
- *>    fprintf (a_mime, "%18.18s %c %3.3s %c "   , x_comma, a_space, x_percent, a_space);         <* 
- *>    /+---(kept part)----------------------+/                                                   <* 
- *>    FILE_commas   (s_nkept                    , x_comma  );                                    <* 
- *>    FILE_percents (s_nkept         , s_cats [0].n_kept  , x_percent);                          <* 
- *>    fprintf (a_mime, "%10.10s %c %3.3s %c "   , x_comma, a_space, x_percent, a_space);         <* 
- *>    FILE_commas   (s_bkept                    , x_comma  );                                    <* 
- *>    FILE_percents (s_bkept         , s_cats [0].b_kept  , x_percent);                          <* 
- *>    fprintf (a_mime, "%18.18s %c %3.3s %c "   , x_comma, a_space, x_percent, a_space);         <* 
- *>    /+---(complete)-----------------------+/                                                   <* 
- *>    return 0;                                                                                  <* 
- *> }                                                                                             <*/
-
 char
-MIME_write         (
-      /*---(formal parameters)+-------------+---------------------------------*/
-      char        a_dest      ,             /* destination type               */
-      char        a_space     )             /* seperator                      */
-{  /*---(locals)-----------+-----------+-*/
-   FILE       *f_mime      = NULL;          /* file pointer                   */
+MIME_write         (char a_type)
+{
+   /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
+   char        rc          =    0;
+   FILE       *f           = NULL;
    int         i           =    0;
-   char        x_comma     [20];
-   char        x_percent   [20];
+   /*> char        x_comma     [20];                                                  <*/
+   /*> char        x_percent   [20];                                                  <*/
    char        x_save      =  '-';
    int         x_count     =    0;
    /*---(header)-------------------------*/
    DEBUG_STATS  yLOG_enter   (__FUNCTION__);
-   DEBUG_STATS  yLOG_char    ("a_dest"    , a_dest);
-   DEBUG_STATS  yLOG_char    ("a_space"   , a_space);
-   /*---(open file)----------------------*/
-   if (a_dest == 's') {
-      f_mime = stdout;
-      fprintf (f_mime, "HELIOS-PHAETON (locate) -- filesystem searching and indexing services\n");
-      fprintf (f_mime, "report : mime type summary\n");
+   DEBUG_STATS  yLOG_char    ("a_type"    , a_type);
+   /*---(open)---------------------------*/
+   rc = FILE_open  (&f, my.file_mime, 'w');
+   DEBUG_INPT   yLOG_value   ("open"      , rc);
+   DEBUG_INPT   yLOG_point   ("f"         , f);
+   --rce;  if (rc < 0 || f == NULL) {
+      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
    }
-   else {
-      /*---(open file)----------------------*/
-      f_mime = fopen (my.file_mime, "w");
-      DEBUG_STATS  yLOG_point   ("f_mime"    , f_mime);
-      DEBUG_STATS  yLOG_point   ("file"      , f_mime);
-      --rce;  if (f_mime == NULL) {
-         DEBUG_STATS  yLOG_exit    (__FUNCTION__);
-         return rce;
-      }
-      DEBUG_STATS  yLOG_note    ("print header");
-      fprintf (f_mime, "#!/usr/local/bin/helios\n");
-      fprintf (f_mime, "#   HELIOS-PHAETON (locate) -- filesystem searching and indexing services\n");
-      fprintf (f_mime, "#   mime configuration file\n");
-   }
-   DEBUG_STATS  yLOG_point   ("f_mime"    , f_mime);
-   MIME_rptg_head (f_mime, a_space, MIME_TOTAL);
+   /*---(titles)-------------------------*/
+   MIME__write_title (f, a_type);
+   /*---(total category)-----------------*/
+   MIME__write_category (f, a_type, MIME_TOTAL);
    /*---(process all)--------------------*/
    for (i = 0; i < n_mime; ++i) {
       /*---(formatting)------------------*/
       if (g_mime [i].cat != x_save) {
          x_count = 0;
-         MIME_rptg_head (f_mime, a_space, g_mime [i].cat);
          x_save = g_mime [i].cat;
+         MIME__write_category (f, a_type, x_save);
+      } else if ((x_count % 25) == 0 ) {
+         MIME__write_columns  (f, a_type);
       } else if ((x_count %  5) == 0 ) {
-         fprintf (f_mime, "\n");
+         fprintf (f, "\n");
       }
       ++x_count;
       /*---(general part)----------------*/
-      fprintf (f_mime, "%-10.10s %c %c %c %-40.40s %c %c %c   ",
-            g_mime [i].ext     , a_space, g_mime [i].cat     , a_space,
-            g_mime [i].desc    , a_space, g_mime [i].like    , a_space);
-      FILE_commas   (g_mime [i].n_seen  , x_comma  );
-      FILE_percents (g_mime [i].n_seen  , s_cats [0].n_seen  , x_percent);
-      fprintf (f_mime, "%10.10s %c %3.3s %c "   , x_comma, a_space, x_percent, a_space);
-      FILE_commas   (g_mime [i].b_seen, x_comma  );
-      FILE_percents (g_mime [i].b_seen, s_cats [0].b_seen  , x_percent);
-      fprintf (f_mime, "%18.18s %c %3.3s %c   "   , x_comma, a_space, x_percent, a_space);
-      FILE_commas   (g_mime [i].n_kept  , x_comma  );
-      FILE_percents (g_mime [i].n_kept  , s_cats [0].n_kept  , x_percent);
-      fprintf (f_mime, "%10.10s %c %3.3s %c "   , x_comma, a_space, x_percent, a_space);
-      FILE_commas   (g_mime [i].b_kept, x_comma  );
-      FILE_percents (g_mime [i].b_kept, s_cats [0].b_kept  , x_percent);
-      fprintf (f_mime, "%18.18s %c %3.3s %c "   , x_comma, a_space, x_percent, a_space);
-      fprintf (f_mime, "\n");
-      /*---(grand totals)----------------*/
-      /*> s_nseen  += g_mime [i].n_seen;                                              <* 
-       *> s_nkept  += g_mime [i].n_kept;                                              <* 
-       *> s_nfound += g_mime [i].n_found;                                             <* 
-       *> s_bseen  += g_mime [i].b_seen;                                              <* 
-       *> s_bkept  += g_mime [i].b_kept;                                              <* 
-       *> s_bfound += g_mime [i].b_found;                                             <* 
-       *> x_save    = g_mime [i].cat;                                                 <*/
+      MIME__write_line (f, a_type, g_mime [i].ext, g_mime [i].cat, g_mime [i].desc, g_mime [i].like, g_mime [i].n_seen, g_mime [i].b_seen, g_mime [i].n_kept, g_mime [i].b_kept);
       /*---(done)------------------------*/
    }
    /*---(wrapup)-------------------------*/
-   fprintf (f_mime, "\n");
-   /*> MIME_subfoot (f_mime, a_space);                                                <*/
-   fclose (f_mime);
+   fprintf (f, "\n");
+   /*---(close)--------------------------*/
+   rc = FILE__close (&f);
+   DEBUG_OUTP   yLOG_value   ("close"     , rc);
+   DEBUG_OUTP   yLOG_point   ("f"         , f);
+   --rce;  if (rc < 0 || f != NULL) {
+      DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
    /*---(complete)-----------------------*/
    DEBUG_STATS  yLOG_exit    (__FUNCTION__);
    return 0;
 }
+
+
+
+/*====================------------------------------------====================*/
+/*===----                       writing tree files                     ----===*/
+/*====================------------------------------------====================*/
+static void  o___TREE____________o () { return; }
 
 char
 MIME_treehead      (void)
@@ -1042,6 +1123,18 @@ MIME__unit              (char *a_question, char *a_ext, int n)
             s_cats [n].n_seen , s_cats [n].b_seen ,
             s_cats [n].n_kept , s_cats [n].b_kept ,
             s_cats [n].n_found, s_cats [n].b_found);
+   }
+   else if (strcmp (a_question, "s_head"        ) == 0) {
+      strlencode (s_head, ySTR_NORM, LEN_RECD);
+      snprintf (unit_answer, LEN_FULL, "MIME s_head      : [%.79s]", s_head);
+   }
+   else if (strcmp (a_question, "s_cols"        ) == 0) {
+      strlencode (s_cols, ySTR_NORM, LEN_RECD);
+      snprintf (unit_answer, LEN_FULL, "MIME s_cols      : [%.79s]", s_cols);
+   }
+   else if (strcmp (a_question, "s_recd"        ) == 0) {
+      strlencode (s_recd, ySTR_NORM, LEN_RECD);
+      snprintf (unit_answer, LEN_FULL, "MIME s_recd      : [%.79s]", s_recd);
    }
    /*---(complete)-----------------------*/
    DEBUG_CONF   yLOG_exit    (__FUNCTION__);

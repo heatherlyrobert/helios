@@ -84,7 +84,7 @@ FILE__check             (char *a_name, char a_mode)
 }
 
 char
-FILE__open              (FILE **a_file, char *a_name, char a_mode)
+FILE_open               (FILE **a_file, char *a_name, char a_mode)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -126,6 +126,12 @@ FILE__open              (FILE **a_file, char *a_name, char a_mode)
       DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   /*---(turn back stdout)---------------*/
+   if (strcmp (a_name, "stdout") == 0) {
+      *a_file = stdout;
+      DEBUG_FILE   yLOG_exit    (__FUNCTION__);
+      return 0;
+   }
    /*---(check)--------------------------*/
    rc = FILE__check (a_name, a_mode);
    DEBUG_FILE   yLOG_value   ("check"     , rc);
@@ -166,8 +172,14 @@ FILE__close             (FILE **a_file)
       DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   /*---(close)--------------------------*/
+   /*---(flush)--------------------------*/
    fflush (*a_file);
+   /*---(turn back stdout)---------------*/
+   if (*a_file == stdout) {
+      DEBUG_FILE   yLOG_exit    (__FUNCTION__);
+      return 0;
+   }
+   /*---(close)--------------------------*/
    rc = fclose (*a_file);
    DEBUG_FILE   yLOG_value   ("close"     , rc);
    --rce;  if (rc < 0) {
@@ -334,7 +346,7 @@ READ__entry             (FILE *a_file, int *a_count)
       DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-  /*---(malloc new data)----------------*/
+   /*---(malloc new data)----------------*/
    while (x_data == NULL) {
       if (++x_tries > 3)  break;
       x_data = (tENTRY*) malloc (sizeof (tENTRY));
@@ -544,7 +556,7 @@ WRITE_all          (char *a_name, int *a_count)
       return rce;
    }
    /*---(open)---------------------------*/
-   rc = FILE__open (&x_file, a_name, 'w');
+   rc = FILE_open  (&x_file, a_name, 'w');
    DEBUG_OUTP   yLOG_value   ("open"      , rc);
    DEBUG_OUTP   yLOG_point   ("x_file"    , x_file);
    --rce;  if (rc < 0 || x_file == NULL) {
@@ -608,7 +620,7 @@ READ_all           (char *a_name, int *a_count)
    rc = ENTRY__purge ();
    rc = DRIVE__purge ();
    /*---(open)---------------------------*/
-   rc = FILE__open (&x_file, a_name, 'r');
+   rc = FILE_open  (&x_file, a_name, 'r');
    DEBUG_INPT   yLOG_value   ("open"      , rc);
    DEBUG_INPT   yLOG_point   ("x_file"    , x_file);
    --rce;  if (rc < 0 || x_file == NULL) {
