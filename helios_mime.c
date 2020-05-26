@@ -631,8 +631,6 @@ MIME__write_title       (FILE *f, char a_type)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
-   /*---(default)------------------------*/
-   strlcpy (s_head, "", LEN_RECD);
    /*---(spacing)------------------------*/
    --rce;  switch (a_type) {
    case DEST_FILE   :
@@ -804,8 +802,6 @@ MIME_write         (char a_type)
    char        rc          =    0;
    FILE       *f           = NULL;
    int         i           =    0;
-   /*> char        x_comma     [20];                                                  <*/
-   /*> char        x_percent   [20];                                                  <*/
    char        x_save      =  '-';
    int         x_count     =    0;
    /*---(header)-------------------------*/
@@ -863,46 +859,50 @@ MIME_write         (char a_type)
 static void  o___TREE____________o () { return; }
 
 char
-MIME_treehead      (void)
+MIME__tree_header       (void)
 {
-   printf ("\n#---name------------------------------------------  --------size---  -------count---  ---desc------------------------------------------- \n");
+   yPARSE_printf ("s_format"    , "O"     , "mimecat"                       );
+   yPARSE_spacer (1);
    return 0;
 }
 
 char
-MIME_treecat       (char a_cat)
+MIME__tree_line         (FILE *f, char a_type, uchar *a_ext, llong a_size, int a_count, char *a_desc)
 {
-   /*---(locals)-----------+-----------+-*/
-   int         i           =    0;
-   llong       x_total     =    0;
-   llong       x_count     =    0;
-   char        x_title     [500]       = "";
-   char        x_cat       [500]       = "n/a";
-   int         c           =    0;
-   /*---(summary run)--------------------*/
-   /*> printf ("\n\nrunning cat %c\n", a_cat);                                        <*/
-   for (i = 0; i < n_mime; ++i) {
-      if (g_mime [i].cat != a_cat)  continue;
-      /*> printf ("      %-44.44s | %15lld¦", g_mime[i].desc, g_mime [i].b_seen);        <*/
-      x_count += g_mime[i].n_seen;
-      x_total += g_mime[i].b_seen;
+   char        l           =    0;
+   static int  c           =    0;
+   /*---(default)------------------------*/
+   strlcpy (s_recd, "", LEN_RECD);
+   /*---(handle type)--------------------*/
+   switch (a_type) {
+   case 'T' : l = 0;  break;
+   case 'c' : l = 1;  break;
+   case 'm' : l = 2;  break;
    }
-   for (i = 0; i < s_ncat; ++i) {
-      if (s_cats [i].cat == 0    ) break;
-      if (s_cats [i].cat != a_cat) continue;
-      strcpy (x_cat, s_cats [i].desc);
-   }
-   MIME_treehead ();
-   printf ("   %-44.44s     %15lld  %15lld  %-50.50s \n", x_cat, x_total, x_count, x_cat);
-   /*---(detail run)---------------------*/
-   for (i = 0; i < n_mime; ++i) {
-      if (g_mime [i].cat != a_cat)  continue;
-      if ((c % 5) == 0) printf ("\n");
-      sprintf (x_title, "%s, %s", g_mime [i].ext, g_mime [i].desc);
-      printf  ("      %-44.44s  %15lld  %15lld  %-50.50s ¦", g_mime [i].ext, g_mime [i].b_seen, g_mime [i].n_seen, x_title); 
-      ++c;
-   }
+   /*---(main)---------------------------*/
+   yPARSE_vprintf (c, "node", l, a_ext, a_size, a_count, a_desc);
+   ++c;
    /*---(complete)-----------------------*/
+   return 0;
+}
+
+char
+MIME__tree_category     (FILE *f, uchar a_cat)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   int         i           =    0;
+   int         n           =    0;
+   /*---(find)---------------------------*/
+   for (i = 0; i < s_ncat; ++i) {
+      if (s_cats [i].cat == 0    )  break;
+      if (s_cats [i].cat != a_cat)  continue;
+      n = i;
+      break;
+   }
+   --rce;  if (n < 0)    return rce;
+   if (a_cat == 'T')  MIME__tree_line      (f, 'T', s_cats [n].name, s_cats [n].b_seen, s_cats [n].n_seen, s_cats [n].desc);
+   else               MIME__tree_line      (f, 'c', s_cats [n].name, s_cats [n].b_seen, s_cats [n].n_seen, s_cats [n].desc);
    return 0;
 }
 
@@ -911,163 +911,27 @@ MIME_tree          (void)
 {
    /*---(locals)-----------+-----------+-*/
    int         i           =    0;
-   char        x_save      = g_mime [i].cat;
+   char        x_save      = MIME_TOTAL;
    /*---(header)-------------------------*/
-   printf ("#!/usr/local/bin/hyleoroi\n");
-   printf ("#   hyleoroi -- tree visualization input file\n");
-   printf ("#   mime-type summary written by helios\n");
-   printf ("\n\n\n");
-   printf ("SIMPLE-FORMAT\n");
-   printf ("\n\n\n");
-   printf ("#--context  ---values------------------------------- \n");
-   printf ("source      helios-phaeton                           \n");
-   printf ("label       total file size by mime category         \n");
-   printf ("format      mimecat                                  \n");
-   printf ("\n\n\n");
+   yPARSE_planned (NULL, "stdout", NULL);
+   yPARSE_header  (P_FULLNAME, P_VERNUM, P_VERTXT, P_NAMESAKE, "file size by mime category", MIME__tree_header);
+   yPARSE_handler_plus ("node", "sThlD", 0.0, NULL, NULL, "lvl,type,size,count,description");
    /*---(root)---------------------------*/
-   MIME_treehead ();
-   printf ("%-44.44s        %15lld  %15lld  %-50.50s \n"   , h_drive->device, h_drive->size, g_mime [0].n_seen, h_drive->device);
+   MIME__tree_category (stdout, MIME_TOTAL);
    /*---(process all)--------------------*/
    for (i = 0; i < n_mime; ++i) {
-      if (g_mime [i].cat == x_save)  continue;
-      x_save = g_mime [i].cat;
-      MIME_treecat (x_save);
+      if (g_mime [i].cat != x_save) {
+         x_save = g_mime [i].cat;
+         MIME__tree_category (stdout, x_save);
+      }
+      if (g_mime [i].b_seen == 0)  continue;
+      MIME__tree_line (stdout, 'm', g_mime [i].ext, g_mime [i].b_seen, g_mime [i].n_seen, g_mime [i].desc);
    }
    /*---(footer)-------------------------*/
-   printf ("   %-44.44s     %15lld  %15lld  %-50.50s ¦", "(empty)", h_drive->size - g_mime [0].b_seen, 0, "(empty)");
-   MIME_treehead ();
-   printf ("# END-OF-FILE\n");
+   yPARSE_close ();
    /*---(complete)-----------------------*/
    return 0;
 }
-
-/*> char                                                                              <* 
- *> MIME__find_match        (cchar *a_ext, int *a_index, char *a_cat)                 <* 
- *> {                                                                                 <* 
- *>    /+---(locals)-----------+-----+-----+-+/                                       <* 
- *>    int         rc          =  -1;                                                 <* 
- *>    char        x_ext       [LEN_TERSE] = "";                                      <* 
- *>    int         i           =   0;                                                 <* 
- *>    int         x_len       =   0;                                                 <* 
- *>    strcpy (x_ext, a_ext);                                                         <* 
- *>    x_len = strlen (x_ext);                                                        <* 
- *>    for (i = 0; i < x_len; ++i)   x_ext [i] = tolower (x_ext [i]);                 <* 
- *>    /+---(search for match)---------------+/                                       <* 
- *>    for (i = 0; i < n_mime; ++i) {                                                 <* 
- *>       /+---(filter)----------------------+/                                       <* 
- *>       if (g_mime [i].ext  [0] != x_ext [0])      continue;                        <* 
- *>       if (g_mime [i].ext  [1] != x_ext [1])      continue;                        <* 
- *>       if (strcmp (g_mime [i].ext , x_ext) != 0)  continue;                        <* 
- *>       /+---(update)----------------------+/                                       <* 
- *>       if (a_index != NULL)  *a_index = i;                                         <* 
- *>       if (a_cat   != NULL)  *a_cat   = g_mime [i].cat;                            <* 
- *>       /+---(get out)---------------------+/                                       <* 
- *>       rc = 0;                                                                     <* 
- *>       break;                                                                      <* 
- *>    }                                                                              <* 
- *>    return rc;                                                                     <* 
- *> }                                                                                 <*/
-
-/*> char         /+===[[ create entry statistics ]]===========[ ------ [ ------ ]=+/                 <* 
- *> MIME_find_by_ext        (cchar *a_ext, cchar *a_name, int *a_index, char *a_cat, long a_bytes)   <* 
- *> {                                                                                                <* 
- *>    /+---(locals)-----------+-----+-----+-+/                                                      <* 
- *>    char        rce         =  -10;                                                               <* 
- *>    int         rc          = -1;            /+ return code                    +/                 <* 
- *>    int         x_len       =  0;            /+ length of extension            +/                 <* 
- *>    char        x_ext       [LEN_TERSE] = "";                                                     <* 
- *>    int         i           =  0;            /+ generic iterator               +/                 <* 
- *>    /+---(header)-------------------------+/                                                      <* 
- *>    DEBUG_DATA   yLOG_enter   (__FUNCTION__);                                                     <* 
- *>    /+---(prepare)------------------------+/                                                      <* 
- *>    if (a_index != NULL)  *a_index = 0;                                                           <* 
- *>    if (a_cat   != NULL)  *a_cat   = MIME_HUH;                                                    <* 
- *>    /+---(defense)------------------------+/                                                      <* 
- *>    DEBUG_DATA   yLOG_point   ("a_ext"     , a_ext);                                              <* 
- *>    --rce;  if (a_ext == NULL) {                                                                  <* 
- *>       DEBUG_DATA   yLOG_exitr   (__FUNCTION__, rce);                                             <* 
- *>       return rce;                                                                                <* 
- *>    }                                                                                             <* 
- *>    x_len = strlen  (a_ext);                                                                      <* 
- *>    DEBUG_DATA   yLOG_complex ("ext"       , "%d, %s", x_len, a_ext);                             <* 
- *>    --rce;  if (x_len <= 0) {                                                                     <* 
- *>       DEBUG_DATA   yLOG_exitr   (__FUNCTION__, rce);                                             <* 
- *>       return rce;                                                                                <* 
- *>    }                                                                                             <* 
- *>    --rce;  if (x_len >=  LEN_TERSE) {                                                            <* 
- *>       DEBUG_DATA   yLOG_exitr   (__FUNCTION__, rce);                                             <* 
- *>       return rce;                                                                                <* 
- *>    }                                                                                             <* 
- *>    DEBUG_DATA   yLOG_point   ("a_name"    , a_name);                                             <* 
- *>    --rce;  if (a_name == NULL) {                                                                 <* 
- *>       DEBUG_DATA   yLOG_exitr   (__FUNCTION__, rce);                                             <* 
- *>       return rce;                                                                                <* 
- *>    }                                                                                             <* 
- *>    DEBUG_DATA   yLOG_info    ("a_name"    , a_name);                                             <* 
- *>    /+---(prepare)------------------------+/                                                      <* 
- *>    strcpy (x_ext, a_ext);                                                                        <* 
- *>    for (i = 0; i < x_len; ++i)   x_ext [i] = tolower (x_ext [i]);                                <* 
- *>    /+---(search for match)---------------+/                                                      <* 
- *>    for (i = 0; i < n_mime; ++i) {                                                                <* 
- *>       /+---(filter)----------------------+/                                                      <* 
- *>       if (g_mime [i].ext  [0] != x_ext [0])      continue;                                       <* 
- *>       if (g_mime [i].ext  [1] != x_ext [1])      continue;                                       <* 
- *>       if (strcmp (g_mime [i].ext , x_ext) != 0)  continue;                                       <* 
- *>       /+---(update)----------------------+/                                                      <* 
- *>       if (a_index != NULL)  *a_index = i;                                                        <* 
- *>       if (a_cat   != NULL)  *a_cat   = g_mime [i].cat;                                           <* 
- *>       /+---(update mime)-----------------+/                                                      <* 
- *>       if (a_bytes > 0) {                                                                         <* 
- *>          /+---(entry)----------+/                                                                <* 
- *>          ++(g_mime [i].n_seen);                                                                  <* 
- *>          g_mime [i].b_seen += a_bytes;                                                           <* 
- *>          /+---(counters)-------+/                                                                <* 
- *>          /+> MIME_add_seen (g_mime [i].cat, a_bytes);                                 <+/        <* 
- *>          /+---(done)-----------+/                                                                <* 
- *>       }                                                                                          <* 
- *>       /+---(get out)---------------------+/                                                      <* 
- *>       rc = 0;                                                                                    <* 
- *>       break;                                                                                     <* 
- *>    }                                                                                             <* 
- *>    DEBUG_DATA   yLOG_value   ("rc"        , rc);                                                 <* 
- *>    /+---(complete)-----------------------+/                                                      <* 
- *>    DEBUG_DATA   yLOG_exit    (__FUNCTION__);                                                     <* 
- *>    return rc;                                                                                    <* 
- *> }                                                                                                <*/
-
-/*> char                                                                               <* 
- *> MIME_find_whole         (cchar *a_name, uchar *a_cat, long a_bytes)                <* 
- *> {                                                                                  <* 
- *>    /+---(locals)-----------+-----+-----+-+/                                        <* 
- *>    char        rce         =  -10;                                                 <* 
- *>    int         rc          = -1;            /+ return code                    +/   <* 
- *>    char        x_name      [LEN_TERSE] = "";                                       <* 
- *>    int         i           =  0;            /+ generic iterator               +/   <* 
- *>    int         x_len       =   0;                                                  <* 
- *>    /+---(header)-------------------------+/                                        <* 
- *>    DEBUG_DATA   yLOG_enter   (__FUNCTION__);                                       <* 
- *>    /+---(prepare)------------------------+/                                        <* 
- *>    if (a_cat   != NULL)  *a_cat   = MIME_HUH;                                      <* 
- *>    /+---(defense)------------------------+/                                        <* 
- *>    DEBUG_DATA   yLOG_point   ("a_name"    , a_name);                               <* 
- *>    --rce;  if (a_name == NULL) {                                                   <* 
- *>       DEBUG_DATA   yLOG_exitr   (__FUNCTION__, rce);                               <* 
- *>       return rce;                                                                  <* 
- *>    }                                                                               <* 
- *>    x_len = strlen  (a_name);                                                       <* 
- *>    DEBUG_DATA   yLOG_complex ("name"      , "%d, %s", x_len, a_name);              <* 
- *>    --rce;  if (x_len == 0 || x_len > 9) {                                          <* 
- *>       DEBUG_DATA   yLOG_exitr   (__FUNCTION__, rce);                               <* 
- *>       return rce;                                                                  <* 
- *>    }                                                                               <* 
- *>    /+---(make copy)----------------------+/                                        <* 
- *>    strlcpy (x_name, a_name, LEN_TERSE);                                            <* 
- *>    for (i = 0; i < x_len; ++i)   x_name [i] = tolower (x_name [i]);                <* 
- *>    DEBUG_DATA   yLOG_info    ("x_name"    , x_name);                               <* 
- *>    rc = MIME_find_by_ext (x_name, "", NULL, a_cat, a_bytes);                       <* 
- *>    DEBUG_DATA   yLOG_exit    (__FUNCTION__);                                       <* 
- *>    return rc;                                                                      <* 
- *> }                                                                                  <*/
 
 
 

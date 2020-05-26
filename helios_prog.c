@@ -4,147 +4,11 @@
 tGLOBAL     my;
 
 
-/*====================------------------------------------====================*/
-/*===----                            utilities                         ----===*/
-/*====================------------------------------------====================*/
-void  o___UTILITIES_______o () { return; }
-
-char        s_string    [MAX_STR];
-
-/*> char*        /+--> clean whitespace from a string --------[--------[--------]-+/            <* 
- *> ySTR_trim          (char *a_source, char a_mode)                                            <* 
- *> {                                                                                           <* 
- *>    /+---(design notes)-------------------+/                                                 <* 
- *>    /+                                                                                       <* 
- *>     *   n = none   (string untouched)                                                       <* 
- *>     *   h = head   (all leading spaces gone)                                                <* 
- *>     *   t = tail   (all ending spaces gone)                                                 <* 
- *>     *   b = both   (head and tail)                                                          <* 
- *>     *   s = single (both plus internal not-in-strings compressed to one space)              <* 
- *>     *   e = every  (both plus internal not-in-strings taken out)                            <* 
- *>     *   m = max    (both plus all internal taken fully out)                                 <* 
- *>     *                                                                                       <* 
- *>     +/                                                                                      <* 
- *>    /+---(locals)-----------+-----------+-+/                                                 <* 
- *>    int         i, j;                             /+ iterators -- characters   +/            <* 
- *>    int         x_len       = 0;                  /+ source string length      +/            <* 
- *>    int         x_len2      = 0;                  /+ source string length      +/            <* 
- *>    int         x_count     = 0;                  /+ whitespace counter        +/            <* 
- *>    int         x_limit     = 0;                                                             <* 
- *>    char        in_str      = '-';                                                           <* 
- *>    /+---(defense: bad source)------------+/                                                 <* 
- *>    strcpy (s_string, "(null)");                                                             <* 
- *>    if (a_source == NULL)   return NULL;                                                     <* 
- *>    x_len = strlen(a_source);                                                                <* 
- *>    strcpy (s_string, "(empty)");                                                            <* 
- *>    if (x_len    <= 0   )   return NULL;                                                     <* 
- *>    /+---(prepare)------------------------+/                                                 <* 
- *>    if (a_mode == 's')   x_limit = 1;                                                        <* 
- *>    /+---(leading whitespace)-------------+/                                                 <* 
- *>    x_len2 = x_len;                                                                          <* 
- *>    if (strchr("hbsem", a_mode) != 0) {                                                      <* 
- *>       for (i = 0; i <= x_len2; ++i) {                                                       <* 
- *>          /+> printf ("%3d %c <<%s>>\n", x_len, a_source [0], a_source);               <+/   <* 
- *>          if (a_source[0] != ' ') break;                                                     <* 
- *>          for (j = 0; j <= x_len; ++j)                                                       <* 
- *>             a_source[j] = a_source[j + 1];                                                  <* 
- *>          --x_len;                                                                           <* 
- *>       }                                                                                     <* 
- *>    }                                                                                        <* 
- *>    /+---(trailing whitespace)------------+/                                                 <* 
- *>    if (strchr("tbsem", a_mode) != 0) {                                                      <* 
- *>       for (i = x_len - 1; i >= 0; --i) {                                                    <* 
- *>          if (a_source[i] != ' ') break;                                                     <* 
- *>          a_source[i] = '\0';                                                                <* 
- *>          --x_len;                                                                           <* 
- *>       }                                                                                     <* 
- *>    }                                                                                        <* 
- *>    /+---(internal whitespace)------------+/                                                 <* 
- *>    if (strchr("esm" , a_mode) != 0) {                                                       <* 
- *>       for (i = 0; i <= x_len; ++i) {                                                        <* 
- *>          /+---(check for strings)--------+/                                                 <* 
- *>          if (a_mode != 'm') {                                                               <* 
- *>             if (in_str == 'y') {                                                            <* 
- *>                if (a_source[i] == '"') {                                                    <* 
- *>                   /+> if (i > 0 && a_source[i-1] == '\\')  continue;                  <+/   <* 
- *>                   in_str = '-';                                                             <* 
- *>                   continue;                                                                 <* 
- *>                }                                                                            <* 
- *>                continue;                                                                    <* 
- *>             } else {                                                                        <* 
- *>                if (a_source[i] == '"') {                                                    <* 
- *>                   /+> if (i > 0 && a_source[i-1] == '\\')  continue;                  <+/   <* 
- *>                   in_str = 'y';                                                             <* 
- *>                   continue;                                                                 <* 
- *>                }                                                                            <* 
- *>             }                                                                               <* 
- *>          }                                                                                  <* 
- *>          /+---(check limit)--------------+/                                                 <* 
- *>          if (a_source[i] != ' '    )  { x_count = 0; continue; }                            <* 
- *>          if (x_count   <  x_limit)  { ++x_count;   continue; }                              <* 
- *>          /+---(compress)-----------------+/                                                 <* 
- *>          for (j = i; j <= x_len; ++j)                                                       <* 
- *>             a_source[j] = a_source[j + 1];                                                  <* 
- *>          --x_len;                                                                           <* 
- *>          --i;                                                                               <* 
- *>          /+---(done)---------------------+/                                                 <* 
- *>       }                                                                                     <* 
- *>    }                                                                                        <* 
- *>    /+---(prepare for return)-------------+/                                                 <* 
- *>    strncpy (s_string, a_source, MAX_STR);                                                   <* 
- *>    /+---(complete)-----------------------+/                                                 <* 
- *>    return a_source;                                                                         <* 
- *> }                                                                                           <*/
-
-/*> char*        /+===[[ pull a substring ]]====================[--------[--------]=+/                                                                  <* 
- *> ySTR_sub           (char *a_source, int a_beg, int a_len, char a_mode)                                                                              <* 
- *> {                                                                                                                                                   <* 
- *>    /+---(locals)-----------+-----------+-+/                                                                                                         <* 
- *>    int         i, j;                             /+ iterators -- characters   +/                                                                    <* 
- *>    int         x_len       = 0;                  /+ source string length      +/                                                                    <* 
- *>    int         x_max       = 0;                  /+ max index                 +/                                                                    <* 
- *>    int         x_rem       = 0;                  /+ space between beg and end +/                                                                    <* 
- *>    int         x_end       = 0;                  /+ end point                 +/                                                                    <* 
- *>    char        x_str       [MAX_STR] = "";                                                                                                          <* 
- *>    /+---(defense: null)------------------+/                                                                                                         <* 
- *>    strcpy (s_string, "((null))");                                                                                                                   <* 
- *>    if (a_source == NULL)   return NULL;                                                                                                             <* 
- *>    /+---(defense: empty)-----------------+/                                                                                                         <* 
- *>    x_len = strlen(a_source);                                                                                                                        <* 
- *>    strcpy (s_string, "((empty))");                                                                                                                  <* 
- *>    if (x_len    <= 0   )   return NULL;                                                                                                             <* 
- *>    x_max = x_len - 1;                                                                                                                               <* 
- *>    /+---(limits)-------------------------+/                                                                                                         <* 
- *>    /+> printf ("x_len = %3d, a_beg = %3d, a_len = %3d, x_max = %3d, x_rem = %3d, x_end = %3d\n", x_len, a_beg, a_len, x_max, x_rem, x_end);   <+/   <* 
- *>    if (a_beg <  0    )   a_beg = 0;                                                                                                                 <* 
- *>    if (a_beg >  x_max)   a_beg = x_max;                                                                                                             <* 
- *>    if (a_len <  0    )   a_len = 0;                                                                                                                 <* 
- *>    x_rem = x_len - a_beg;                                                                                                                           <* 
- *>    if (a_len >  x_rem)   a_len = x_rem;                                                                                                             <* 
- *>    x_end = a_beg + a_len - 1;                                                                                                                       <* 
- *>    /+> printf ("x_len = %3d, a_beg = %3d, a_len = %3d, x_max = %3d, x_rem = %3d, x_end = %3d\n", x_len, a_beg, a_len, x_max, x_rem, x_end);   <+/   <* 
- *>    /+---(pull substring)-----------------+/                                                                                                         <* 
- *>    i = 0;                                                                                                                                           <* 
- *>    /+> printf ("<<");                                                                 <+/                                                           <* 
- *>    for (j = a_beg; j <= x_end; ++j) {                                                                                                               <* 
- *>       /+> printf ("%c", a_source [j]);                                                <+/                                                           <* 
- *>       x_str [i] = a_source [j];                                                                                                                     <* 
- *>       ++i;                                                                                                                                          <* 
- *>    }                                                                                                                                                <* 
- *>    /+> printf (">>\n");                                                               <+/                                                           <* 
- *>    x_str [i] = '\0';                                                                                                                                <* 
- *>    /+---(trim)---------------------------+/                                                                                                         <* 
- *>    ySTR_trim (x_str, a_mode);                                                                                                                       <* 
- *>    /+---(complete)-----------------------+/                                                                                                         <* 
- *>    return s_string;                                                                                                                                 <* 
- *> }                                                                                                                                                   <*/
-
-
 
 /*====================------------------------------------====================*/
-/*===----                   standard program functions                 ----===*/
+/*===----                       small support                          ----===*/
 /*====================------------------------------------====================*/
-static void      o___PROGRAM_________________o (void) {;}
+static void      o___SUPPORT_________________o (void) {;}
 
 char      verstring    [500];
 
@@ -165,11 +29,15 @@ PROG_version       (void)
    return verstring;
 }
 
-   /*> DEBUG_ARGS  yLOG_char    ("mime"      , debug.mime);                           <* 
-    *> DEBUG_ARGS  yLOG_char    ("perms"     , debug.perms);                          <*/
+
+
+/*====================------------------------------------====================*/
+/*===----                        program startup                       ----===*/
+/*====================------------------------------------====================*/
+void  o___STARTUP_________o () { return; }
 
 char             /* [------] minimal pre-argument program initialization -----*/
-PROG_init          (void)
+PROG_init               (int argc, char *argv[])
 {
    /*---(locals)-----------+-----------+-*/
    int         i           = 0;
@@ -186,7 +54,14 @@ PROG_init          (void)
    yLOG_stage   ('i');
    /*---(header)-------------------------*/
    DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
-   /*---(runtime control)----------------*/
+   /*---(update database)----------------*/
+   strlcpy (my.progname, argv [0], LEN_LABEL);
+   DEBUG_PROG   yLOG_info    ("progname"  , my.progname);
+   my.updatedb     =  '-';
+   if (strcmp (my.progname, "helios_update") == 0)     my.updatedb = 'y';
+   if (strcmp (my.progname, "updatedb"     ) == 0)     my.updatedb = 'y';
+   DEBUG_PROG   yLOG_char    ("updatedb"  , my.updatedb);
+   /*---(default modes)------------------*/
    my.mode         = MODE_SEARCH;
    my.report       = RPT_MATCHES;
    my.output       = OUTPUT_NORMAL;
@@ -198,7 +73,6 @@ PROG_init          (void)
    my.runtime      = time (NULL);
    my.maxlevel     =   99;   /* maxiumum */
    my.conf         =  'y';
-   my.updatedb     =  '-';
    n_nodir         =    0;
    my.dump         =  '-';
    my.dirtree      =  '-';
@@ -280,8 +154,10 @@ PROG_args          (int argc, char *argv[])
          return -1;
       }
       /*---(configuration)---------------*/
-      else if (strcmp (a, "--conf"         ) == 0)                           my.conf = 'y';
+      else if (strcmp (a, "-c"             ) == 0 && i + 1 < argc)   strncpy (my.file_conf, argv [++i], LEN_PATH);
+      else if (strcmp (a, "--config"       ) == 0 && i + 1 < argc)   strncpy (my.file_conf, argv [++i], LEN_PATH);
       else if (strcmp (a, "--noconf"       ) == 0)                           my.conf = 'n';
+      else if (strcmp (a, "-d"             ) == 0 && i + 1 < argc)   strncpy (my.file_data, argv [++i], LEN_PATH);
       else if (strcmp (a, "--database"     ) == 0 && i + 1 < argc)   strncpy (my.file_data, argv [++i], LEN_PATH);
       else if (strcmp (a, "--mimefile"     ) == 0 && i + 1 < argc)   strncpy (my.file_mime, argv [++i], LEN_PATH);
       else if (strcmp (a, "--public"       ) == 0)                           my.pub  = 'y';
@@ -310,6 +186,7 @@ PROG_args          (int argc, char *argv[])
       else if (strcmp (a, "--gid"          ) == 0 && i + 1 < argc)   my.r_gid = atoi (argv [++i]);
       /*---(output control)--------------*/
       else if (strstr (OUTPUT_OPTIONS   , a) != NULL)                RPTG_config_output    (a);
+      else if (strcmp (a, "--mimetree"     ) == 0)                   my.mimetree = 'y';
       /*> else if (strcmp (a, "--verbose"      ) == 0 || strcmp (a, "-v") == 0)  my.verbose        = 'y';   <* 
        *> else if (strcmp (a, "--dump"         ) == 0)                           my.dump           = 'y';   <* 
        *> else if (strcmp (a, "--dirtree"      ) == 0)                           my.dirtree        = 'y';   <* 
@@ -327,6 +204,7 @@ PROG_args          (int argc, char *argv[])
        *> else if (strcmp (a, "--show-level"   ) == 0)                           my.show_level     = 'y';   <* 
        *> else if (strcmp (a, "--show-ascii"   ) == 0)                           my.show_ascii     = 'y';   <*/
       /*---(processing control)----------*/
+      else if (strcmp (a, "-u"             ) == 0)                           my.updatedb       = 'y';
       else if (strcmp (a, "--updatedb"     ) == 0)                           my.updatedb       = 'y';
       else if (strcmp (a, "--mpoint"       ) == 0 && i + 1 < argc)   strncpy (my.mpoint  , argv [++i], LEN_FULL);
       /*---(search filtering)------------*/
@@ -411,6 +289,73 @@ PROG_begin         (void)
    return 0;
 }
 
+
+
+/*====================------------------------------------====================*/
+/*===----                        main program                          ----===*/
+/*====================------------------------------------====================*/
+void  o___DRIVER__________o () { return; }
+
+char
+PROG_driver             (void)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   int         c           =    0;
+   /*---(header)-------------------------*/
+   DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
+   /*---(update)-------------------------*/
+   if (my.updatedb == 'y') {
+      rc = DRIVE_inventory ();
+   }
+   /*---(reporting)----------------------*/
+   else if (my.mimetree == 'y') {
+      READ_all     (my.file_data, &c);
+      MIME_tree    ();
+   }
+   else if (my.dirtree == 'y') {
+      READ_all   (my.file_data, &c);
+      if (rc >= 0)  rc = ENTRY_start ();
+      /*> if (my.path != NULL)  DATA_start (my.path);                                 <*/
+      RPTG_dirtree (1, h_ptrs, "");
+   }
+   else if (my.statistics == 'y') {
+      READ_all   (my.file_data, &c);
+      RPTG_summ  ();
+   }
+   else if (my.mime_table == 'y' && strcmp (my.regex, "") == 0) {
+      READ_all   (my.file_data, &c);
+      MIME_write   ('s');
+   }
+   else if (my.dump == 'y') {
+      READ_all   (my.file_data, &c);
+   }
+   /*---(search)-------------------------*/
+   else {
+      READ_all   (my.file_data, &c);
+      if (rc >= 0)  rc = ENTRY_start ();
+      if (rc >= 0)  rc = RPTG_walker (WALK_ALL);
+      if (my.total > 0 && my.output != OUTPUT_COUNT)  RPTG_footer ();
+      /*> if (my.mime_table == 'y') MIME_write   ('s', ' ');                          <*/
+   }
+   /*---(check for trouble)--------------*/
+   --rce;  if (rc < 0) {
+      DEBUG_TOPS   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                        program shutdown                      ----===*/
+/*====================------------------------------------====================*/
+void  o___SHUTDOWN________o () { return; }
+
 char                /* PURPOSE : shutdown program and free memory ------------*/
 PROG_end           (void)
 {
@@ -435,7 +380,7 @@ PROG__unit_quiet     (void)
 {
    char       *x_args [1]  = { "helios" };
    yURG_logger (1, x_args);
-   PROG_init   ();
+   PROG_init   (1, x_args);
    yURG_urgs   (1, x_args);
    PROG_args   (1, x_args);
    PROG_begin  ();
@@ -449,7 +394,7 @@ PROG__unit_loud      (void)
    int         x_argc      = 4;
    char       *x_args [20] = { "helios_unit", "@@kitchen", "@@args", "@@stats" };
    yURG_logger (x_argc, x_args);
-   PROG_init   ();
+   PROG_init   (x_argc, x_args);
    yURG_urgs   (x_argc, x_args);
    PROG_args   (x_argc, x_args);
    PROG_begin  ();

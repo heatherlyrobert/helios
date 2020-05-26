@@ -881,3 +881,31 @@ SCRP          (MIME) verify finding mime extensions for man files              
 
 
 
+#23456789-12  123456789-123456789-123456789-12345  123456789-123456789-123456  123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-  123456789-  123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-  -  123456789-123456789- 
+#==(verb)===  ===========(description)===========  =====(function)===========  ========================(arguments)=================================================================  ==(test)==  ==========================(results)=================================================================  t  ========(var)======= 
+SCRP          (MIME) verify writing mime tree                                                                                                                                          ((01.---))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+
+   COND       verify program setup                                               - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     setup the program                    PROG__unit_quiet                                                                                                                  i_equal     0                                                                                                    
+     exec     reset mime totals                    MIME_reset_all                                                                                                                    i_equal     0                                                                                                    
+
+   COND       verify detail line (totals)                                        - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     generate line                        MIME__tree_line             NULL        , 'T', "/dev/sda4"          ,  100002,   102, "full drive"                                i_equal     0                                                                                                    
+     get      ... review line                      MIME__unit                  "s_recd"    , NULL       ,   0                                                                        s_equal     MIME s_recd      : [/dev/sda4        §          100002 §      102 § full drive                     ] 
+
+   COND       verify detail line (category)                                      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     generate line                        MIME__tree_line             NULL        , 'c', "AUDIO"              ,   54321,    32, "music files"                               i_equal     0                                                                                                    
+     get      ... review line                      MIME__unit                  "s_recd"    , NULL       ,   0                                                                        s_equal     MIME s_recd      : [   AUDIO         §           54321 §       32 § music files                    ] 
+
+   COND       verify detail line (mime)                                          - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((01.001))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     generate line                        MIME__tree_line             NULL        , 'm', "mp3"                ,   12345,    15, "music file"                                i_equal     0                                                                                                    
+     get      ... review line                      MIME__unit                  "s_recd"    , NULL       ,   0                                                                        s_equal     MIME s_recd      : [      mp3        §           12345 §       15 § music file                     ] 
+
+   COND       verify program teardown                                            - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   ((02.017))  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+     exec     wrap-up the program                  PROG__unit_end                                                                                                                    i_pass      0                                                                                                    
+
+
+
+
+
+

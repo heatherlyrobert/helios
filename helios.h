@@ -8,11 +8,15 @@
 
 #define     P_FOCUS     "SU (system utilities)"
 #define     P_NICHE     "ff (filesystem finder)"
-#define     P_PURPOSE   "provide file location, search, and summary services"
+#define     P_PURPOSE   "file system indexing, searching, and analytics"
+
+#define     P_FULLNAME  "/usr/local/bin/helios"
+#define     P_PREFIX    "helios-phaeton (locate)"
+#define     P_ONELINE   "helios-phaeton (locate) file system indexing, searching, and analytics"
 
 #define     P_NAMESAKE  "helios-phaeton (radiant)"
 #define     P_HERITAGE  "the all-seeing titan god of the sun and clear sight"
-#define     P_IMAGERY   "drives the sun in a fiery chariot pulled by four winged horses"
+#define     P_IMAGERY   "drives the sun across the sky in a chariot pulled by winged horses"
 
 #define     P_SYSTEM    "gnu/linux   (powerful, ubiquitous, technical, and hackable)"
 #define     P_LANGUAGE  "ansi-c      (wicked, limitless, universal, and everlasting)"
@@ -24,12 +28,13 @@
 
 #define     P_VERMAJOR  "1.--, first major version in production"
 #define     P_VERMINOR  "1.1-, adding extensive unit testing"
-#define     P_VERNUM    "1.1i"
-#define     P_VERTXT    "writing mime file is significantly upgraded and tested"
+#define     P_VERNUM    "1.1j"
+#define     P_VERTXT    "mime file fully uses yPARSE for output"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
 #define     P_REMINDER  "there are many better options, but i *own* every byte of this one"
+
 
 
 /*
@@ -223,6 +228,7 @@
 #include    <yURG.h>         /* CUSTOM : heatherly urgent processing          */
 #include    <yLOG.h>         /* CUSTOM : heatherly program logging            */
 #include    <ySTR.h>         /* CUSTOM : heatherly string handling            */
+#include    <yPARSE.h>       /* CUSTOM : heatherly file handling              */
 #include    <ySORT.h>        /* CUSTOM : heatherly sorting and searching      */
 #include    <yREGEX.h>       /* CUSTOM : heatherly regular expressions        */
 
@@ -497,6 +503,7 @@ struct cGLOBAL {
    char        headers;                     /* format output as report        */
    char        lineno;                      /* format with line numbers       */
    /*------------------------------------*/
+   char        progname    [LEN_LABEL];     /* run-name of program            */
    char        host        [LEN_DESC]; /* host name of current computer       */
    long        runtime;                /* run time for helios                 */
    int         maxlevel;               /* maximum recursion on entry gather   */          
@@ -616,19 +623,22 @@ int         main               (int argc, char *argv[]);
 
 
 /*===[[ HELIOS_PROG.C ]]======================================================*/
-/*---(program)--------------*/
-char        PROG_init          (void);
-char        PROG_urgsmass      (char a_set, char a_extra);
-char        PROG_urgs          (int argc, char *argv[]);
-char        PROG_args          (int argc, char *argv[]);
-/*> char        PROG_getdrive      (void);                                            <*/
-char        PROG_begin         (void);
-char        PROG_end           (void);
+/*---(support)--------------*/
+char*       PROG_version            (void);
+/*---(startup)--------------*/
+char        PROG_init               (int argc, char *argv[]);
+char        PROG_args               (int argc, char *argv[]);
+char        PROG_begin              (void);
+char        PROG_final              (void);
+/*---(driver)---------------*/
+char        PROG_driver             (void);
+/*---(shutdown)-------------*/
+char        PROG_end                (void);
 /*---(testing)--------------*/
-/*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
 char        PROG__unit_loud         (void);
 char        PROG__unit_quiet        (void);
 char        PROG__unit_end          (void);
+/*---(done)-----------------*/
 
 
 /*===[[ HELIOS_FILE.C ]]======================================================*/
@@ -681,11 +691,8 @@ char        MIME__write_line        (FILE *f, char a_type, uchar *a_name, uchar 
 char        MIME__write_columns     (FILE *f, char a_type);
 char        MIME__write_category    (FILE *f, char a_type, char a_cat);
 char        MIME_write              (char a_type);
-/*---(locate)---------------*/
-/*> char        MIME__find_match        (cchar *a_ext, int *a_index, char *a_cat);    <*/
-/*> char        MIME_find_by_ext        (cchar *a_ext, cchar *a_name, int *a_index, char *a_cat, long a_bytes);   <*/
-/*> char        MIME_find_man           (cchar *a_ext, uchar *a_cat, long a_bytes);   <*/
-/*---(reporting)------------*/
+/*---(tree)-----------------*/
+char        MIME__tree_line         (FILE *f, char a_type, uchar *a_ext, llong a_size, int a_count, char *a_desc);
 char        MIME_tree               (void);
 char        MIME_all                (void);
 char        MIME_found              (void);
