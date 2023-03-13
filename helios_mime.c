@@ -14,9 +14,9 @@
 #define     MAX_CAT         50
 typedef     struct      cCAT        tCAT;
 struct cCAT {
-   char        name        [LEN_TERSE];
-   char        cat;
-   char        desc        [LEN_DESC];
+   uchar       name        [LEN_TERSE];
+   uchar       cat;
+   uchar       desc        [LEN_DESC];
    int         n_seen;
    llong       b_seen;
    int         n_kept;
@@ -164,7 +164,7 @@ MIME_init          (void)
 static void  o___SINGLE__________o () { return; }
 
 char
-MIME__action            (uchar *a_ext, int *a_cindex, int *a_mindex, uchar *a_cat, char a_action, llong a_bytes)
+MIME__action            (uchar *a_ext, int *a_cindex, int *a_mindex, uchar *a_cat, char a_action, llong a_bytes, char *a_full)
 {
    /*---(local variables)--+-----+-----+-*/
    char        rce         =  -10;
@@ -196,6 +196,9 @@ MIME__action            (uchar *a_ext, int *a_cindex, int *a_mindex, uchar *a_ca
    --rce;  if (x_len <= 0 || x_len >= LEN_TERSE) {
       DEBUG_STATS  yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
+   }
+   --rce;  if (a_full != NULL) {
+      DEBUG_STATS  yLOG_snote   (a_full);
    }
    /*---(prepare)------------------------*/
    strlcpy (x_ext, a_ext, LEN_TERSE);
@@ -235,6 +238,7 @@ MIME__action            (uchar *a_ext, int *a_cindex, int *a_mindex, uchar *a_ca
       break;
    case DEST_STDOUT  : 
       DEBUG_STATS  yLOG_snote   ("seen");
+      DEBUG_STATS  yLOG_sint    (x_inc);
       s_cats [0].n_seen  += x_inc;
       s_cats [c].n_seen  += x_inc;
       g_mime [m].n_seen  += x_inc;
@@ -246,6 +250,7 @@ MIME__action            (uchar *a_ext, int *a_cindex, int *a_mindex, uchar *a_ca
       break;
    case 'k'  : 
       DEBUG_STATS  yLOG_snote   ("kept");
+      DEBUG_STATS  yLOG_sint    (x_inc);
       s_cats [0].n_kept  += x_inc;
       s_cats [c].n_kept  += x_inc;
       g_mime [m].n_kept  += x_inc;
@@ -257,6 +262,7 @@ MIME__action            (uchar *a_ext, int *a_cindex, int *a_mindex, uchar *a_ca
       break;
    case 'f'  : 
       DEBUG_STATS  yLOG_snote   ("found");
+      DEBUG_STATS  yLOG_sint    (x_inc);
       s_cats [0].n_found += x_inc;
       s_cats [c].n_found += x_inc;
       g_mime [m].n_found += x_inc;
@@ -283,10 +289,13 @@ MIME__action            (uchar *a_ext, int *a_cindex, int *a_mindex, uchar *a_ca
    return 0;
 }
 
-char MIME_get_index   (uchar *a_ext, int *a_cindex, int *a_mindex) { return MIME__action (a_ext, a_cindex, a_mindex, NULL, 'i', 0); }
-char MIME_add_seen    (uchar *a_ext, uchar *a_cat, llong a_bytes) { return MIME__action (a_ext, NULL, NULL, a_cat, 's', a_bytes); }
-char MIME_add_kept    (uchar *a_ext, llong a_bytes) { return MIME__action (a_ext, NULL , NULL, NULL, 'k', a_bytes); }
-char MIME_add_found   (uchar *a_ext, llong a_bytes) { return MIME__action (a_ext, NULL , NULL, NULL, 'f', a_bytes); }
+char MIME_get_index   (uchar *a_ext, int *a_cindex, int *a_mindex) { return MIME__action (a_ext, a_cindex, a_mindex, NULL, 'i', 0, NULL); }
+char MIME_add_seen    (uchar *a_ext, uchar *a_cat, llong a_bytes, char *o_path) { return MIME__action (a_ext, NULL, NULL, a_cat, 's', a_bytes, o_path); }
+char MIME_add_kept    (uchar *a_ext, llong a_bytes, char *o_path) { return MIME__action (a_ext, NULL , NULL, NULL, 'k', a_bytes, o_path); }
+char MIME_add_found   (uchar *a_ext, llong a_bytes) { return MIME__action (a_ext, NULL , NULL, NULL, 'f', a_bytes, NULL); }
+char MIME_del_seen    (uchar *a_ext, llong a_bytes, char *o_path) { return MIME__action (a_ext, NULL , NULL, NULL, 's', -a_bytes, o_path); }
+char MIME_del_kept    (uchar *a_ext, llong a_bytes) { return MIME__action (a_ext, NULL , NULL, NULL, 'k', -a_bytes, NULL); }
+char MIME_del_found   (uchar *a_ext, llong a_bytes) { return MIME__action (a_ext, NULL , NULL, NULL, 'f', -a_bytes, NULL); }
 
 char
 MIME_add_man            (uchar *a_ext, uchar *a_cat, long a_bytes)
@@ -297,33 +306,33 @@ MIME_add_man            (uchar *a_ext, uchar *a_cat, long a_bytes)
    char        x_ext       [LEN_TERSE] = "";
    int         i           =   0;
    int         x_len       =   0;
-   DEBUG_DATA   yLOG_enter   (__FUNCTION__);
+   DEBUG_STATS  yLOG_enter   (__FUNCTION__);
    /*---(prepare)------------------------*/
    if (a_cat   != NULL)  *a_cat   = MIME_HUH;
    /*---(defense)------------------------*/
-   DEBUG_DATA   yLOG_point   ("a_ext"     , a_ext);
+   DEBUG_STATS  yLOG_point   ("a_ext"     , a_ext);
    --rce;  if (a_ext == NULL) {
-      DEBUG_DATA   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_STATS  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    x_len = strlen  (a_ext);
-   DEBUG_DATA   yLOG_complex ("ext"       , "%d, %s", x_len, a_ext);
+   DEBUG_STATS  yLOG_complex ("ext"       , "%d, %s", x_len, a_ext);
    --rce;  if (x_len == 0 || x_len > 2) {
-      DEBUG_DATA   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_STATS  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(make copy)----------------------*/
    strlcpy (x_ext, a_ext, LEN_TERSE);
    --rce;  if (strchr ("123456789", x_ext [0]) == NULL) {
-      DEBUG_DATA   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_STATS  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    --rce;  if (x_len > 1 && strchr ("x"        , x_ext [1]) == NULL) {
-      DEBUG_DATA   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_STATS  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   rc = MIME_add_seen ("manual", a_cat, a_bytes);
-   DEBUG_DATA   yLOG_exit    (__FUNCTION__);
+   rc = MIME_add_seen ("manual", a_cat, a_bytes, NULL);
+   DEBUG_STATS  yLOG_exit    (__FUNCTION__);
    return rc;
 }
 
@@ -347,266 +356,128 @@ uchar *MIME_mime_ext    (int m) { return g_mime [m].ext;  }
 static void  o___INPUT___________o () { return; }
 
 char
-MIME__parse_essential   (char *a_recd, char *a_flag, char **s)
+MIME__find_cat          (uchar a_cat, uchar *a_name, int *n)
 {
    /*---(locals)-----------+-----------+-*/
    char        rce         =  -10;
-   char       *x_name      =    0;
-   char       *x_cat       =    0;
-   char       *q           = "§";
-   char        x_flag      =  '-';
    int         i           =    0;
    /*---(header)-------------------------*/
-   DEBUG_INPT   yLOG_enter   (__FUNCTION__);
-   /*---(default)---------------------*/
-   if (a_flag != NULL)  *a_flag = '-';
-   /*---(extension)-------------------*/
-   x_name = strtok_r (a_recd, q, s);
-   DEBUG_INPT  yLOG_point   ("name"      , x_name);
-   --rce;  if (x_name == NULL) {
-      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   strltrim (x_name, ySTR_BOTH, LEN_TERSE);
-   DEBUG_INPT  yLOG_info    ("name"      , x_name);
-   /*---(set flag))-------------------*/
-   if (x_name [0] == toupper (x_name [0]))  x_flag = 'y';
-   else                                     x_flag = '-';
-   DEBUG_INPT  yLOG_char    ("x_flag"    , x_flag);
-   /*---(category)--------------------*/
-   x_cat  = strtok_r (NULL  , q, s);
-   DEBUG_INPT  yLOG_point   ("cat"       , x_cat );
-   --rce;  if (x_cat  == NULL) {
-      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   strltrim (x_cat , ySTR_BOTH, LEN_TERSE);
-   DEBUG_INPT  yLOG_char    ("cat"       , x_cat  [0]);
-   /*---(save category)---------------*/
-   --rce;  if (x_flag == 'y') {
-      DEBUG_INPT   yLOG_note    ("check for category duplicates");
-      for (i = 0; i <= s_ncat; ++i) {
-         if (strcmp (x_name, s_cats [i].name) == 0) {
-            DEBUG_INPT   yLOG_info    ("duplicate" , x_name);
-            DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
-            return rce;
-         }
-         if (x_cat [0] == s_cats [i].cat) {
-            DEBUG_INPT   yLOG_char    ("duplicate" , x_cat);
-            DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
-            return rce;
-         }
+   DEBUG_STATS  yLOG_senter  (__FUNCTION__);
+   if (n != NULL)   *n = -1;
+   for (i = 0; i <= s_ncat; ++i) {
+      if (strcmp (a_name, s_cats [i].name) == 0) {
+         DEBUG_STATS  yLOG_snote   ("FOUND ext");
+         DEBUG_STATS  yLOG_sint    (i);
+         if (n != NULL)   *n = i;
+         DEBUG_STATS  yLOG_sexit   (__FUNCTION__);
+         return 0;
       }
-      DEBUG_INPT  yLOG_note    ("save to table");
-      strlcpy (s_cats [s_ncat].name, x_name, LEN_TERSE);
-      s_cats [s_ncat].cat     = x_cat [0];
-      ++s_ncat;
-      DEBUG_INPT  yLOG_value   ("s_ncat"    , s_ncat);
+      if (a_cat == s_cats [i].cat) {
+         DEBUG_STATS  yLOG_snote   ("FOUND cat");
+         DEBUG_STATS  yLOG_sint    (i);
+         if (n != NULL)   *n = i;
+         DEBUG_STATS  yLOG_sexit   (__FUNCTION__);
+         return 0;
+      }
    }
-   /*---(save mime)-------------------*/
-   --rce;  if (x_flag != 'y') {
-      DEBUG_INPT   yLOG_note    ("check for matching category");
-      for (i = 0; i < s_ncat; ++i) {
-         if (x_cat [0] == s_cats [i].cat) {
-            DEBUG_INPT   yLOG_value   ("found it"  , i);
-            break;
-         }
-      }
-      DEBUG_INPT   yLOG_complex ("checked"   , "%d, %d", s_ncat, i);
-      if (i >= s_ncat) {
-         DEBUG_INPT   yLOG_note    ("no matching category");
-         DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
-         return rce;
-      }
-      DEBUG_INPT   yLOG_note    ("check for mime entry duplicates");
-      for (i = 0; i < n_mime; ++i) {
-         if (strcmp (x_name, g_mime [i].ext) == 0) {
-            DEBUG_INPT   yLOG_info    ("duplicate" , x_name);
-            DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
-            return rce;
-         }
-      }
-      DEBUG_INPT  yLOG_note    ("save to table");
-      strlcpy (g_mime [n_mime].ext , x_name, LEN_TERSE);
-      g_mime [n_mime].cat     = x_cat [0];
-      ++n_mime;
-      DEBUG_INPT  yLOG_value   ("n_mime"    , n_mime);
-   }
-   /*---(save back)-------------------*/
-   if (a_flag != NULL)  *a_flag = x_flag;
-   /*---(complete)-----------------------*/
-   DEBUG_INPT   yLOG_exit    (__FUNCTION__);
-   return 0;
+   /*---(header)-------------------------*/
+   DEBUG_STATS  yLOG_sexitr  (__FUNCTION__, rce);
+   return rce;
 }
 
 char
-MIME__parse_optional    (char a_flag, char **s)
+MIME__read_one          (int a_line, uchar *a_verb)
 {
    /*---(locals)-----------+-----------+-*/
-   char       *p           =    0;
-   char       *q           = "§";
-   llong       v           =    0;
+   char        rce         =  -10;
+   char        rc          =  -10;
+   uchar       x_name      [LEN_LABEL] = "";
+   uchar       x_cat       =  '-';
+   uchar       x_desc      [LEN_DESC]  = "";
+   uchar       x_like      =  '-';
+   int         x_scount    =    0;
+   llong       x_ssize     =    0;
+   int         x_kcount    =    0;
+   llong       x_ksize     =    0;
+   int         i           =    0;
+   int         n           =    0;
    /*---(header)-------------------------*/
-   DEBUG_INPT   yLOG_enter   (__FUNCTION__);
-   /*---(desc)------------------------*/
-   p = strtok_r (NULL  , q, s);
-   DEBUG_INPT  yLOG_point   ("desc"      , p);
-   if (p == NULL) {
-      DEBUG_INPT   yLOG_exit    (__FUNCTION__);
-      return 0;
+   DEBUG_STATS  yLOG_enter   (__FUNCTION__);
+   DEBUG_STATS  yLOG_complex ("args"      , "%3d, %s", a_line, a_verb);
+   /*---(read)---------------------------*/
+   rc = yPARSE_scanf (a_verb, "TcDc,s;s,s;s", x_name, &x_cat, x_desc, &x_like, &x_scount, NULL, &x_ssize, NULL, &x_kcount, NULL, &x_ksize, NULL);
+   DEBUG_STATS  yLOG_complex ("returns"   , "%-10.10s %c %-10.10s %c %10.0d %16.0ld %10.0d %16.0ld", x_name, x_cat, x_desc, x_like, x_scount, x_ssize, x_kcount, x_ksize);
+   /*---(defense)------------------------*/
+   --rce; if (x_name == NULL || strcmp (x_name, "") == 0 || strlen (x_name) <= 0) {
+      DEBUG_STATS  yLOG_note    ("label not found");
+      DEBUG_STATS  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
    }
-   strltrim (p, ySTR_BOTH, LEN_DESC);
-   DEBUG_INPT  yLOG_info    ("desc"      , p);
-   if (a_flag == 'y')  strlcpy (s_cats [s_ncat - 1].desc, p, LEN_DESC);
-   else                strlcpy (g_mime [n_mime - 1].desc, p, LEN_DESC);
-   /*---(like)------------------------*/
-   p = strtok_r (NULL  , q, s);
-   DEBUG_INPT  yLOG_point   ("like"      , p);
-   if (p == NULL) {
-      DEBUG_INPT   yLOG_exit    (__FUNCTION__);
-      return 0;
+   --rce; if (strchr ("Tabcdefghijklmnopqrstuvwxyz?!-", x_cat) == NULL) {
+      DEBUG_STATS  yLOG_note    ("cat not allowed");
+      DEBUG_STATS  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
    }
-   strltrim (p, ySTR_BOTH, LEN_LABEL);
-   DEBUG_INPT  yLOG_char    ("like"      , p [0]);
-   if (a_flag == 'y')  ;
-   else                g_mime [n_mime - 1].like    = p [0];
-   /*---(seen)------------------------*/
-   p = strtok_r (NULL  , q, s);
-   DEBUG_INPT  yLOG_point   ("n_seen"    , p);
-   if (p == NULL) {
-      DEBUG_INPT   yLOG_exit    (__FUNCTION__);
-      return 0;
+   /*---(duplicate)----------------------*/
+   if        (strcmp (a_verb, "CAT") == 0) {
+      rc = MIME__find_cat (x_cat, x_name, &n);
+   } else if (strcmp (a_verb, "ext") == 0) {
+      rc = MIME_get_index (x_name, NULL, &n);
+   } else {
+      DEBUG_STATS  yLOG_note    ("verb not recognized");
+      DEBUG_STATS  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
    }
-   strltrim (p, ySTR_BOTH, LEN_LABEL);
-   DEBUG_INPT  yLOG_info    ("n_seen"    , p);
-   FILE_uncommas (p, &v);
-   DEBUG_INPT  yLOG_value   ("n_seen"    , v);
-   if (a_flag == 'y')  s_cats [s_ncat - 1].n_seen  = v;
-   else                g_mime [n_mime - 1].n_seen  = v;
-   /*---(seen percent)----------------*/
-   p = strtok_r (NULL  , q, s);
-   if (p == NULL) {
-      DEBUG_INPT   yLOG_exit    (__FUNCTION__);
-      return 0;
+   DEBUG_STATS  yLOG_value   ("rc"        , rc);
+   DEBUG_STATS  yLOG_value   ("n"         , n);
+   --rce;  if (n >= 0) {
+      DEBUG_STATS  yLOG_info    ("duplicate" , x_name);
+      DEBUG_STATS  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
    }
-   /*---(seen bytes)------------------*/
-   p = strtok_r (NULL  , q, s);
-   DEBUG_INPT  yLOG_point   ("b_seen"    , p);
-   if (p == NULL) {
-      DEBUG_INPT   yLOG_exit    (__FUNCTION__);
-      return 0;
+   /*---(save)---------------------------*/
+   switch (a_verb [0]) {
+   case 'C' :
+      strlcpy (s_cats [s_ncat].name, x_name, LEN_TERSE);
+      s_cats [s_ncat].cat     = x_cat;
+      strlcpy (s_cats [s_ncat].desc, x_desc, LEN_DESC);
+      s_cats [s_ncat].n_seen  = x_scount;
+      s_cats [s_ncat].b_seen  = x_ssize;
+      s_cats [s_ncat].n_kept  = x_kcount;
+      s_cats [s_ncat].b_kept  = x_ksize;
+      DEBUG_STATS  yLOG_complex ("cat"       , "%-10.10s %c %-10.10s   %10.0d %16.0ld %10.0d %16.0ld", s_cats [s_ncat].name, s_cats [s_ncat].cat, s_cats [s_ncat].desc, s_cats [s_ncat].n_seen, s_cats [s_ncat].b_seen, s_cats [s_ncat].n_kept, s_cats [s_ncat].b_kept);
+      ++s_ncat;
+      if (x_cat == MIME_EMPTY)  my.empty = x_ssize;
+      break;
+   case 'e' :
+      strlcpy (g_mime [n_mime].ext , x_name, LEN_TERSE);
+      g_mime [n_mime].cat     = x_cat;
+      strlcpy (g_mime [n_mime].desc, x_desc, LEN_DESC);
+      g_mime [n_mime].like    = x_like;
+      g_mime [n_mime].n_seen  = x_scount;
+      g_mime [n_mime].b_seen  = x_ssize;
+      g_mime [n_mime].n_kept  = x_kcount;
+      g_mime [n_mime].b_kept  = x_ksize;
+      DEBUG_STATS  yLOG_complex ("mime"      , "%-10.10s %c %-10.10s   %10.0d %16.0ld %10.0d %16.0ld", g_mime [n_mime].ext, g_mime [n_mime].cat, g_mime [n_mime].desc, g_mime [n_mime].n_seen, g_mime [n_mime].b_seen, g_mime [n_mime].n_kept, g_mime [n_mime].b_kept);
+      ++n_mime;
+      break;
    }
-   strltrim (p, ySTR_BOTH, LEN_LABEL);
-   DEBUG_INPT  yLOG_info    ("b_seen"    , p);
-   FILE_uncommas (p, &v);
-   DEBUG_INPT  yLOG_llong   ("b_seen"    , v);
-   if (a_flag == 'y')  s_cats [s_ncat - 1].b_seen  = v;
-   else                g_mime [n_mime - 1].b_seen  = v;
-   /*---(seen bytes percent)----------*/
-   p = strtok_r (NULL  , q, s);
-   if (p == NULL) {
-      DEBUG_INPT   yLOG_exit    (__FUNCTION__);
-      return 0;
-   }
-   /*---(kept)------------------------*/
-   p = strtok_r (NULL  , q, s);
-   DEBUG_INPT  yLOG_point   ("n_kept"    , p);
-   if (p == NULL) {
-      DEBUG_INPT   yLOG_exit    (__FUNCTION__);
-      return 0;
-   }
-   strltrim (p, ySTR_BOTH, LEN_LABEL);
-   DEBUG_INPT  yLOG_info    ("n_kept"    , p);
-   FILE_uncommas (p, &v);
-   DEBUG_INPT  yLOG_value   ("n_kept"    , v);
-   if (a_flag == 'y')  s_cats [s_ncat - 1].n_kept  = v;
-   else                g_mime [n_mime - 1].n_kept  = v;
-   /*---(kept percent)----------------*/
-   p = strtok_r (NULL  , q, s);
-   if (p == NULL) {
-      DEBUG_INPT   yLOG_exit    (__FUNCTION__);
-      return 0;
-   }
-   /*---(kept bytes)------------------*/
-   p = strtok_r (NULL  , q, s);
-   DEBUG_INPT  yLOG_point   ("b_kept"    , p);
-   if (p == NULL) {
-      DEBUG_INPT   yLOG_exit    (__FUNCTION__);
-      return 0;
-   }
-   strltrim (p, ySTR_BOTH, LEN_LABEL);
-   DEBUG_INPT  yLOG_info    ("b_kept"    , p);
-   FILE_uncommas (p, &v);
-   DEBUG_INPT  yLOG_llong   ("b_kept"    , v);
-   if (a_flag == 'y')  s_cats [s_ncat - 1].b_kept  = v;
-   else                g_mime [n_mime - 1].b_kept  = v;
    /*---(complete)-----------------------*/
-   DEBUG_INPT   yLOG_exit    (__FUNCTION__);
+   DEBUG_STATS  yLOG_exit    (__FUNCTION__);
    return 0;
 }
-
 
 char
 MIME_read          (void)
 {
-   /*---(locals)-----------+-----------+-*/
-   char        rce         =  -10;
-   char        rc          =    0;
-   FILE       *f           = NULL;          /* file pointer                   */
-   int         f_lines     =    0;          /* line counter                   */
-   char        x_recd      [MAX_RECD];      /* input record                   */
-   int         x_len       =    0;          /* input length                   */
-   char       *s           = NULL;          /* strtok context                 */
-   char        x_flag      =  '-';
    /*---(header)-------------------------*/
-   DEBUG_INPT   yLOG_enter   (__FUNCTION__);
+   DEBUG_STATS  yLOG_enter   (__FUNCTION__);
    /*---(purge the tables)---------------*/
    MIME__purge ();
-   /*---(open)---------------------------*/
-   rc = FILE_open  (&f, my.file_mime, 'r');
-   DEBUG_INPT   yLOG_value   ("open"      , rc);
-   DEBUG_INPT   yLOG_point   ("f"         , f);
-   --rce;  if (rc < 0 || f == NULL) {
-      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(read lines)---------------------*/
-   DEBUG_INPT  yLOG_note    ("read lines");
-   --rce;  while (1) {
-      /*---(read and clean)--------------*/
-      ++f_lines;
-      DEBUG_INPT  yLOG_value   ("line"      , f_lines);
-      fgets (x_recd, MAX_RECD, f);
-      if (feof(f))                break;
-      if (x_recd [0] == '#')      continue;
-      if (x_recd [0] == '\0')     continue;
-      if (x_recd [0] == ' ')      continue;
-      x_len = strlen (x_recd);
-      if (x_len <= 1)             continue;
-      x_recd [--x_len] = '\0';
-      DEBUG_INPT  yLOG_value   ("n_mime"    , n_mime);
-      strldecode (x_recd, LEN_RECD);
-      DEBUG_INPT  yLOG_info    ("fixed"     , x_recd);
-      /*---(essential)-------------------*/
-      rc = MIME__parse_essential (x_recd, &x_flag, &s);
-      if (rc < 0) {
-         DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
-         return rce;
-      }
-      /*---(optional)--------------------*/
-      rc = MIME__parse_optional  (x_flag, &s);
-      /*---(done)------------------------*/
-   }
-   /*---(close)--------------------------*/
-   rc = FILE__close (&f);
-   DEBUG_INPT   yLOG_value   ("close"     , rc);
-   DEBUG_INPT   yLOG_point   ("f"         , f);
-   --rce;  if (rc < 0 || f != NULL) {
-      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
+   yPARSE_autoread (my.file_mime, NULL, MIME__read_one);
+   yPARSE_close ();
    /*---(complete)-----------------------*/
-   DEBUG_INPT   yLOG_exit    (__FUNCTION__);
+   DEBUG_STATS  yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
@@ -626,171 +497,92 @@ MIME__write_clear       (void)
    return 0;
 }
 
-char
-MIME__write_title       (FILE *f, char a_type)
+int
+MIME__write_callback    (int a_line, uchar *a_verb)
 {
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   /*---(spacing)------------------------*/
-   --rce;  switch (a_type) {
-   case DEST_FILE   :
-      fprintf (f, "#!/usr/local/bin/helios\n");
-      fprintf (f, "#   HELIOS-PHAETON (locate) -- filesystem searching and indexing services\n");
-      fprintf (f, "#   mime configuration file\n");
-      break;
-   case DEST_STDOUT :
-      fprintf (f, "HELIOS-PHAETON (locate) -- filesystem searching and indexing services\n");
-      fprintf (f, "report : mime type summary\n");
-      break;
-   default  :
-      return rce;
-      break;
+   char        rc          =    0;
+   int         n           =    0;
+   uchar       x_cat       =  ' ';
+   int         i           =    0;
+   int         c           =    0;
+   int         xn_spct, xb_spct;
+   int         xn_kpct, xb_kpct;
+   int         xn_fpct, xb_fpct;
+   int         xn_pct , xb_pct;
+   int         xn_pctf, xb_pctf;
+   /*---(start category)-----------------*/
+   rc    = MIME__find_cat ('¬', a_verb, &n);
+   x_cat = MIME_cat_abbr (n);
+   yPARSE_sect_begin (a_verb);
+   /*---(write category)-----------------*/
+   xn_spct  = ((double) s_cats [n].n_seen / s_cats [0].n_seen) * 100;
+   xb_spct  = ((double) s_cats [n].b_seen / s_cats [0].b_seen) * 100;
+   xn_kpct  = ((double) s_cats [n].n_kept / s_cats [0].n_kept) * 100;
+   xb_kpct  = ((double) s_cats [n].b_kept / s_cats [0].b_kept) * 100;
+   xn_pct   = ((double) s_cats [n].n_kept / s_cats [n].n_seen) * 100;
+   xb_pct   = ((double) s_cats [n].b_kept / s_cats [n].b_seen) * 100;
+   xn_fpct  = ((double) s_cats [n].n_found / s_cats [0].n_found) * 100;
+   xb_fpct  = ((double) s_cats [n].b_found / s_cats [0].b_found) * 100;
+   xn_pctf  = ((double) s_cats [n].n_found / s_cats [n].n_seen) * 100;
+   xb_pctf  = ((double) s_cats [n].b_found / s_cats [n].b_seen) * 100;
+   yPARSE_printf ("CAT","TcDc,s;s,s;sss,s;sss",
+         s_cats [n].name, s_cats [n].cat, s_cats [n].desc, '-',
+         s_cats [n].n_seen, xn_spct, s_cats [n].b_seen, xb_spct,
+         s_cats [n].n_kept, xn_kpct, s_cats [n].b_kept, xb_kpct,
+         xn_pct, xb_pct,
+         s_cats [n].n_found, xn_fpct, s_cats [n].b_found, xb_fpct,
+         xn_pctf, xb_pctf);
+   /*---(process mime ext)---------------*/
+   for (i = 0; i < n_mime; ++i) {
+      if (g_mime [i].cat != x_cat)  continue;
+      xn_spct  = ((double) g_mime [i].n_seen / s_cats [0].n_seen) * 100;
+      xb_spct  = ((double) g_mime [i].b_seen / s_cats [0].b_seen) * 100;
+      xn_kpct  = ((double) g_mime [i].n_kept / s_cats [0].n_kept) * 100;
+      xb_kpct  = ((double) g_mime [i].b_kept / s_cats [0].b_kept) * 100;
+      xn_pct   = ((double) g_mime [i].n_kept / g_mime [i].n_seen) * 100;
+      xb_pct   = ((double) g_mime [i].b_kept / g_mime [i].b_seen) * 100;
+      xn_fpct  = ((double) g_mime [i].n_found / s_cats [0].n_found) * 100;
+      xb_fpct  = ((double) g_mime [i].b_found / s_cats [0].b_found) * 100;
+      yPARSE_sect_break (c);
+      yPARSE_printf ("ext","TcDc,s;s,s;sss,s;sss",
+            g_mime [i].ext, g_mime [i].cat, g_mime [i].desc, g_mime [i].like,
+            g_mime [i].n_seen, xn_spct, g_mime [i].b_seen, xb_spct,
+            g_mime [i].n_kept, xn_kpct, g_mime [i].b_kept, xb_kpct,
+            xn_pct, xb_pct,
+            g_mime [i].n_found, xn_fpct, g_mime [i].b_found, xb_fpct,
+            xn_pctf, xb_pctf);
+      ++c;
+      /*---(done)------------------------*/
    }
-   return 0;
-}
-
-char
-MIME__write_line        (FILE *f, char a_type, uchar *a_name, uchar a_cat, uchar *a_desc, uchar a_like, int a_nseen, llong a_bseen, int a_nkept, llong a_bkept)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   char        s           =  ' ';
-   char        t           [LEN_RECD]  = "";
-   char        c           [LEN_LABEL] = "";
-   char        p           [LEN_LABEL] = "";
-   /*---(default)------------------------*/
-   strlcpy (s_recd, "", LEN_RECD);
-   /*---(defense)------------------------*/
-   --rce;  if (a_name == NULL)    return rce;
-   /*---(spacing)------------------------*/
-   --rce;  switch (a_type) {
-   case DEST_FILE   : s = '';           break;
-   case DEST_STDOUT : s = '§';            break;
-   default  : return rce;         break;
-   }
-   /*---(prefix)-------------------------*/
-   sprintf (t, "%-10.10s %c %c %c %-40.40s %c %c %c ",
-         a_name, s, a_cat , s, a_desc, s, a_like, s);
-   strlcat (s_recd, t, LEN_RECD);
-   /*---(internal spacer)----------------*/
-   sprintf (t, "   ");
-   strlcat (s_recd, t, LEN_RECD);
-   /*---(seen count)---------------------*/
-   FILE_commas   (a_nseen, c);
-   FILE_percents (a_nseen, s_cats [0].n_seen, p);
-   sprintf (t, "%10.10s %c %3.3s %c ", c, s, p, s);
-   strlcat (s_recd, t, LEN_RECD);
-   /*---(seen bytes)---------------------*/
-   FILE_commas   (a_bseen, c);
-   FILE_percents (a_bseen, s_cats [0].b_seen, p);
-   sprintf (t, "%18.18s %c %3.3s %c ", c, s, p, s);
-   strlcat (s_recd, t, LEN_RECD);
-   /*---(internal spacer)----------------*/
-   sprintf (t, "   ");
-   strlcat (s_recd, t, LEN_RECD);
-   /*---(kept count)---------------------*/
-   FILE_commas   (a_nkept, c);
-   FILE_percents (a_nkept, s_cats [0].n_kept, p);
-   sprintf (t, "%10.10s %c %3.3s %c ", c, s, p, s);
-   strlcat (s_recd, t, LEN_RECD);
-   /*---(kept bytes)---------------------*/
-   FILE_commas   (a_bkept, c);
-   FILE_percents (a_bkept, s_cats [0].b_kept, p);
-   sprintf (t, "%18.18s %c %3.3s %c ", c, s, p, s);
-   strlcat (s_recd, t, LEN_RECD);
-   /*---(internal spacer)----------------*/
-   sprintf (t, "   ");
-   strlcat (s_recd, t, LEN_RECD);
-   /*---(seen vs kept)-------------------*/
-   FILE_percents (a_nkept, a_nseen, c);
-   FILE_percents (a_bkept, a_bseen, p);
-   sprintf (t, "  %3.3s %c %3.3s %c ", c, s, p, s);
-   strlcat (s_recd, t, LEN_RECD);
-   /*---(write)--------------------------*/
-   if (f != NULL)   fprintf (f, "%s\n", s_recd);
+   /*---(end category)-------------------*/
+   yPARSE_sect_end (c);
    /*---(complete)-----------------------*/
-   return 0;
+   return c;
 }
 
 char
-MIME__write_columns     (FILE *f, char a_type)
+MIME__write_handlers    (void)
 {
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   char        s           =  ' ';
-   char        t           [LEN_RECD]  = "";
-   /*---(default)------------------------*/
-   strlcpy (s_cols, "", LEN_RECD);
-   /*---(spacing)------------------------*/
-   --rce;  switch (a_type) {
-   case DEST_FILE   : s = '';           break;
-   case DEST_STDOUT : s = '§';            break;
-   default  : return rce;         break;
-   }
-   /*---(prefix)-------------------------*/
-   sprintf (t, "#-ext----- %c t %c ---desc--------------------------------- %c l %c ",
-         s, s, s, s);
-   strlcat (s_cols, t, LEN_RECD);
-   /*---(internal spacer)----------------*/
-   sprintf (t, "   ");
-   strlcat (s_cols, t, LEN_RECD);
-   /*---(seen)---------------------------*/
-   sprintf (t, "---seen--- %c pct %c ---seen-bytes----- %c pct %c ", s, s, s, s);
-   strlcat (s_cols, t, LEN_RECD);
-   /*---(internal spacer)----------------*/
-   sprintf (t, "   ");
-   strlcat (s_cols, t, LEN_RECD);
-   /*---(kept)---------------------------*/
-   sprintf (t, "---kept--- %c pct %c ---kept-bytes----- %c pct %c ", s, s, s, s);
-   strlcat (s_cols, t, LEN_RECD);
-   /*---(internal spacer)----------------*/
-   sprintf (t, "   ");
-   strlcat (s_cols, t, LEN_RECD);
-   /*---(seen vs kept--------------------*/
-   sprintf (t, "  cnt %c siz %c ", s, s);
-   strlcat (s_cols, t, LEN_RECD);
-   /*---(write)--------------------------*/
-   if (f != NULL)   fprintf (f, "\n%s\n", s_cols);
-   /*---(complete)-----------------------*/
-   return 0;
-}
-
-char
-MIME__write_category    (FILE *f, char a_type, char a_cat)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   int         i           =   0;
-   int         n           =   0;
-   char        x           [LEN_TERSE] = "";
-   char        t           [LEN_RECD]  = "";
-   /*---(default)------------------------*/
-   strlcpy (s_head, "", LEN_RECD);
-   /*---(find)---------------------------*/
+   int         i           =    0;
    for (i = 0; i < s_ncat; ++i) {
-      if (s_cats [i].cat == 0    )  break;
-      if (s_cats [i].cat != a_cat)  continue;
-      n = i;
-      break;
+      yPARSE_handler_plus (s_cats [i].name, "TcDc,s;s,s;sss,s;sss", i, NULL, MIME__write_callback, "ext,t,desc,l,seen,pct,seen-bytes,pct,kept,pct,kept-bytes,pct,cnt,siz,found,pct,found-bytes,pct,cnt,siz");
    }
-   --rce;  if (n < 0)    return rce;
-   /*---(type spacing)-------------------*/
-   if (a_type == DEST_FILE)  strlcpy (x, "====", LEN_TERSE);
-   /*---(heading bar)--------------------*/
-   sprintf (t, "[[ %s ]]==================================", s_cats [n].name);
-   sprintf (s_head, "#===%-16.16s==========================================%s]    [===========================================%s]    [===========================================%s]", t, x, x, x);
-   if (a_type == DEST_FILE)  strlcpy (x, "==", LEN_TERSE);
-   sprintf (t, "    [===========%s]", x);
-   strlcat (s_head, t, LEN_RECD);
-   /*---(write)--------------------------*/
-   if (f != NULL) {
-      fprintf (f, "\n\n\n%s\n", s_head);
-   }
-   /*---(detailed line)------------------*/
-   MIME__write_line (f, a_type, s_cats [n].name, a_cat, s_cats [n].desc, '-', s_cats [n].n_seen, s_cats [n].b_seen, s_cats [n].n_kept, s_cats [n].b_kept);
-   /*---(columns)------------------------*/
-   if (a_cat != MIME_TOTAL)    MIME__write_columns (f, a_type);
-   /*---(complete)-----------------------*/
+   return 0;
+}
+
+char
+MIME__write_header      (void)
+{
+   yPARSE_spacer (1);
+   yPARSE_printf ("f_public"    , "c"     , my.pub               );
+   yPARSE_printf ("f_path"      , "O"     , my.path              );
+   yPARSE_printf ("f_regex"     , "O"     , my.regex             );
+   yPARSE_printf ("f_types"     , "O"     , my.types             );
+   yPARSE_printf ("f_mimes"     , "O"     , my.mimes             );
+   yPARSE_printf ("f_sizes"     , "O"     , my.sizes             );
+   yPARSE_printf ("f_ages"      , "O"     , my.ages              );
+   yPARSE_printf ("f_ascii"     , "O"     , my.ascii             );
+   yPARSE_printf ("f_super"     , "c"     , my.super             );
    return 0;
 }
 
@@ -800,52 +592,23 @@ MIME_write         (char a_type)
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    char        rc          =    0;
-   FILE       *f           = NULL;
-   int         i           =    0;
-   char        x_save      =  '-';
-   int         x_count     =    0;
    /*---(header)-------------------------*/
    DEBUG_STATS  yLOG_enter   (__FUNCTION__);
    DEBUG_STATS  yLOG_char    ("a_type"    , a_type);
-   /*---(open)---------------------------*/
-   rc = FILE_open  (&f, my.file_mime, 'w');
-   DEBUG_INPT   yLOG_value   ("open"      , rc);
-   DEBUG_INPT   yLOG_point   ("f"         , f);
-   --rce;  if (rc < 0 || f == NULL) {
-      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
+   /*---(open file)----------------------*/
+   switch (a_type) {
+   case DEST_FILE   :
+      yPARSE_planned  (NULL, my.file_mime, NULL);
+      break;
+   case DEST_STDOUT :
+      yPARSE_planned  (NULL, "stdout"    , NULL);
+      break;
    }
-   /*---(titles)-------------------------*/
-   MIME__write_title (f, a_type);
-   /*---(total category)-----------------*/
-   MIME__write_category (f, a_type, MIME_TOTAL);
-   /*---(process all)--------------------*/
-   for (i = 0; i < n_mime; ++i) {
-      /*---(formatting)------------------*/
-      if (g_mime [i].cat != x_save) {
-         x_count = 0;
-         x_save = g_mime [i].cat;
-         MIME__write_category (f, a_type, x_save);
-      } else if ((x_count % 25) == 0 ) {
-         MIME__write_columns  (f, a_type);
-      } else if ((x_count %  5) == 0 ) {
-         fprintf (f, "\n");
-      }
-      ++x_count;
-      /*---(general part)----------------*/
-      MIME__write_line (f, a_type, g_mime [i].ext, g_mime [i].cat, g_mime [i].desc, g_mime [i].like, g_mime [i].n_seen, g_mime [i].b_seen, g_mime [i].n_kept, g_mime [i].b_kept);
-      /*---(done)------------------------*/
-   }
-   /*---(wrapup)-------------------------*/
-   fprintf (f, "\n");
-   /*---(close)--------------------------*/
-   rc = FILE__close (&f);
-   DEBUG_OUTP   yLOG_value   ("close"     , rc);
-   DEBUG_OUTP   yLOG_point   ("f"         , f);
-   --rce;  if (rc < 0 || f != NULL) {
-      DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
+   /*---(prepare)------------------------*/
+   yPARSE_header  (P_FULLPATH, P_VERNUM, P_VERTXT, P_NAMESAKE, "mime configuration file", MIME__write_header);
+   MIME__write_handlers ();
+   yPARSE_write_all ();
+   yPARSE_close ();
    /*---(complete)-----------------------*/
    DEBUG_STATS  yLOG_exit    (__FUNCTION__);
    return 0;
@@ -861,48 +624,33 @@ static void  o___TREE____________o () { return; }
 char
 MIME__tree_header       (void)
 {
-   yPARSE_printf ("s_format"    , "O"     , "mimecat"                       );
+   yPARSE_spacer (1);
+   yPARSE_printf ("o_format"    , "O"     , "mimecat"            );
+   yPARSE_printf ("o_label0"    , "O"     , "total bytes"        );
+   yPARSE_printf ("o_label1"    , "O"     , "total count"        );
+   yPARSE_printf ("o_label2"    , "O"     , "average"            );
+   yPARSE_printf ("o_label3"    , "O"     , "primary"            );
+   yPARSE_printf ("o_label4"    , "O"     , "secondary"          );
+   yPARSE_printf ("o_label5"    , "O"     , "terciary"           );
    yPARSE_spacer (1);
    return 0;
 }
 
 char
-MIME__tree_line         (FILE *f, char a_type, uchar *a_ext, llong a_size, int a_count, char *a_desc)
-{
-   char        l           =    0;
-   static int  c           =    0;
-   /*---(default)------------------------*/
-   strlcpy (s_recd, "", LEN_RECD);
-   /*---(handle type)--------------------*/
-   switch (a_type) {
-   case 'T' : l = 0;  break;
-   case 'c' : l = 1;  break;
-   case 'm' : l = 2;  break;
-   }
-   /*---(main)---------------------------*/
-   yPARSE_vprintf (c, "node", l, a_ext, a_size, a_count, a_desc);
-   ++c;
-   /*---(complete)-----------------------*/
-   return 0;
-}
-
-char
-MIME__tree_category     (FILE *f, uchar a_cat)
+MIME__tree_line         (char a_lvl, uchar *a_ext, llong a_size, llong a_count, char *a_desc)
 {
    /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   int         i           =    0;
-   int         n           =    0;
-   /*---(find)---------------------------*/
-   for (i = 0; i < s_ncat; ++i) {
-      if (s_cats [i].cat == 0    )  break;
-      if (s_cats [i].cat != a_cat)  continue;
-      n = i;
-      break;
-   }
-   --rce;  if (n < 0)    return rce;
-   if (a_cat == 'T')  MIME__tree_line      (f, 'T', s_cats [n].name, s_cats [n].b_seen, s_cats [n].n_seen, s_cats [n].desc);
-   else               MIME__tree_line      (f, 'c', s_cats [n].name, s_cats [n].b_seen, s_cats [n].n_seen, s_cats [n].desc);
+   static int  c           =    0;
+   /*---(header)-------------------------*/
+   DEBUG_STATS  yLOG_enter   (__FUNCTION__);
+   /*---(default)------------------------*/
+   strlcpy (s_recd, "", LEN_RECD);
+   /*---(main)---------------------------*/
+   DEBUG_STATS  yLOG_complex ("node"      , "%2d %-10.10s %10ld %10d %s", a_lvl, a_ext, a_size, a_count, a_desc);
+   if (a_size > 0)  yPARSE_vprintf (c, "node", a_lvl, a_ext, a_desc, a_size, a_count, a_size / a_count, 0, 0, 0);
+   ++c;
+   /*---(complete)-----------------------*/
+   DEBUG_STATS  yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
@@ -911,25 +659,35 @@ MIME_tree          (void)
 {
    /*---(locals)-----------+-----------+-*/
    int         i           =    0;
-   char        x_save      = MIME_TOTAL;
+   int         n           =    0;
+   uchar       x_save      = MIME_TOTAL;
+   /*---(header)-------------------------*/
+   DEBUG_STATS  yLOG_enter   (__FUNCTION__);
    /*---(header)-------------------------*/
    yPARSE_planned (NULL, "stdout", NULL);
-   yPARSE_header  (P_FULLNAME, P_VERNUM, P_VERTXT, P_NAMESAKE, "file size by mime category", MIME__tree_header);
-   yPARSE_handler_plus ("node", "sThlD", 0.0, NULL, NULL, "lvl,type,size,count,description");
+   yPARSE_header  (P_FULLPATH, P_VERNUM, P_VERTXT, P_NAMESAKE, "file size by mime category", MIME__tree_header);
+   yPARSE_handler_plus ("node", "sTDhlllll", 0.0, NULL, NULL, "lvl,type,description,size,count,avg,1st,2nd,3rd");
    /*---(root)---------------------------*/
-   MIME__tree_category (stdout, MIME_TOTAL);
+   if      (my.mime_all != '-')     MIME__tree_line      (0, s_cats [n].name, s_cats [n].b_seen , s_cats [n].n_seen , s_cats [n].desc);
+   else if (s_cats [0].b_found > 0) MIME__tree_line      (0, s_cats [n].name, s_cats [n].b_found, s_cats [n].n_found, s_cats [n].desc);
+   else                             MIME__tree_line      (0, s_cats [n].name, s_cats [n].b_kept , s_cats [n].n_kept , s_cats [n].desc);
    /*---(process all)--------------------*/
    for (i = 0; i < n_mime; ++i) {
       if (g_mime [i].cat != x_save) {
          x_save = g_mime [i].cat;
-         MIME__tree_category (stdout, x_save);
+         MIME__find_cat (x_save, "¬¬¬¬¬", &n);
+            if      (my.mime_all != '-')     MIME__tree_line  (1, s_cats [n].name, s_cats [n].b_seen , s_cats [n].n_seen , s_cats [n].desc);
+            else if (s_cats [0].b_found > 0) MIME__tree_line  (1, s_cats [n].name, s_cats [n].b_found, s_cats [n].n_found, s_cats [n].desc);
+            else                             MIME__tree_line  (1, s_cats [n].name, s_cats [n].b_kept , s_cats [n].n_kept , s_cats [n].desc);
       }
-      if (g_mime [i].b_seen == 0)  continue;
-      MIME__tree_line (stdout, 'm', g_mime [i].ext, g_mime [i].b_seen, g_mime [i].n_seen, g_mime [i].desc);
+      if      (my.mime_all != '-')     MIME__tree_line (2, g_mime [i].ext, g_mime [i].b_seen , g_mime [i].n_seen , g_mime [i].desc);
+      else if (s_cats [0].b_found > 0) MIME__tree_line (2, g_mime [i].ext, g_mime [i].b_found, g_mime [i].n_found, g_mime [i].desc);
+      else                             MIME__tree_line (2, g_mime [i].ext, g_mime [i].b_kept , g_mime [i].n_kept , g_mime [i].desc);
    }
    /*---(footer)-------------------------*/
    yPARSE_close ();
    /*---(complete)-----------------------*/
+   DEBUG_STATS  yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
@@ -951,7 +709,7 @@ MIME__unit              (char *a_question, char *a_ext, int n)
    short       c           =    0;
    char        t           [LEN_LABEL] = "";
    /*---(header)-------------------------*/
-   DEBUG_CONF   yLOG_enter   (__FUNCTION__);
+   DEBUG_STATS  yLOG_enter   (__FUNCTION__);
    /*---(parse location)-----------------*/
    strcpy  (unit_answer, "ENTRY            : question not understood");
    /*---(overall)------------------------*/
@@ -1001,7 +759,7 @@ MIME__unit              (char *a_question, char *a_ext, int n)
       snprintf (unit_answer, LEN_FULL, "MIME s_recd      : [%.79s]", s_recd);
    }
    /*---(complete)-----------------------*/
-   DEBUG_CONF   yLOG_exit    (__FUNCTION__);
+   DEBUG_STATS  yLOG_exit    (__FUNCTION__);
    return unit_answer;
 }
 

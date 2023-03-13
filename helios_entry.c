@@ -2,8 +2,6 @@
 #include    "helios.h"       /* LOCAL  : main header                          */
 
 
-tNODIR      g_nodir [MAX_NODIR];
-int         n_nodir;
 
 tPTRS      *dir_stack   [MAX_DEPTH];
 tPTRS      *root_stack  [MAX_DEPTH];
@@ -230,6 +228,7 @@ ENTRY__free             (tPTRS **a_ptrs)
    /*---(free data)----------------------*/
    DEBUG_ENVI   yLOG_note    ("free data");
    if (x_curr->data != NULL)  free (x_curr->data);
+   /*> printf ("entry destroy %s\n", x_curr->data->name);                             <*/
    /*---(check children)-----------------*/
    DEBUG_ENVI   yLOG_note    ("free children");
    x_child = x_curr->c_head;
@@ -589,13 +588,14 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
    int         rc          =    0;
    tSTAT       x_stat;
    char        x_name      [LEN_RECD]  = "";
-   char        x_ext       [LEN_TERSE] = "";
+   char        x_ext       [LEN_LABEL] = "";
    char        x_cat       = MIME_HUH;
    int         x_index     = -1;
    char       *p           = NULL;
    int         x_len       = 0;
    int         i           = 0;
    char       *x_final     = NULL;
+   char        x_inst      = '-';
    /*---(header)-------------------------*/
    DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
    /*---(defense)------------------------*/
@@ -626,7 +626,7 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
       case   ENTRY_SOCK   :  p = EXT_SLINK;      break;
       default             :  p = EXT_ULINK;      break;
       }
-      rc = MIME_add_seen (p, &x_cat, a_bytes);
+      rc = MIME_add_seen (p, &x_cat, a_bytes, a_full);
    } else if (strchr (ENTRY_DEVICES, a_type) != NULL) {
       DEBUG_ENVI   yLOG_note    ("device entry");
       switch (a_type) {
@@ -636,37 +636,37 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
       case   ENTRY_FIFO   :  p = EXT_FIFO;       break;
       case   ENTRY_SOCK   :  p = EXT_SOCK;       break;
       }
-      rc = MIME_add_seen (p, &x_cat, a_bytes);
+      rc = MIME_add_seen (p, &x_cat, a_bytes, a_full);
    } else if (x_name [x_len - 1] == '~') {
       DEBUG_ENVI   yLOG_note    ("backup/cache entry");
       p  = EXT_BACKUP;
-      rc = MIME_add_seen (p, &x_cat, a_bytes);
+      rc = MIME_add_seen (p, &x_cat, a_bytes, a_full);
    }
    /*---(check for git)-------------------*/
    else if (strstr (a_full, "/.git") != NULL) {
-      rc = MIME_add_seen (EXT_GIT, &x_cat, a_bytes);
+      rc = MIME_add_seen (EXT_GIT, &x_cat, a_bytes, a_full);
       DEBUG_RPTG   yLOG_value   ("find"      , rc);
       if (rc == 0)  p = EXT_GIT;
    }
    /*---(gentoo)--------------------------*/
    else if (strncmp (a_full, "/usr/portage/"    , 13) == 0) {
-      rc = MIME_add_seen (EXT_PORTAGE, &x_cat, a_bytes);
+      rc = MIME_add_seen (EXT_PORTAGE, &x_cat, a_bytes, a_full);
       DEBUG_RPTG   yLOG_value   ("portage"   , rc);
       if (rc == 0)  p = EXT_PORTAGE;
    } else if (strncmp (a_full, "/var/tmp/portage/", 17) == 0) {
-      rc = MIME_add_seen (EXT_PORTAGE, &x_cat, a_bytes);
+      rc = MIME_add_seen (EXT_PORTAGE, &x_cat, a_bytes, a_full);
       DEBUG_RPTG   yLOG_value   ("portage"   , rc);
       if (rc == 0)  p = EXT_PORTAGE;
    } else if (strncmp (a_full, "/var/db/pkg/"     , 12) == 0) {
-      rc = MIME_add_seen (EXT_PORTAGE, &x_cat, a_bytes);
+      rc = MIME_add_seen (EXT_PORTAGE, &x_cat, a_bytes, a_full);
       DEBUG_RPTG   yLOG_value   ("portage"   , rc);
       if (rc == 0)  p = EXT_PORTAGE;
    } else if (strncmp (a_full, "/usr/src/"        ,  9) == 0) {
-      rc = MIME_add_seen (EXT_KERNEL , &x_cat, a_bytes);
+      rc = MIME_add_seen (EXT_KERNEL , &x_cat, a_bytes, a_full);
       DEBUG_RPTG   yLOG_value   ("kernel"    , rc);
       if (rc == 0)  p = EXT_KERNEL;
    } else if (strncmp (a_full, "/var/cache/"      , 11) == 0) {
-      rc = MIME_add_seen (EXT_CACHE  , &x_cat, a_bytes);
+      rc = MIME_add_seen (EXT_CACHE  , &x_cat, a_bytes, a_full);
       DEBUG_RPTG   yLOG_value   ("kernel"    , rc);
       if (rc == 0)  p = EXT_CACHE;
    }
@@ -685,7 +685,7 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
          if (x_len <= 9) {
             if (i == 0)  x_final = p + 1;
             DEBUG_RPTG   yLOG_snote   (p + 1);
-            rc = MIME_add_seen (p + 1, &x_cat, a_bytes);
+            rc = MIME_add_seen (p + 1, &x_cat, a_bytes, a_full);
             DEBUG_RPTG   yLOG_value   ("find"      , rc);
             if (rc == 0) {
                ++p;
@@ -697,13 +697,13 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
    }
    /*---(check for single word)-----------*/
    if (p == NULL && i == 0) {
-      rc = MIME_add_seen (a_name, &x_cat, a_bytes);
+      rc = MIME_add_seen (a_name, &x_cat, a_bytes, a_full);
       DEBUG_RPTG   yLOG_value   ("whole"    , rc);
       if (rc == 0)  p = a_name;
    }
    /*---(check for hidden)----------------*/
    if (x_cat == MIME_HUH && x_name [0] == '.') {
-      rc = MIME_add_seen (EXT_OHIDDEN, &x_cat, a_bytes);
+      rc = MIME_add_seen (EXT_OHIDDEN, &x_cat, a_bytes, a_full);
       DEBUG_RPTG   yLOG_value   (EXT_OHIDDEN, rc);
       if (rc == 0)  p = EXT_OHIDDEN;
    }
@@ -722,7 +722,7 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
          if      (p == EXT_RLINK)    p  = EXT_ELINK;
          else if (p == EXT_OHIDDEN)  p  = EXT_XHIDDEN;
          else                        p  = EXT_EXEC;
-         rc = MIME_add_seen (p, &x_cat, a_bytes);
+         rc = MIME_add_seen (p, &x_cat, a_bytes, a_full);
       }
    }
    /*---(file the rest properly)----------*/
@@ -730,16 +730,77 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
       if (strncmp (a_full, "/etc/", 5) == 0) {
          DEBUG_ENVI   yLOG_note    ("configuration entry");
          p  = EXT_CONF;
-         rc = MIME_add_seen (p, &x_cat, a_bytes);
+         rc = MIME_add_seen (p, &x_cat, a_bytes, a_full);
          DEBUG_RPTG   yLOG_value   ("portage"   , rc);
       } else if (x_len > 0 && x_len <= 7) {
          DEBUG_ENVI   yLOG_note    ("other entry");
          p  = EXT_UNKNOWN;
-         rc = MIME_add_seen (p, &x_cat, a_bytes);
+         rc = MIME_add_seen (p, &x_cat, a_bytes, a_full);
       } else {
          DEBUG_ENVI   yLOG_note    ("unknown entry");
          p  = EXT_MYSTERY;
-         rc = MIME_add_seen (p, &x_cat, a_bytes);
+         rc = MIME_add_seen (p, &x_cat, a_bytes, a_full);
+      }
+   }
+   /*---(final executable)---------------*/
+   if (x_cat == MIME_EXEC) {
+      x_inst = '-';
+      sprintf (x_ext, " %s ", p);
+      if (strstr (" so ar a dll ", p) != NULL) {
+         if      (strncmp ("/lib"           , a_full,  4) == 0)  x_inst = 'y';
+         else if (strncmp ("/usr/lib"       , a_full,  8) == 0)  x_inst = 'y';
+         else if (strncmp ("/usr/local/lib" , a_full, 14) == 0)  x_inst = 'y';
+         if (x_inst != 'y') {
+            rc = MIME_del_seen (p, a_bytes, a_full);
+            p  = EXT_JLIB;
+            rc = MIME_add_seen (p, &x_cat, a_bytes, a_full);
+         }
+      } else if (strcmp (p, EXT_EXEC) == 0) {
+         if      (strncmp ("/bin"           , a_full,  4) == 0)  x_inst = 'y';
+         else if (strncmp ("/sbin"          , a_full,  5) == 0)  x_inst = 'y';
+         else if (strncmp ("/usr/bin"       , a_full,  8) == 0)  x_inst = 'y';
+         else if (strncmp ("/usr/sbin"      , a_full,  9) == 0)  x_inst = 'y';
+         else if (strncmp ("/usr/local/bin" , a_full, 14) == 0)  x_inst = 'y';
+         else if (strncmp ("/usr/local/sbin", a_full, 15) == 0)  x_inst = 'y';
+         if (x_inst != 'y') {
+            rc = MIME_del_seen (p, a_bytes, a_full);
+            if (strlen (a_name) > 6 && strstr (a_name, "_unit") != NULL) {
+               p  = EXT_JUNIT;
+            } else {
+               p  = EXT_JEXEC;
+            }
+            rc = MIME_add_seen (p, &x_cat, a_bytes, a_full);
+         }
+      }
+   }
+   /*---(final image)--------------------*/
+   if (x_cat == MIME_IMAGE) {
+      x_inst = '-';
+      if      (strncmp ("/home/shared/wallpaper", a_full, 22) == 0)  x_inst = 'w';
+      if      (strncmp ("/home/archive"         , a_full, 13) == 0)  x_inst = 's';
+      else if (strncmp ("IMG"                   , a_name,  3) == 0)  x_inst = 'p';
+      if (x_inst == 'w') {
+         rc = MIME_del_seen (p, a_bytes, a_full);
+         p  = EXT_WALL;
+         rc = MIME_add_seen (p, &x_cat, a_bytes, a_full);
+      }
+      else if (x_inst == 'p') {
+         rc = MIME_del_seen (p, a_bytes, a_full);
+         p  = EXT_PHOTO;
+         rc = MIME_add_seen (p, &x_cat, a_bytes, a_full);
+      }
+      else if (x_inst == 's') {
+         rc = MIME_del_seen (p, a_bytes, a_full);
+         p  = EXT_SCAN;
+         rc = MIME_add_seen (p, &x_cat, a_bytes, a_full);
+      }
+   }
+   /*---(final unit)---------------------*/
+   if (x_cat == MIME_CODE && strcmp (p, "c") == 0) {
+      if (strlen (a_name) > 7 && strstr (a_name, "_unit.c") != NULL) {
+         rc = MIME_del_seen (p, a_bytes, a_full);
+         p  = EXT_JC;
+         rc = MIME_add_seen (p, &x_cat, a_bytes, a_full);
       }
    }
    /*---(save_back)----------------------*/
@@ -747,7 +808,9 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
    if (rc >= 0) {
       DEBUG_RPTG   yLOG_complex ("results"   , "%c, %s", x_cat, p);
       if (a_cat != NULL)  *a_cat  = x_cat;
-      if (a_ext != NULL)  strlcpy (a_ext, p, LEN_TERSE);
+      strlcpy  (x_ext, p, LEN_TERSE);
+      strllower(x_ext, LEN_TERSE);
+      if (a_ext != NULL)  strlcpy (a_ext, x_ext, LEN_TERSE);
    }
    /*---(complete)-----------------------*/
    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
@@ -846,6 +909,12 @@ ENTRY__populate         (tPTRS *a_ptrs, char *a_full)
    --rce; if (rc < 0) {
       DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
       return rce;
+   }
+   /*---(name trouble fix)----------------*/
+   if  (x_data->ascii == ASCII_CRAZY) {
+      DEBUG_ENVI   yLOG_note    ("name has unprintable characters, resave");
+      strlmark (x_data->name, ySTR_PRINT, LEN_HUND);
+      DEBUG_ENVI   yLOG_info    ("new_name"  , x_data->name);
    }
    /*---(complete)------------------------*/
    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
@@ -1080,7 +1149,7 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
       return 0;
    }
    --rce;  if (strchr (STYPE_BADS, x_parent->stype) != NULL) {
-      DEBUG_ENVI   yLOG_note    ("dir_avoid or dir_ignore, get out and remove");
+      DEBUG_ENVI   yLOG_note    ("dir_avoid, dir_ignore, dir_private, get out and remove");
       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -1092,7 +1161,7 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
       if (x_follow == '-') {
          DEBUG_ENVI   yLOG_note    ("not marked to follow (artificial)");
          DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
-         return rce;
+         return 0;
       }
       if (x_drive == NULL)  rc = DRIVE_populate (&x_drive, x_path, my.runtime, &x_index);
       x_parent->drive = x_drive->ref;
@@ -1103,7 +1172,7 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
    --rce;  if (x_dir == NULL) {
       DEBUG_ENVI   yLOG_note    ("could not open the location");
       DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
-      return rce;
+      return 0;
    }
    DEBUG_ENVI   yLOG_note    ("success, location open");
    /*---(cycle through the entries)------*/
@@ -1142,6 +1211,7 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
       rc = ENTRY__populate (x_curr, x_full);
       DEBUG_ENVI   yLOG_value   ("populate"  , rc);
       if (rc < 0) continue;
+      /*> printf ("%2d, %-30.30s, %c %c %c, %s\n", x_data->lvl, x_data->name, x_data->type, x_data->stype, a_silent, x_path);   <*/
       /*---(recurse directories)---------*/
       if (x_data->type == ENTRY_DIR) {
          if        (x_begin != 'd' && x_data->stype   == STYPE_LINK) {
@@ -1154,37 +1224,69 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
             DEBUG_ENVI   yLOG_note    ("stop, do not recurse as this is dir_last");
          } else {
             DEBUG_ENVI   yLOG_note    ("found a sub-directory that needs exploring");
-            rc2 = ENTRY__level_read (x_curr, x_path, a_silent);
+            if (x_parent->stype == STYPE_LASTPLUS) {
+               rc2 = ENTRY__level_read (x_curr, x_path, 'y');
+            } else {
+               rc2 = ENTRY__level_read (x_curr, x_path, a_silent);
+            }
             DEBUG_ENVI   yLOG_value   ("recurse"   , rc);
             if (rc2 < 0) {
                DEBUG_ENVI   yLOG_note    ("dir_never or dir_avoid, no totals, erase entry");
+               DEBUG_ENVI   yLOG_info    ("killing"   , x_data->name);
+               MIME_del_seen (x_data->ext, x_data->bytes, x_full);
                ENTRY__free (&x_curr);
                continue;
             }
          }
       }
-      /*---(update cumulatives)----------*/
-      DEBUG_ENVI   yLOG_note    ("add sizes and counts to mime");
-      x_curr->parent->data->bcum += x_data->bcum;
-      x_curr->parent->data->ccum += x_data->ccum;
       /*---(check silent)----------------*/
       DEBUG_ENVI   yLOG_note    ("check for silent treatment");
-      if (a_silent == 'y' || x_data->stype == STYPE_AVOID || x_data->stype == STYPE_NEVER) {
-         DEBUG_ENVI   yLOG_note    ("dir_silent entry, deleting after recursing/totalling");
+      if (x_data->type == ENTRY_DIR && (x_data->stype == STYPE_AVOID || x_data->stype == STYPE_NEVER)) {
+         DEBUG_ENVI   yLOG_note    ("dir_avoid or dir_never entry, deleting after recursing, remove from total");
+         MIME_del_seen (x_data->ext, x_data->bytes, x_full);
          ENTRY__free (&x_curr);
       }
-      if (x_begin != 'y') {
+      else if (x_begin != 'y') {
          if (x_data->type == ENTRY_DIR && x_begin != 'd') {
             DEBUG_ENVI   yLOG_note    ("dir falls outside --start <dir>");
+            MIME_del_seen (x_data->ext, x_data->bytes, x_full);
             ENTRY__free (&x_curr);
          }
          else if (x_data->type != ENTRY_DIR) {
             DEBUG_ENVI   yLOG_note    ("file/non-dir falls outside --start <dir>");
+            MIME_del_seen (x_data->ext, x_data->bytes, x_full);
             ENTRY__free (&x_curr);
          }
+         else {
+            DEBUG_ENVI   yLOG_note    ("falls in line before --start");
+            MIME_del_seen (x_data->ext, x_data->bytes, x_full);
+            x_curr->parent->data->bytes = 0.0;
+            x_curr->parent->data->count = 0;
+            x_curr->parent->data->bcum  = x_data->bcum;
+            x_curr->parent->data->ccum  = x_data->ccum;
+         }
       }
-      if (x_curr != NULL) {
-         MIME_add_kept (x_data->ext, x_data->bytes);
+      else {
+         /*---(update cumulatives)----------*/
+         DEBUG_ENVI   yLOG_note    ("add sizes to dir structure");
+         x_curr->parent->data->bcum += x_data->bcum;
+         x_curr->parent->data->ccum += x_data->ccum;
+         switch (a_silent) {
+         case  'p' :
+            DEBUG_ENVI   yLOG_note    ("dir_silent entry, deleting after recursing, leave in total");
+            DEBUG_ENVI   yLOG_info    ("killing"   , x_data->name);
+            MIME_del_seen (x_data->ext, x_data->bytes, x_full);
+            strlcpy (x_data->ext, EXT_PRIVATE, LEN_TERSE);
+            MIME_add_seen (EXT_PRIVATE, NULL, x_data->bytes, x_full);
+            ENTRY__free (&x_curr);
+            break;
+         case  'y' :
+            DEBUG_ENVI   yLOG_note    ("dir_silent entry, deleting after recursing, leave in total");
+            DEBUG_ENVI   yLOG_info    ("killing"   , x_data->name);
+            ENTRY__free (&x_curr);
+            break;
+         }
+         MIME_add_kept (x_data->ext, x_data->bytes, x_full);
       }
       /*---(done)------------------------*/
    }
@@ -1258,14 +1360,14 @@ ENTRY_tail         (tDRIVE *a_drive, tPTRS *a_root)
    tPTRS      *x_ptrs      = NULL;          /* current entry                  */
    DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
    rc = ENTRY_normal (&x_ptrs, a_root);
-   DEBUG_ENVI   yLOG_point   ("(empty)"   , x_ptrs);
-   DEBUG_ENVI   yLOG_point   ("parent"    , x_ptrs->parent);
-   DEBUG_ENVI   yLOG_point   ("->data"    , x_ptrs->parent->data);
-   DEBUG_ENVI   yLOG_info    ("->->name"  , x_ptrs->parent->data->name);
-   DEBUG_ENVI   yLOG_value   ("->->lvl"   , x_ptrs->parent->data->lvl);
-   DEBUG_ENVI   yLOG_point   ("->tail"    , x_ptrs->parent->c_tail);
-   DEBUG_ENVI   yLOG_point   ("->->data"  , x_ptrs->parent->c_tail->data);
-   DEBUG_ENVI   yLOG_info    ("->->->name", x_ptrs->parent->c_tail->data->name);
+   /*> DEBUG_ENVI   yLOG_point   ("(empty)"   , x_ptrs);                               <* 
+    *> DEBUG_ENVI   yLOG_point   ("parent"    , x_ptrs->parent);                       <* 
+    *> DEBUG_ENVI   yLOG_point   ("->data"    , x_ptrs->parent->data);                 <* 
+    *> DEBUG_ENVI   yLOG_info    ("->->name"  , x_ptrs->parent->data->name);           <* 
+    *> DEBUG_ENVI   yLOG_value   ("->->lvl"   , x_ptrs->parent->data->lvl);            <* 
+    *> DEBUG_ENVI   yLOG_point   ("->tail"    , x_ptrs->parent->c_tail);               <* 
+    *> DEBUG_ENVI   yLOG_point   ("->->data"  , x_ptrs->parent->c_tail->data);         <* 
+    *> DEBUG_ENVI   yLOG_info    ("->->->name", x_ptrs->parent->c_tail->data->name);   <*/
    strcpy (x_ptrs->data->name, "(empty)");
    x_ptrs->data->drive = a_drive->ref;
    x_ptrs->data->type  = ENTRY_DIR;
@@ -1273,6 +1375,7 @@ ENTRY_tail         (tDRIVE *a_drive, tPTRS *a_root)
    x_ptrs->data->bytes = a_drive->size - a_root->data->bcum;
    x_ptrs->data->bcum  = a_drive->size - a_root->data->bcum;
    a_root->data->bcum  = a_drive->size;
+   MIME_add_seen (EXT_EMPTY, NULL, x_ptrs->data->bcum, NULL);
    /*---(complete)-----------------------*/
    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
    return 0;
@@ -1494,15 +1597,10 @@ ENTRY__walker            (char a_trigger, tPTRS *a_dir, char *a_path, void *a_ca
       DEBUG_DATA   yLOG_value   ("handler"   , rc);
    }
    /*---(spin through entries)-----------*/
-   if (my.pub == 'y') {
-      if (strcmp (a_path, "/home/member") == 0) {
-         DEBUG_DATA   yLOG_exit    (__FUNCTION__);
-         return 0;
-      }
-      if (strcmp (a_path, "/root") == 0) {
-         DEBUG_DATA   yLOG_exit    (__FUNCTION__);
-         return 0;
-      }
+   rc = CONF_private (a_path);
+   --rce;  if (rc < 0) {
+      DEBUG_DATA   yLOG_exit    (__FUNCTION__);
+      return 0;
    }
    /*---(spin through entries)-----------*/
    DEBUG_DATA   yLOG_complex ("ENTRY"     , "%3d of %3d for %s, %p", c, a_dir->nchild, a_dir->data->name, a_dir->c_head);
@@ -1599,7 +1697,7 @@ ENTRY__unit             (char *a_question, int n)
       if (x_curr == NULL) 
          snprintf (unit_answer, LEN_FULL, "ENTRY entry (%2d) : no entry", n);
       else 
-         snprintf (unit_answer, LEN_FULL, "ENTRY entry (%2d) : %-2d  %-2d %2d[%-20.20s]   %c %c   %c %-6.6s   %d %-6ld   %-6d %d", n,
+         snprintf (unit_answer, LEN_FULL, "ENTRY entry (%2d) : %-2d  %-2d %2d[%-20.20s]   %c %c   %c %-6.6s   %d %-6ld   %2d %2d", n,
                x_curr->data->drive ,x_curr->data->lvl   ,
                x_curr->data->len   , x_curr->data->name , 
                x_curr->data->type  , x_curr->data->stype,

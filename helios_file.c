@@ -447,33 +447,7 @@ WRITE__dir         (FILE *a_file, tPTRS *a_parent, int *a_count)
          DEBUG_OUTP   yLOG_complex ("entry"     , "%p, %s, %c, %c", x_data, x_data->name, x_data->type, x_data->stype);
          WRITE__entry (a_file, x_data, a_count);
          if   (x_data->type == ENTRY_DIR) {
-            switch (x_data->stype) {
-            case STYPE_NORMAL :
-               DEBUG_OUTP   yLOG_note    ("normal directory, recurse");
-               WRITE__dir (a_file, x_entry, a_count);
-               break;
-            case STYPE_LINK   :
-               DEBUG_OUTP   yLOG_note    ("dir is symlink, do not recurse");
-               break;
-            case STYPE_SILENT :
-               DEBUG_OUTP   yLOG_note    ("dir_silent, do not recurse");
-               break;
-            case STYPE_AVOID  :
-               DEBUG_OUTP   yLOG_note    ("dir_avoid, do not recurse");
-               break;
-            case STYPE_PASS   :
-               DEBUG_OUTP   yLOG_note    ("dir_pass, do not recurse");
-               break;
-            case STYPE_LAST   :
-               DEBUG_OUTP   yLOG_note    ("dir_last, do not recurse");
-               break;
-            case STYPE_NEVER  :
-               DEBUG_OUTP   yLOG_note    ("dir_never, do not recurse");
-               break;
-            default           :
-               DEBUG_OUTP   yLOG_note    ("dir stype is unknown, do not recurse");
-               break;
-            }
+            WRITE__dir (a_file, x_entry, a_count);
          }
       }
       x_entry = x_entry->s_next;

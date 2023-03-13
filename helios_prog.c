@@ -13,7 +13,7 @@ static void      o___SUPPORT_________________o (void) {;}
 char      verstring    [500];
 
 char*        /*--: return versioning information ---------[ ------ [ ------ ]-*/
-PROG_version       (void)
+PROG_version            (void)
 {
    char    t [20] = "";
 #if    __TINYC__ > 0
@@ -29,6 +29,79 @@ PROG_version       (void)
    return verstring;
 }
 
+char
+PROG_vershow            (void)
+{
+   printf ("%s\n", PROG_version ());
+   exit (0);
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                       pre-initialization                     ----===*/
+/*====================------------------------------------====================*/
+static void      o___PREINIT_________________o (void) {;}
+
+char       /*----: very first setup ------------------s-----------------------*/
+PROG__header            (void)
+{
+   /*---(header)----------------------*/
+   DEBUG_PROG   yLOG_enter (__FUNCTION__);
+   /*---(versioning)------------------*/
+   DEBUG_PROG   yLOG_info     ("khronos" , PROG_version    ());
+   DEBUG_PROG   yLOG_info     ("purpose" , P_PURPOSE);
+   DEBUG_PROG   yLOG_info     ("namesake", P_NAMESAKE);
+   DEBUG_PROG   yLOG_info     ("heritage", P_HERITAGE);
+   DEBUG_PROG   yLOG_info     ("imagery" , P_IMAGERY);
+   DEBUG_PROG   yLOG_note     ("custom core");
+   DEBUG_PROG   yLOG_info     ("yURG"    , yURG_version      ());
+   DEBUG_PROG   yLOG_info     ("yLOG"    , yLOGS_version     ());
+   DEBUG_PROG   yLOG_info     ("ySTR"    , ySTR_version      ());
+   DEBUG_PROG   yLOG_note     ("custom other");
+   DEBUG_PROG   yLOG_info     ("yPARSE"  , yPARSE_version    ());
+   DEBUG_PROG   yLOG_info     ("ySORT"   , ySORT_version     ());
+   DEBUG_PROG   yLOG_info     ("yREGEX"  , yREGEX_version    ());
+   DEBUG_PROG   yLOG_note     ("job control");
+   DEBUG_PROG   yLOG_info     ("yJOBS"   , yJOBS_version     ());
+   /*---(complete)-----------------------*/
+   DEBUG_PROG   yLOG_exit  (__FUNCTION__);
+   return 0;
+}
+
+char
+PROG_urgents            (int a_argc, char *a_argv [])
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   /*---(set mute)-----------------------*/
+   yURG_all_off  ();
+   /*---(start logger)-------------------*/
+   rc = yURG_logger  (a_argc, a_argv);
+   DEBUG_PROG   yLOG_value    ("logger"    , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_PROG   yLOG_exitr    (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(process urgents)----------------*/
+   rc = yURG_urgs    (a_argc, a_argv);
+   DEBUG_PROG   yLOG_value    ("logger"    , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_PROG   yLOG_exitr    (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(process urgents)----------------*/
+   rc = PROG__header ();
+   DEBUG_PROG   yLOG_value    ("header"    , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_PROG   yLOG_exitr    (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(complete)-----------------------*/
+   return rc;
+}
+
 
 
 /*====================------------------------------------====================*/
@@ -37,30 +110,35 @@ PROG_version       (void)
 void  o___STARTUP_________o () { return; }
 
 char             /* [------] minimal pre-argument program initialization -----*/
-PROG_init               (int argc, char *argv[])
+PROG__init              (int a_argc, char *a_argv[])
 {
-   /*---(locals)-----------+-----------+-*/
-   int         i           = 0;
-   /*---(log header)---------------------*/
-   DEBUG_PROG   yLOG_info     ("purpose" , P_PURPOSE);
-   DEBUG_PROG   yLOG_info     ("namesake", P_NAMESAKE);
-   DEBUG_PROG   yLOG_info     ("heritage", P_HERITAGE);
-   DEBUG_PROG   yLOG_info     ("imagery" , P_IMAGERY);
-   DEBUG_PROG   yLOG_info     ("helios"  , PROG_version    ());
-   DEBUG_PROG   yLOG_info     ("yURG"    , yURG_version    ());
-   DEBUG_PROG   yLOG_info     ("ySTR"    , ySTR_version    ());
-   DEBUG_PROG   yLOG_info     ("yLOG"    , yLOGS_version   ());
-   DEBUG_PROG   yLOG_info     ("ySORT"   , ySORT_version   ());
-   yLOG_stage   ('i');
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   int         i           =    0;
    /*---(header)-------------------------*/
-   DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
+   DEBUG_PROG   yLOG_enter   (__FUNCTION__);
    /*---(update database)----------------*/
-   strlcpy (my.progname, argv [0], LEN_LABEL);
+   strlcpy (my.progname, a_argv [0], LEN_TITLE);
    DEBUG_PROG   yLOG_info    ("progname"  , my.progname);
    my.updatedb     =  '-';
    if (strcmp (my.progname, "helios_update") == 0)     my.updatedb = 'y';
    if (strcmp (my.progname, "updatedb"     ) == 0)     my.updatedb = 'y';
    DEBUG_PROG   yLOG_char    ("updatedb"  , my.updatedb);
+   /*---(defaults)-----------------------*/
+   my.run_as   = IAM_HELIOS;
+   my.run_mode = ACT_NONE;
+   strlcpy (my.run_file, "", LEN_PATH);
+   /*---(begin)--------------------------*/
+   rc = yJOBS_runas (a_argv [0], &(my.run_as), P_FOCUS, P_NICHE, P_SUBJECT, P_PURPOSE, P_NAMESAKE, P_PRONOUNCE, P_HERITAGE, P_BRIEFLY, P_IMAGERY, P_REASON, P_ONELINE, P_HOMEDIR, P_BASENAME, P_FULLPATH, P_SUFFIX, P_CONTENT, P_SYSTEM, P_LANGUAGE, P_COMPILER, P_CODESIZE, P_DEPSTDC, P_AUTHOR, P_CREATED, P_VERMAJOR, P_VERMINOR, P_VERNUM, P_VERTXT, NULL);
+   DEBUG_PROG  yLOG_value   ("runas"     , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_PROG  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_PROG  yLOG_char    ("run_as"    , my.run_as);
+   rc = yPARSE_init  ('-', NULL, '-');
+   rc = yPARSE_delimiters  ("§");
    /*---(default modes)------------------*/
    my.mode         = MODE_SEARCH;
    my.report       = RPT_MATCHES;
@@ -68,15 +146,17 @@ PROG_init               (int argc, char *argv[])
    my.pub          = '-';
    my.headers      = '-';
    my.lineno       = '-';
+   my.empty        =   0;
    /*---(default run-time options)-------*/
    strcpy (my.host     , "-"      );
    my.runtime      = time (NULL);
    my.maxlevel     =   99;   /* maxiumum */
    my.conf         =  'y';
-   n_nodir         =    0;
+   g_nconf         =    0;
    my.dump         =  '-';
    my.dirtree      =  '-';
    my.mimetree     =  '-';
+   my.mime_all     =  '-';
    my.mime_table   =  '-';
    my.statistics   =  '-';
    /*---(output prepending)--------------*/
@@ -122,31 +202,56 @@ PROG_init               (int argc, char *argv[])
    my.level        =   0;
    DEBUG_CONF  yLOG_value ("n_mime"    , n_mime);
    /*---(complete)-----------------------*/
-   DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
+   DEBUG_PROG   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
 char             /* [------] process the command line arguments --------------*/
-PROG_args          (int argc, char *argv[])
+PROG__args              (int a_argc, char *a_argv[])
 {
    /*---(locals)-----------+-----------+-*/
-   int         i           = 0;             /* loop iterator -- arguments     */
+   char        rce         =  -10;
+   char        rc          =    0;
+   int         i           =    0;
    char       *a           = NULL;          /* current argument               */
-   int         len         = 0;             /* argument length                */
-   int         x_total     = 0;
-   int         x_args      = 0;
+   char       *b           = NULL;          /* next argument                  */
+   int         x_total     =    0;          /* total arg/urg count            */
+   int         x_args      =    0;          /* argument count                 */
+   char        two_arg     =    0;
+   int         x_max       =    0;
    /*---(begin)--------------------------*/
-   DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
+   DEBUG_PROG   yLOG_enter   (__FUNCTION__);
+   yURG_msg ('>', "command line arguments handling...");
+   yURG_msg ('-', "total of %d arguments, including name", a_argc);
+   /*---(check for no args)--------------*/
+   DEBUG_PROG   yLOG_value   ("a_argc"    , a_argc);
+   if (a_argc == 1) {
+      DEBUG_PROG   yLOG_exit    (__FUNCTION__);
+      return 0;
+   }
    /*---(process)------------------------*/
-   for (i = 1; i < argc; ++i) {
-      /*---(read)------------------------*/
-      a   = argv [i];
-      len = strlen(a);
+   for (i = 1; i < a_argc; ++i) {
+      /*---(prepare)---------------------*/
+      a = a_argv [i];
+      if (a == NULL) {
+         yURG_err ('f', "arg %d is NULL", i);
+         DEBUG_PROG   yLOG_note    ("FATAL, found a null argument, really bad news");
+         DEBUG_PROG   yLOG_exitr   (__FUNCTION__, rce);
+         return rce;
+      }
+      if (i < a_argc - 1)  b = a_argv [i + 1];
+      else                 b = NULL;
+      /*---(debugging--------------------*/
       ++x_total;
-      /*---(filter)----------------------*/
-      if (a[0] == '@')  continue;
+      if (a [0] == '@')       continue;
       ++x_args;
       DEBUG_ARGS  yLOG_info  ("argument"  , a);
+      /*---(yJOBS argument check)--------*/
+      ++x_args;
+      DEBUG_ARGS  yLOG_info     ("argument"  , a);
+      rc = yJOBS_argument (&i, a, b, &(my.run_as), &(my.run_mode), my.run_file);
+      DEBUG_ARGS  yLOG_value    ("rc"        , rc);
+      if (rc > 0)  continue;
       /*---(version)---------------------*/
       if      (strcmp (a, "--version"      ) == 0 || strcmp (a, "-V") == 0) {
          PROG_version ();
@@ -154,75 +259,74 @@ PROG_args          (int argc, char *argv[])
          return -1;
       }
       /*---(configuration)---------------*/
-      else if (strcmp (a, "-c"             ) == 0 && i + 1 < argc)   strncpy (my.file_conf, argv [++i], LEN_PATH);
-      else if (strcmp (a, "--config"       ) == 0 && i + 1 < argc)   strncpy (my.file_conf, argv [++i], LEN_PATH);
+      else if (strcmp (a, "-c"             ) == 0 && i + 1 < a_argc)   strncpy (my.file_conf, a_argv [++i], LEN_PATH);
+      else if (strcmp (a, "--config"       ) == 0 && i + 1 < a_argc)   strncpy (my.file_conf, a_argv [++i], LEN_PATH);
       else if (strcmp (a, "--noconf"       ) == 0)                           my.conf = 'n';
-      else if (strcmp (a, "-d"             ) == 0 && i + 1 < argc)   strncpy (my.file_data, argv [++i], LEN_PATH);
-      else if (strcmp (a, "--database"     ) == 0 && i + 1 < argc)   strncpy (my.file_data, argv [++i], LEN_PATH);
-      else if (strcmp (a, "--mimefile"     ) == 0 && i + 1 < argc)   strncpy (my.file_mime, argv [++i], LEN_PATH);
-      else if (strcmp (a, "--public"       ) == 0)                           my.pub  = 'y';
+      else if (strcmp (a, "-d"             ) == 0 && i + 1 < a_argc)   strncpy (my.file_data, a_argv [++i], LEN_PATH);
+      else if (strcmp (a, "--database"     ) == 0 && i + 1 < a_argc)   strncpy (my.file_data, a_argv [++i], LEN_PATH);
+      else if (strcmp (a, "--mimefile"     ) == 0 && i + 1 < a_argc)   strncpy (my.file_mime, a_argv [++i], LEN_PATH);
       /*---(filters)---------------------*/
-      else if (strcmp (a, "--types"        ) == 0 && i + 1 < argc)   RPTG_config_types_set (argv [++i]);
+      else if (strcmp (a, "--public"       ) == 0)                           my.pub  = 'y';
+      else if (strcmp (a, "--types"        ) == 0 && i + 1 < a_argc)   RPTG_config_types_set (a_argv [++i]);
       else if (strstr (ENTRY_OPTIONS    , a) != NULL)                RPTG_config_types_add (a);
       else if (strstr (ENTRY_NEGS       , a) != NULL)                RPTG_config_types_sub (a);
-      else if (strcmp (a, "--mimes"        ) == 0 && i + 1 < argc)   RPTG_config_mimes_set (argv [++i]);
+      else if (strcmp (a, "--mimes"        ) == 0 && i + 1 < a_argc)   RPTG_config_mimes_set (a_argv [++i]);
       else if (strstr (MIME_OPTIONS     , a) != NULL)                RPTG_config_mimes_add (a);
       else if (strstr (MIME_NEGS        , a) != NULL)                RPTG_config_mimes_sub (a);
-      else if (strcmp (a, "--ext"          ) == 0 && i + 1 < argc)   strlcpy (my.ext, argv [++i], LEN_TERSE);
-      else if (strcmp (a, "--sizes"        ) == 0 && i + 1 < argc)   RPTG_config_sizes_set (argv [++i]);
+      else if (strcmp (a, "--ext"          ) == 0 && i + 1 < a_argc)   strlcpy (my.ext, a_argv [++i], LEN_TERSE);
+      else if (strcmp (a, "--sizes"        ) == 0 && i + 1 < a_argc)   RPTG_config_sizes_set (a_argv [++i]);
       else if (strstr (SIZES_OPTIONS    , a) != NULL)                RPTG_config_sizes_add (a);
       else if (strstr (SIZES_NEGS       , a) != NULL)                RPTG_config_sizes_sub (a);
-      else if (strcmp (a, "--ages"         ) == 0 && i + 1 < argc)   RPTG_config_ages_set  (argv [++i]);
+      else if (strcmp (a, "--ages"         ) == 0 && i + 1 < a_argc)   RPTG_config_ages_set  (a_argv [++i]);
       else if (strstr (AGES_OPTIONS     , a) != NULL)                RPTG_config_ages_add  (a);
       else if (strstr (AGES_NEGS        , a) != NULL)                RPTG_config_ages_sub  (a);
-      else if (strcmp (a, "--ages"         ) == 0 && i + 1 < argc)   RPTG_config_ages_set  (argv [++i]);
-      else if (strcmp (a, "--naming"       ) == 0 && i + 1 < argc)   RPTG_config_ascii_set (argv [++i]);
+      else if (strcmp (a, "--ages"         ) == 0 && i + 1 < a_argc)   RPTG_config_ages_set  (a_argv [++i]);
+      else if (strcmp (a, "--naming"       ) == 0 && i + 1 < a_argc)   RPTG_config_ascii_set (a_argv [++i]);
       else if (strstr (ASCII_OPTIONS    , a) != NULL)                RPTG_config_ascii_add (a);
       else if (strstr (ASCII_NEGS       , a) != NULL)                RPTG_config_ascii_sub (a);
       else if (strcmp (a, "--super"        ) == 0)                   RPTG_config_super_on  ();
       else if (strcmp (a, "--headers"      ) == 0)                   my.headers  = 'y';
       else if (strcmp (a, "--lineno"       ) == 0)                   my.lineno   = 'y';
-      else if (strcmp (a, "--uid"          ) == 0 && i + 1 < argc)   my.r_uid = atoi (argv [++i]);
-      else if (strcmp (a, "--gid"          ) == 0 && i + 1 < argc)   my.r_gid = atoi (argv [++i]);
+      else if (strcmp (a, "--uid"          ) == 0 && i + 1 < a_argc)   my.r_uid = atoi (a_argv [++i]);
+      else if (strcmp (a, "--gid"          ) == 0 && i + 1 < a_argc)   my.r_gid = atoi (a_argv [++i]);
       /*---(output control)--------------*/
       else if (strstr (OUTPUT_OPTIONS   , a) != NULL)                RPTG_config_output    (a);
       else if (strcmp (a, "--mimetree"     ) == 0)                   my.mimetree = 'y';
-      /*> else if (strcmp (a, "--verbose"      ) == 0 || strcmp (a, "-v") == 0)  my.verbose        = 'y';   <* 
-       *> else if (strcmp (a, "--dump"         ) == 0)                           my.dump           = 'y';   <* 
-       *> else if (strcmp (a, "--dirtree"      ) == 0)                           my.dirtree        = 'y';   <* 
-       *> else if (strcmp (a, "--mimetree"     ) == 0)                           my.mimetree       = 'y';   <* 
-       *> else if (strcmp (a, "--count"        ) == 0 || strcmp (a, "-c") == 0)  my.count          = 'y';   <* 
-       *> else if (strcmp (a, "--mime-table"   ) == 0)                           my.mime_table     = 'y';   <* 
-       *> else if (strcmp (a, "--statistics"   ) == 0 || strcmp (a, "-S") == 0)  my.statistics     = 'y';   <*/
+      else if (strcmp (a, "--mimefind"     ) == 0)                 { my.mimetree = 'f'; RPTG_config_output    ("--silent"); }
+      else if (strcmp (a, "--mimeall"      ) == 0)                 { my.mime_all = 'y'; RPTG_config_output    ("--silent"); }
+      else if (strcmp (a, "--dirtree"      ) == 0)                 { my.dirtree  = 'y'; RPTG_config_output    ("--silent"); }
+      else if (strcmp (a, "--dirall"       ) == 0)                 { my.dir_all  = 'y'; RPTG_config_output    ("--silent"); }
+      else if (strcmp (a, "--dump"         ) == 0)                   my.dump     = 'y';
+      else if (strcmp (a, "--count"        ) == 0 || strcmp (a, "-c") == 0)  my.count          = 'y';
+      else if (strcmp (a, "--statistics"   ) == 0 || strcmp (a, "-S") == 0)  my.statistics     = 'y';
       /*---(output control)--------------*/
       else if (strstr (COL_OPTIONS      , a) != NULL)                RPTG_config_columns   (a);
-      /*> else if (strcmp (a, "--show-cat"     ) == 0)                           my.show_cat       = 'y';   <* 
-       *> else if (strcmp (a, "--show-mime"    ) == 0)                           my.show_mime      = 'y';   <* 
-       *> else if (strcmp (a, "--show-days"    ) == 0)                           my.show_days      = 'y';   <* 
-       *> else if (strcmp (a, "--show-size"    ) == 0)                           my.show_size      = 'y';   <* 
-       *> else if (strcmp (a, "--show-bytes"   ) == 0)                           my.show_bytes     = 'y';   <* 
-       *> else if (strcmp (a, "--show-level"   ) == 0)                           my.show_level     = 'y';   <* 
-       *> else if (strcmp (a, "--show-ascii"   ) == 0)                           my.show_ascii     = 'y';   <*/
       /*---(processing control)----------*/
       else if (strcmp (a, "-u"             ) == 0)                           my.updatedb       = 'y';
       else if (strcmp (a, "--updatedb"     ) == 0)                           my.updatedb       = 'y';
-      else if (strcmp (a, "--mpoint"       ) == 0 && i + 1 < argc)   strncpy (my.mpoint  , argv [++i], LEN_FULL);
+      else if (strcmp (a, "--mpoint"       ) == 0 && i + 1 < a_argc)   strncpy (my.mpoint  , a_argv [++i], LEN_FULL);
       /*---(search filtering)------------*/
       else if (strcmp (a, "--first"        ) == 0)                   my.limit    =  1 ;
-      else if (strcmp (a, "--limit"        ) == 0 && i + 1 < argc)   my.limit    = atoi (argv[++i]);
-      else if (strcmp (a, "--number"       ) == 0 && i + 1 < argc)   my.number   = atoi (argv[++i]);
-      else if (strcmp (a, "--start"        ) == 0 && i + 1 < argc)   strncpy (my.path    , argv [++i], LEN_PATH);
-      else if (strcmp (a, "--depth"        ) == 0 && i + 1 < argc)   my.maxlevel = atoi (argv[++i]);
+      else if (strcmp (a, "--limit"        ) == 0 && i + 1 < a_argc)   my.limit    = atoi (a_argv[++i]);
+      else if (strcmp (a, "--number"       ) == 0 && i + 1 < a_argc)   my.number   = atoi (a_argv[++i]);
+      else if (strcmp (a, "--start"        ) == 0 && i + 1 < a_argc)   strncpy (my.path    , a_argv [++i], LEN_PATH);
+      else if (strcmp (a, "--depth"        ) == 0 && i + 1 < a_argc)   my.maxlevel = atoi (a_argv[++i]);
       /*---(regex search)----------------*/
       else if (strcmp (a, "--all"          ) == 0 || strcmp (a, "-A") == 0)  strncpy (my.regex, ".", MAX_REGEX);
       else if (a[0] != '-')    RPTG_regex_prep (a);
       /*---(not understood)--------------*/
       else {
          printf  ("option <<%s>> not understood or implemented\n", a);
-         DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
+         DEBUG_PROG   yLOG_exit    (__FUNCTION__);
          return -1;
       }
       /*---(done)------------------------*/
+   }
+   /*---(max name)-----------------------*/
+   IF_RUNNING {
+      rc = yEXEC_maxname (a_argc, a_argv, &x_max);
+      printf ("x_max = %d\n", x_max);
+      strlcpy (a_argv [0], P_ONELINE, x_max);
    }
    /*---(fix limits)---------------------*/
    if (my.maxlevel <=  0)       my.maxlevel = 99;
@@ -260,33 +364,59 @@ PROG_args          (int argc, char *argv[])
    DEBUG_ARGS  yLOG_value   ("limit"     , my.limit);
    DEBUG_ARGS  yLOG_info    ("ext"       , my.ext);
    /*---(complete)-----------------------*/
-   DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
+   DEBUG_PROG   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
 char             /* [------] post-argument program initialization ------------*/
-PROG_begin         (void)
+PROG__begin             (void)
 {
-   DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
+   DEBUG_PROG   yLOG_enter   (__FUNCTION__);
    MIME_init   ();
    api_ysort_init ();
-   /*> my.regex_len = strlen (my.regex);                                                                           <* 
-    *> if (my.regex_case == 'y')  my.regex_rc  = regcomp (&(my.regex_comp), my.regex, REG_EXTENDED);               <* 
-    *> else                       my.regex_rc  = regcomp (&(my.regex_comp), my.regex, REG_EXTENDED | REG_ICASE);   <* 
-    *> DEBUG_PROG   yLOG_value   ("regex_rc"  , my.regex_rc);                                                      <*/
-   /*> if (my.regex_len <= 0) {                                                                 <* 
-    *>    /+> printf ("regex could not be compiled\n");                                   <+/   <* 
-    *>    DEBUG_TOPS   yLOG_note    ("regex could not be compiled");                            <* 
-    *>    DEBUG_TOPS   yLOG_exit    (__FUNCTION__);                                             <* 
-    *>    return -1;                                                                            <* 
-    *> }                                                                                        <*/
    my.uid    = geteuid();
    my.gid    = getegid();
    DRIVE_init   ();
-   DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
-   yLOG_stage   ('m');
+   DEBUG_PROG   yLOG_exit    (__FUNCTION__);
+   /*> yLOG_stage   ('m');                                                            <*/
    /*---(complete)-----------------------*/
    return 0;
+}
+
+char
+PROG_startup            (int a_argc, char *a_argv [])
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   /*---(header)----------------------*/
+   yURG_stage_check (YURG_BEG);
+   DEBUG_PROG  yLOG_enter   (__FUNCTION__);
+   /*---(initialize)---------------------*/
+   rc = PROG__init   (a_argc, a_argv);
+   DEBUG_PROG   yLOG_value    ("init"      , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_PROG   yLOG_exitr    (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(arguments)----------------------*/
+   rc = PROG__args   (a_argc, a_argv);
+   DEBUG_PROG   yLOG_value    ("args"      , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_PROG   yLOG_exitr    (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(begin)--------------------------*/
+   rc = PROG__begin  ();
+   DEBUG_PROG   yLOG_value    ("begin"     , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_PROG   yLOG_exitr    (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_PROG  yLOG_exit  (__FUNCTION__);
+   yURG_stage_check (YURG_MID);
+   return rc;
 }
 
 
@@ -304,7 +434,7 @@ PROG_driver             (void)
    char        rc          =    0;
    int         c           =    0;
    /*---(header)-------------------------*/
-   DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
+   DEBUG_PROG   yLOG_enter   (__FUNCTION__);
    /*---(update)-------------------------*/
    if (my.updatedb == 'y') {
       rc = DRIVE_inventory ();
@@ -318,7 +448,7 @@ PROG_driver             (void)
       READ_all   (my.file_data, &c);
       if (rc >= 0)  rc = ENTRY_start ();
       /*> if (my.path != NULL)  DATA_start (my.path);                                 <*/
-      RPTG_dirtree (1, h_ptrs, "");
+      RPTG_dirtree ();
    }
    else if (my.statistics == 'y') {
       READ_all   (my.file_data, &c);
@@ -333,19 +463,55 @@ PROG_driver             (void)
    }
    /*---(search)-------------------------*/
    else {
+      CONF_read  ();
       READ_all   (my.file_data, &c);
       if (rc >= 0)  rc = ENTRY_start ();
       if (rc >= 0)  rc = RPTG_walker (WALK_ALL);
       if (my.total > 0 && my.output != OUTPUT_COUNT)  RPTG_footer ();
       /*> if (my.mime_table == 'y') MIME_write   ('s', ' ');                          <*/
+      MIME_write ('f');
+      if      (my.mimetree == 'f')  MIME_tree    ();
+      else if (my.mime_all == 'y')  MIME_tree    ();
    }
    /*---(check for trouble)--------------*/
    --rce;  if (rc < 0) {
-      DEBUG_TOPS   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_PROG   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(complete)-----------------------*/
-   DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
+   DEBUG_PROG   yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                        program shutdown                      ----===*/
+/*====================------------------------------------====================*/
+static void      o___SHUTDOWN________________o (void) {;}
+
+char                /* PURPOSE : shutdown program and free memory ------------*/
+PROG__end               (void)
+{
+   /*> yLOG_stage   ('w');                                                            <*/
+   DEBUG_PROG   yLOG_enter   (__FUNCTION__);
+   DRIVE_wrap ();
+   yREGEX_clear ();
+   DEBUG_PROG   yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+char             /* [------] drive the program closure activities ------------*/
+PROG_shutdown           (void)
+{
+   /*---(stage-check)--------------------*/
+   yURG_stage_check (YURG_END);
+   /*---(header)-------------------------*/
+   DEBUG_PROG   yLOG_enter    (__FUNCTION__);
+   PROG__end ();
+   /*---(complete)-----------------------*/
+   DEBUG_PROG   yLOG_exit     (__FUNCTION__);
+   DEBUG_PROG   yLOGS_end    ();
    return 0;
 }
 
@@ -355,59 +521,6 @@ PROG_driver             (void)
 /*===----                        program shutdown                      ----===*/
 /*====================------------------------------------====================*/
 void  o___SHUTDOWN________o () { return; }
-
-char                /* PURPOSE : shutdown program and free memory ------------*/
-PROG_end           (void)
-{
-   yLOG_stage   ('w');
-   DEBUG_TOPS   yLOG_enter   (__FUNCTION__);
-   DRIVE_wrap ();
-   yREGEX_clear ();
-   DEBUG_TOPS   yLOG_exit    (__FUNCTION__);
-   DEBUG_TOPS   yLOGS_end    ();
-   return 0;
-}
-
-
-
-/*====================------------------------------------====================*/
-/*===----                         unit testing                         ----===*/
-/*====================------------------------------------====================*/
-static void  o___UNITTEST________o () { return; }
-
-char         /*-> set up programgents/debugging ------[ light  [uz.320.011.05]*/ /*-[00.0000.00#.#]-*/ /*-[--.---.---.--]-*/
-PROG__unit_quiet     (void)
-{
-   char       *x_args [1]  = { "helios" };
-   yURG_logger (1, x_args);
-   PROG_init   (1, x_args);
-   yURG_urgs   (1, x_args);
-   PROG_args   (1, x_args);
-   PROG_begin  ();
-   my.output = OUTPUT_SILENT;
-   return 0;
-}
-
-char         /*-> set up programgents/debugging ------[ light  [uz.320.011.05]*/ /*-[00.0000.00#.!]-*/ /*-[--.---.---.--]-*/
-PROG__unit_loud      (void)
-{
-   int         x_argc      = 4;
-   char       *x_args [20] = { "helios_unit", "@@kitchen", "@@args", "@@stats" };
-   yURG_logger (x_argc, x_args);
-   PROG_init   (x_argc, x_args);
-   yURG_urgs   (x_argc, x_args);
-   PROG_args   (x_argc, x_args);
-   PROG_begin  ();
-   my.output = OUTPUT_SILENT;
-   return 0;
-}
-
-char         /*-> set up program urgents/debugging ---[ light  [uz.210.001.01]*/ /*-[00.0000.00#.!]-*/ /*-[--.---.---.--]-*/
-PROG__unit_end       (void)
-{
-   PROG_end       ();
-   return 0;
-}
 
 
 

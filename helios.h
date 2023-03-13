@@ -1,40 +1,57 @@
 /*===============================[[ beg-code ]]===============================*/
 
 
-/*===[[ BEG_HEADER ]]=========================================================*/
-
 /*===[[ ONE_LINERS ]]=========================================================*/
-/*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-12345678901-12345678901-*/
-
+/*                      ´·········1·········2·········3·········4·········5·········6·········7*/
+/*--------- 12345678901 ´123456789-123456789-123456789-123456789-123456789-123456789-123456789-*/
+/*········· ··········· ´·····························´········································*/
 #define     P_FOCUS     "SU (system utilities)"
 #define     P_NICHE     "ff (filesystem finder)"
+#define     P_SUBJECT   "file-system searching"
 #define     P_PURPOSE   "file system indexing, searching, and analytics"
-
-#define     P_FULLNAME  "/usr/local/bin/helios"
-#define     P_PREFIX    "helios-phaeton (locate)"
-#define     P_ONELINE   "helios-phaeton (locate) file system indexing, searching, and analytics"
-
+/*········· ··········· ´·····························´········································*/
 #define     P_NAMESAKE  "helios-phaeton (radiant)"
+#define     P_PRONOUNCE "hee·lee·ohs fay·tuhn"
 #define     P_HERITAGE  "the all-seeing titan god of the sun and clear sight"
+#define     P_BRIEFLY   "all-seeing sun god"
 #define     P_IMAGERY   "drives the sun across the sky in a chariot pulled by winged horses"
-
+#define     P_REASON    ""
+/*········· ··········· ´·····························´········································*/
+#define     P_ONELINE   P_NAMESAKE " " P_SUBJECT
+/*········· ··········· ´·····························´········································*/
+#define     P_HOMEDIR   "/home/system/helios.filesystem_locator"
+#define     P_BASENAME  "helios"
+#define     P_FULLPATH  "/usr/local/bin/helios"
+#define     P_SUFFIX    "···"
+#define     P_CONTENT   "···"
+/*········· ··········· ´·····························´········································*/
 #define     P_SYSTEM    "gnu/linux   (powerful, ubiquitous, technical, and hackable)"
 #define     P_LANGUAGE  "ansi-c      (wicked, limitless, universal, and everlasting)"
+#define     P_COMPILER  "gcc 5.3.0"
 #define     P_CODESIZE  "small       (appoximately 2,000 slocl)"
-
+/*········· ··········· ´·····························´········································*/
+#define     P_DEPSTDC   "stdio,stdlib,string,errno,time"
+#define     P_DEPPOSIX  "unistd,dirent,fcntl,sys/stat,sys/ioctl,linux/fs,linux/hdreg"
+#define     P_DEPCORE   "yURG,yLOG,ySTR"
+#define     P_DEPVIKEYS "···"
+#define     P_DEPOTHER  "yPARSE,ySORT,yREGEX,yJOBS,yEXEC"
+#define     P_DEPSOLO   "···"
+/*········· ··········· ´·····························´········································*/
 #define     P_AUTHOR    "heatherlyrobert"
 #define     P_CREATED   "2014-10"
-#define     P_DEPENDS   "none"
-
+/*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "1.--, first major version in production"
 #define     P_VERMINOR  "1.1-, adding extensive unit testing"
-#define     P_VERNUM    "1.1j"
-#define     P_VERTXT    "mime file fully uses yPARSE for output"
-
+#define     P_VERNUM    "1.1k"
+#define     P_VERTXT    "partial yJOBS integration"
+/*········· ··········· ´·····························´········································*/
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
 #define     P_REMINDER  "there are many better options, but i *own* every byte of this one"
-
+/*········· ··········· ´·····························´········································*/
+/*--------- 12345678901 ´123456789-123456789-123456789-123456789-123456789-123456789-123456789-*/
+/*                      ´·········1·········2·········3·········4·········5·········6·········7*/
+/*===[[ HEADER END ]]=========================================================*/
 
 
 /*
@@ -222,7 +239,6 @@
 
 /*---(other standard)-----------*/
 #include    <time.h>         /* C_ANSI (28) time, localtime, strftime, timer  */
-#include    <regex.h>        /* POSIX  (04) regcomp, regexec, regfree         */
 
 /*===[[ CUSTOM LIBRARIES ]]===================================================*/
 #include    <yURG.h>         /* CUSTOM : heatherly urgent processing          */
@@ -231,6 +247,8 @@
 #include    <yPARSE.h>       /* CUSTOM : heatherly file handling              */
 #include    <ySORT.h>        /* CUSTOM : heatherly sorting and searching      */
 #include    <yREGEX.h>       /* CUSTOM : heatherly regular expressions        */
+#include    <yJOBS.h>             /* heatherly job execution and control      */
+#include    <yEXEC.h>
 
 
 
@@ -319,8 +337,11 @@ extern      short      u_drive;
 #define       STYPE_AVOID    '['
 #define       STYPE_PASS     '('
 #define       STYPE_LAST     ')'
-#define       STYPE_NEVER    'X'
-#define       STYPE_BADS     "[X"
+#define       STYPE_LASTPLUS '+'
+#define       STYPE_NEVER    'x'
+#define       STYPE_PRIVATE  '!'
+#define       STYPE_BADS     "[x"
+#define       STYPE_EMPTY    ' '
 
 #define       AGES_JUST      'j'
 #define       AGES_DAYS      'd'
@@ -346,6 +367,10 @@ extern      short      u_drive;
 #define       EXT_DIR        "d_dir"
 #define       EXT_CONF       "t_conf"
 #define       EXT_EXEC       "x_exec"  
+#define       EXT_JEXEC      "j_exec"  
+#define       EXT_JLIB       "j_lib"
+#define       EXT_JUNIT      "j_unit"
+#define       EXT_JC         "j_c"
 #define       EXT_BDEV       "b_dev"
 #define       EXT_CDEV       "c_dev"
 #define       EXT_FIFO       "f_fifo"
@@ -368,6 +393,11 @@ extern      short      u_drive;
 #define       EXT_PORTAGE    "o_portage"
 #define       EXT_KERNEL     "o_kernel"
 #define       EXT_CACHE      "o_cache"
+#define       EXT_SCAN       "i_scan"
+#define       EXT_PHOTO      "i_photo"
+#define       EXT_WALL       "i_wall" 
+#define       EXT_PRIVATE    "!_priv"
+#define       EXT_EMPTY      "e_empty"
 
 #define       SIZES_ALL      "0123456789abcdefghi"
 #define       SIZES_OPTIONS  " --zb --sb --kb --mb --gb --tb --pb "
@@ -434,15 +464,17 @@ extern      tPTRS      *dir_stack  [MAX_DEPTH];
 extern      tPTRS      *root_stack [MAX_DEPTH];
 
 
-#define     MAX_NODIR   100
-typedef     struct      cNODIR    tNODIR;
-struct cNODIR {
-   char        type;
-   char        name        [LEN_HUND];
+#define     MAX_CONFS   100
+typedef     struct      cCONFS    tCONFS;
+struct cCONFS {
+   uchar       type;
+   uchar       path        [LEN_HUND];
    int         len;
+   int         uses;
+   uchar       reason      [LEN_DESC];
 };
-extern      tNODIR      g_nodir [MAX_NODIR];
-extern      int         n_nodir;
+extern      tCONFS      g_confs [MAX_CONFS];
+extern      int         g_nconf;
 
 
 typedef  struct cBUCKET tSLOT;
@@ -469,19 +501,24 @@ struct cBUCKET {
 #define     MIME_JUNK        'j'
 #define     MIME_OTHER       'o'
 #define     MIME_HUH         '?'
-#define     MIME_ALL         "avistbcpxdjo?"
-#define     MIME_OPTIONS     " --audio --video --image --source --text --base --crypt --prop --exec --dir --junk --other --huh "
-#define     MIME_NEGS        " --noaudio --novideo --noimage --nosource --notext --nobase --nocrypt --noprop --noexec --nodir --nojunk --noother --nohuh "
+#define     MIME_PRIV        '!'
+#define     MIME_EMPTY       'e'
+#define     MIME_ALL         "avistbcpxdjo?!e"
+#define     MIME_MEDIA       'M'
+#define     MIME_WORK        'W'
+#define     MIME_TEMP        'T'
+#define     MIME_OPTIONS     " --audio --video --image --source --text --base --crypt --prop --exec --dir --junk --other --huh --allmedia --allwork --alltemp "
+#define     MIME_NEGS        " --noaudio --novideo --noimage --nosource --notext --nobase --nocrypt --noprop --noexec --nodir --nojunk --noother --nohuh --zeromedia --zerowork --zerotemp "
 
 
 
 #define     MAX_MIME      500
 typedef     struct      cMIME       tMIME;
 struct cMIME {
-   char        ext         [LEN_TERSE];
-   char        cat;
-   char        desc        [LEN_DESC];
-   char        like;
+   uchar       ext         [LEN_TERSE];
+   uchar       cat;
+   uchar       desc        [LEN_DESC];
+   uchar       like;
    int         n_seen;
    llong       b_seen;
    int         n_kept;
@@ -494,6 +531,10 @@ extern      int         n_mime;
 
 
 struct cGLOBAL {
+   /*---(yJOBS)--------------------------*/
+   char        run_as;                      /* khronos, eos, heracles, ...    */
+   char        run_mode;                    /* verify, install, audit, ...    */
+   char        run_file    [LEN_PATH];      /* file to act on                 */
    /*---(run control)--------------------*/
    char        mode;                        /* run mode                       */
    char        report;                      /* report type                    */
@@ -502,8 +543,9 @@ struct cGLOBAL {
    uchar       pub;                         /* allow only public findings     */
    char        headers;                     /* format output as report        */
    char        lineno;                      /* format with line numbers       */
+   llong       empty;
    /*------------------------------------*/
-   char        progname    [LEN_LABEL];     /* run-name of program            */
+   char        progname    [LEN_TITLE];     /* run-name of program            */
    char        host        [LEN_DESC]; /* host name of current computer       */
    long        runtime;                /* run time for helios                 */
    int         maxlevel;               /* maximum recursion on entry gather   */          
@@ -515,7 +557,6 @@ struct cGLOBAL {
    /*---(regex search)-------------------*/
    uchar       regex       [MAX_REGEX];/* regex text pattern                  */
    int         regex_len;              /* regex text pattern length           */
-   regex_t     regex_comp;             /* regex pattern compilied             */
    char        count;                  /* count rather than show results      */
    int         total;                  /* total matches                       */
    /*---(filtering)----------------------*/
@@ -544,8 +585,10 @@ struct cGLOBAL {
    char        path        [LEN_PATH]; /* begin search using this path        */
    tPTRS      *start;                  /* begin search from this location     */
    int         level;                  /* begin search at this level          */
-   char        dirtree;                /* display directory tree              */
-   char        mimetree;               /* display mime-based tree             */
+   char        dirtree;                /* display directory tree (kept)       */
+   char        dir_all;                /* display mime-based tree (seen)      */
+   char        mimetree;               /* display mime-based tree (kept/found)*/
+   char        mime_all;               /* display mime-based tree (seen)      */
    char        mpoint      [LEN_FULL]; /* mountpoint to inventory             */
    short       drive;                  /* currently processed drive           */
    char        file_conf   [LEN_PATH]; /* alternative mime file               */
@@ -601,10 +644,12 @@ extern      tGLOBAL    my;
 #define     COL_TYPE            't'
 #define     COL_PERMS           'p'
 #define     COL_DRIVE           'd'
-#define     COL_OPTIONS         " --show-mime --show-age --show-size --show-level --show-naming --show-find --show-type --show-perms --show-drive "
+#define     COL_BASE            'b'
+#define     COL_OPTIONS         " --show-mime --show-age --show-size --show-level --show-naming --show-find --show-type --show-perms --show-drive --show-base "
 /*---(destinations)-------------------*/
 #define     DEST_FILE           'f'
 #define     DEST_STDOUT         's'
+#define     DEST_TREE           't'
 
 
 
@@ -625,17 +670,23 @@ int         main               (int argc, char *argv[]);
 /*===[[ HELIOS_PROG.C ]]======================================================*/
 /*---(support)--------------*/
 char*       PROG_version            (void);
+char        PROG_vershow            (void);
+/*---(preinit)--------------*/
+char        PROG__header            (void);
+char        PROG_urgents            (int a_argc, char *a_argv []);
 /*---(startup)--------------*/
-char        PROG_init               (int argc, char *argv[]);
-char        PROG_args               (int argc, char *argv[]);
-char        PROG_begin              (void);
-char        PROG_final              (void);
+char        PROG__init              (int argc, char *argv[]);
+char        PROG__args              (int argc, char *argv[]);
+char        PROG__begin             (void);
+char        PROG_startup            (int a_argc, char *a_argv []);
 /*---(driver)---------------*/
 char        PROG_driver             (void);
 /*---(shutdown)-------------*/
-char        PROG_end                (void);
+char        PROG__end               (void);
+char        PROG_shutdown           (void);
 /*---(testing)--------------*/
 char        PROG__unit_loud         (void);
+char        PROG__unit_mute         (void);
 char        PROG__unit_quiet        (void);
 char        PROG__unit_end          (void);
 /*---(done)-----------------*/
@@ -670,12 +721,15 @@ char        MIME__purge             (void);
 /*---(program)--------------*/
 char        MIME_init               (void);
 /*---(action)---------------*/
-char        MIME__action            (uchar *a_ext, int *a_cindex, int *a_mindex, uchar *a_cat, char a_action, llong a_bytes);
+char        MIME__action            (uchar *a_ext, int *a_cindex, int *a_mindex, uchar *a_cat, char a_action, llong a_bytes, char *a_path);
 char        MIME_get_index          (uchar *a_ext, int *a_cindex, int *a_mindex);
-char        MIME_add_seen           (uchar *a_ext, uchar *a_cat, llong a_bytes);
-char        MIME_add_kept           (uchar *a_ext, llong a_bytes);
+char        MIME_add_seen           (uchar *a_ext, uchar *a_cat, llong a_bytes, char *o_path);
+char        MIME_add_kept           (uchar *a_ext, llong a_bytes, char *o_path);
 char        MIME_add_found          (uchar *a_ext, llong a_bytes);
 char        MIME_add_man            (uchar *a_ext, uchar *a_cat, long a_bytes);
+char        MIME_del_seen           (uchar *a_ext, llong a_bytes, char *a_path);
+char        MIME_del_kept           (uchar *a_ext, llong a_bytes);
+char        MIME_del_found          (uchar *a_ext, llong a_bytes);
 /*---(helpers)--------------*/
 uchar       MIME_cat_abbr           (int c);
 uchar      *MIME_cat_name           (int c);
@@ -692,7 +746,7 @@ char        MIME__write_columns     (FILE *f, char a_type);
 char        MIME__write_category    (FILE *f, char a_type, char a_cat);
 char        MIME_write              (char a_type);
 /*---(tree)-----------------*/
-char        MIME__tree_line         (FILE *f, char a_type, uchar *a_ext, llong a_size, int a_count, char *a_desc);
+char        MIME__tree_line         (char a_type, uchar *a_ext, llong a_size, llong a_count, char *a_desc);
 char        MIME_tree               (void);
 char        MIME_all                (void);
 char        MIME_found              (void);
@@ -704,9 +758,10 @@ char*       MIME__unit              (char *a_question, char *a_ext, int n);
 /*---(config)---------------*/
 char        CONF__purge             (void);
 char        CONF_init               (void);
-char        CONF__parse             (cchar *a_recd);
+char        CONF__duplicate         (uchar *a_path);
 char        CONF_read               (void);
 char        CONF_find               (char *a_full, char *a_name, char *a_stype, char *a_silent);
+char        CONF_private            (uchar *a_path);
 char*       CONF__unit              (char *a_question, int n);
 
 
@@ -823,7 +878,7 @@ char        RPTG_walker             (char a_trigger);
 
 
 char        RPTG_regex              (int a_level, tPTRS *a_ptrs, char *a_path);
-char        RPTG_dirtree            (int a_level, tPTRS *a_ptrs, char *a_path);
+char        RPTG_dirtree            (void);
 char        RPTG_summ               (void);
 char        RPTG__change_modtime    (char *a_file, int a_days);
 char        RPTG__create_file       (char a_how, char *a_src, char *a_dst, int a_days, int a_perms, char *a_own, char *a_grp);

@@ -129,18 +129,27 @@ RPTG_filter_type        (uchar a_type, uchar a_stype)
 /*====================------------------------------------====================*/
 static void      o___MIME____________________o (void) {;}
 
-char RPTG_config_mimes_all   (void) { strlcpy (my.mimes, MIME_ALL       , LEN_LABEL); return 0; }
-char RPTG_config_mimes_none  (void) { strlcpy (my.mimes, "·············", LEN_LABEL); return 0; }
+char RPTG_config_mimes_all   (void) { strlcpy (my.mimes, MIME_ALL        , LEN_LABEL); return 0; }
+char RPTG_config_mimes_none  (void) { strlcpy (my.mimes, "··············", LEN_LABEL); return 0; }
 
 char
 RPTG_config_mimes_add   (uchar *a_option)
 {
    int         x_len       =     0;
+   int         x_ch        =   '-';
    if (a_option == NULL)  return -1;
    x_len = strlen (a_option);
    if (strlen (a_option) < 1)  return -2;
    if (strcmp (my.mimes, MIME_ALL)  == 0)  RPTG_config_mimes_none ();
-   switch (a_option [2]) {
+   x_ch = a_option [2];
+   if (strncmp (a_option, "--all", 5) == 0) {
+      switch (a_option [5]) {
+      case 'm' :  x_ch = MIME_MEDIA;  break;
+      case 'w' :  x_ch = MIME_WORK;   break;
+      case 't' :  x_ch = MIME_TEMP;   break;
+      }
+   }
+   switch (x_ch) {
    case MIME_AUDIO  :  my.mimes [0]  = MIME_AUDIO;  break;
    case MIME_VIDEO  :  my.mimes [1]  = MIME_VIDEO;  break;
    case MIME_IMAGE  :  my.mimes [2]  = MIME_IMAGE;  break;
@@ -155,6 +164,24 @@ RPTG_config_mimes_add   (uchar *a_option)
    case MIME_OTHER  :  my.mimes [11] = MIME_OTHER;  break;
    case 'h'         :  my.mimes [12] = MIME_HUH;    break;
    }
+   switch (x_ch) {
+   case MIME_MEDIA  :  my.mimes [0]  = MIME_AUDIO;
+                       my.mimes [1]  = MIME_VIDEO;
+                       my.mimes [2]  = MIME_IMAGE;
+                       break;
+   case MIME_WORK   :  my.mimes [3]  = MIME_CODE;
+                       my.mimes [4]  = MIME_ASCII;
+                       my.mimes [5]  = MIME_DBASE;
+                       my.mimes [6]  = MIME_CRYPT;
+                       my.mimes [7]  = MIME_PROP;
+                       my.mimes [8]  = MIME_EXEC;
+                       my.mimes [9]  = MIME_DIR;
+                       break;
+   case MIME_TEMP   :  my.mimes [10] = MIME_JUNK;
+                       my.mimes [11] = MIME_OTHER;
+                       my.mimes [12] = MIME_HUH;
+                       break;
+   }
    return 0;
 }
 
@@ -162,10 +189,19 @@ char
 RPTG_config_mimes_sub   (uchar *a_option)
 {
    int         x_len       =     0;
+   int         x_ch        =   '-';
    if (a_option == NULL)  return -1;
    x_len = strlen (a_option);
    if (strlen (a_option) <= 4)  return -2;
-   switch (a_option [4]) {
+   x_ch = a_option [4];
+   if (strncmp (a_option, "--zero", 6) == 0) {
+      switch (a_option [6]) {
+      case 'm' :  x_ch = MIME_MEDIA;  break;
+      case 'w' :  x_ch = MIME_WORK;   break;
+      case 't' :  x_ch = MIME_TEMP;   break;
+      }
+   }
+   switch (x_ch) {
    case MIME_AUDIO  :  my.mimes [0]  = (uchar) '·'; break;
    case MIME_VIDEO  :  my.mimes [1]  = (uchar) '·'; break;
    case MIME_IMAGE  :  my.mimes [2]  = (uchar) '·'; break;
@@ -179,6 +215,24 @@ RPTG_config_mimes_sub   (uchar *a_option)
    case MIME_JUNK   :  my.mimes [10] = (uchar) '·'; break;
    case MIME_OTHER  :  my.mimes [11] = (uchar) '·'; break;
    case 'h'         :  my.mimes [12] = (uchar) '·'; break;
+   }
+   switch (x_ch) {
+   case MIME_MEDIA  :  my.mimes [0]  = (uchar) '·';
+                       my.mimes [1]  = (uchar) '·';
+                       my.mimes [2]  = (uchar) '·';
+                       break;
+   case MIME_WORK   :  my.mimes [3]  = (uchar) '·';
+                       my.mimes [4]  = (uchar) '·';
+                       my.mimes [5]  = (uchar) '·';
+                       my.mimes [6]  = (uchar) '·';
+                       my.mimes [7]  = (uchar) '·';
+                       my.mimes [8]  = (uchar) '·';
+                       my.mimes [9]  = (uchar) '·';
+                       break;
+   case MIME_TEMP   :  my.mimes [10] = (uchar) '·';
+                       my.mimes [11] = (uchar) '·';
+                       my.mimes [12] = (uchar) '·';
+                       break;
    }
    return 0;
 }
@@ -631,13 +685,14 @@ RPTG_regex_filter       (uchar *a_string)
       return 1;
    }
    /*---(filter by name)--------------*/
-   rc = yREGEX_fast (a_string);
+   rc = yREGEX_filter (a_string);
    DEBUG_INPT   yLOG_value   ("exec"      , rc);
    if (rc <= 0) {
       DEBUG_RPTG   yLOG_exit    (__FUNCTION__);
       return 0;
    }
-   rc = yREGEX_best (YREGEX_BEST, -1, &s_pos, &s_len, NULL, NULL);
+   /*> rc = yREGEX_best (YREGEX_BEST, -1, &s_pos, &s_len, NULL, NULL);                <*/
+   rc = yREGEX_best (YREGEX_BEST, &s_pos, &s_len, NULL, NULL);
    /*---(complete)-----------------------*/
    DEBUG_RPTG   yLOG_exit    (__FUNCTION__);
    return 1;
@@ -712,7 +767,7 @@ RPTG_perms_dir          (int a_uid, char a_own, int a_gid, char a_grp, char a_ot
 /*====================------------------------------------====================*/
 static void      o___FORMAT__________________o (void) {;}
 
-char RPTG_config_col_none    (void) { strlcpy (my.columns, "·········", LEN_LABEL); if (my.output == OUTPUT_PREFIX)  my.output = OUTPUT_NORMAL;  return 0; }
+char RPTG_config_col_none    (void) { strlcpy (my.columns, "··········", LEN_LABEL); if (my.output == OUTPUT_PREFIX)  my.output = OUTPUT_NORMAL;  return 0; }
 
 char
 RPTG_config_columns      (uchar *a_option)
@@ -731,6 +786,7 @@ RPTG_config_columns      (uchar *a_option)
    case COL_TYPE   :  my.columns [6] = COL_TYPE;      break;
    case COL_PERMS  :  my.columns [7] = COL_PERMS;     break;
    case COL_DRIVE  :  my.columns [8] = COL_DRIVE;     break;
+   case COL_BASE   :  my.columns [9] = COL_BASE;      break;
    }
    my.output = OUTPUT_PREFIX;
    return 0;
@@ -800,6 +856,7 @@ RPTG__title             (void)
       if (my.columns [6] != (uchar) '·')  strlcat (s_recd, " --show-type"  , LEN_RECD);
       if (my.columns [7] != (uchar) '·')  strlcat (s_recd, " --show-perms" , LEN_RECD);
       if (my.columns [8] != (uchar) '·')  strlcat (s_recd, " --show-drive" , LEN_RECD);
+      if (my.columns [9] != (uchar) '·')  strlcat (s_recd, " --show-base"  , LEN_RECD);
       break;
    case OUTPUT_DETAIL   :
       strlcat (s_recd, "##    report option (key statistics) --detail", LEN_RECD);
@@ -859,7 +916,7 @@ RPTG__columns           (char a_force)
       break;
    case OUTPUT_PREFIX   :
       if (my.columns [0] != (uchar) '·')  strlcat (s_recd, "-  ---ext---  ", LEN_RECD);
-      if (my.columns [1] != (uchar) '·')  strlcat (s_recd, "-  -day-  ", LEN_RECD);
+      if (my.columns [1] != (uchar) '·')  strlcat (s_recd, "-day-  -  ", LEN_RECD);
       if (my.columns [2] != (uchar) '·')  strlcat (s_recd, "sz  appr  ---bytes-------  ", LEN_RECD);
       if (my.columns [3] != (uchar) '·')  strlcat (s_recd, "lvl  ", LEN_RECD);
       if (my.columns [4] != (uchar) '·')  strlcat (s_recd, "-  len  ", LEN_RECD);
@@ -867,6 +924,7 @@ RPTG__columns           (char a_force)
       if (my.columns [6] != (uchar) '·')  strlcat (s_recd, "t  s  ", LEN_RECD);
       if (my.columns [7] != (uchar) '·')  strlcat (s_recd, "--own-  --grp-  o  s  ", LEN_RECD);
       if (my.columns [8] != (uchar) '·')  strlcat (s_recd, "dr  ", LEN_RECD);
+      if (my.columns [9] != (uchar) '·')  strlcat (s_recd, "---name---------------------------------  ", LEN_RECD);
       strlcat (s_recd, "---fully qualified file---------------------------", LEN_RECD);
       break;
    case OUTPUT_DETAIL   :
@@ -877,8 +935,8 @@ RPTG__columns           (char a_force)
       strlcat (s_recd, "lv t s   uid# u gid# g o s   ", LEN_RECD);
       strlcat (s_recd, "dr --inode- --dhode-   ", LEN_RECD);
       strlcat (s_recd, "---epoch-- days a   ", LEN_RECD);
-      strlcat (s_recd, "sz ---bytes------- ---bcum---   ", LEN_RECD);
-      strlcat (s_recd, "-cnt-- -bcum-   ", LEN_RECD);
+      strlcat (s_recd, "sz ---bytes------- ---bcum--------   ", LEN_RECD);
+      strlcat (s_recd, "-cnt-- -ccum-   ", LEN_RECD);
       strlcat (s_recd, "c ---ext---   pos len   ", LEN_RECD);
       strlcat (s_recd, "---fully qualified file-------------------------------", LEN_RECD);
       break;
@@ -887,8 +945,8 @@ RPTG__columns           (char a_force)
       strlcat (s_recd, "lv  t  s  uid#  u  gid#  g  o  s  ", LEN_RECD);
       strlcat (s_recd, "dr  --inode-  --dhode-  ", LEN_RECD);
       strlcat (s_recd, "---epoch--  days  a  ", LEN_RECD);
-      strlcat (s_recd, "sz  ---bytes-------  ---bcum---  ", LEN_RECD);
-      strlcat (s_recd, "-cnt--  -bcum-  ", LEN_RECD);
+      strlcat (s_recd, "sz  ---bytes-------  ---bcum--------  ", LEN_RECD);
+      strlcat (s_recd, "-cnt--  -ccum-  ", LEN_RECD);
       strlcat (s_recd, "c  ---ext---  pos  len  ", LEN_RECD);
       strlcat (s_recd, "---fully qualified file------------------------------- ", LEN_RECD);
       break;
@@ -935,7 +993,7 @@ RPTG__line        (tENTRY *a_data, char *a_full)
          strlcat (s_recd, t, LEN_RECD);
       }
       if (my.columns [1] != (uchar) '·') {
-         sprintf (t, "%c  %-5d  "  , s_age, s_days);
+         sprintf (t, "%-5d  %c  "  , s_days, s_age);
          strlcat (s_recd, t, LEN_RECD);
       }
       if (my.columns [2] != (uchar) '·') {
@@ -982,6 +1040,10 @@ RPTG__line        (tENTRY *a_data, char *a_full)
          else                    sprintf (t, "-   ");
          strlcat (s_recd, t, LEN_RECD);
       }
+      if (my.columns [9] != (uchar) '·') {
+         sprintf (t, "%-40.40s  "   , a_data->name);
+         strlcat (s_recd, t, LEN_RECD);
+      }
       sprintf (t, "%s", a_full);
       strlcat (s_recd, t, LEN_RECD);
       break;
@@ -1004,7 +1066,7 @@ RPTG__line        (tENTRY *a_data, char *a_full)
       strlcat (s_recd, t, LEN_RECD);
       sprintf (t, "   %-10d %-4d %c"       , a_data->changed, s_days, s_age);
       strlcat (s_recd, t, LEN_RECD);
-      sprintf (t, "   %d %-15ld %-15ld"    , a_data->size, a_data->bytes, a_data->bcum);
+      sprintf (t, "   %d  %-15ld %-15ld"   , a_data->size, a_data->bytes, a_data->bcum);
       strlcat (s_recd, t, LEN_RECD);
       sprintf (t, "   %-6ld %-6ld"         , a_data->count, a_data->ccum);
       strlcat (s_recd, t, LEN_RECD);
@@ -1056,6 +1118,7 @@ RPTG_driver             (tENTRY *a_data, char *a_full)
    if (my.total == 0) {
       RPTG__title   ();
       RPTG__columns ('-');
+      RPTG__break   ('-');
    }
    /*---(individual headers)-------------*/
    else if (my.total % 25 == 0) {
@@ -1162,6 +1225,7 @@ RPTG__callback    (char a_serious, tENTRY *a_data, char *a_full)
    /*---(update total)-------------------*/
    ++my.total;
    s_bytes  += a_data->bytes;
+   if (a_data->count > 0)  MIME_add_found (a_data->ext, a_data->bytes);
    /*---(complete)-----------------------*/
    return 1;
 }
@@ -1170,6 +1234,7 @@ char
 RPTG_walker       (char a_trigger)
 {
    char        rc          =    0;
+   MIME_reset_found ();
    rc = ENTRY_walk (a_trigger, RPTG__callback);
    if (my.output == OUTPUT_COUNT)  printf ("%d\n", my.total);
    return rc;
@@ -1182,264 +1247,176 @@ RPTG_walker       (char a_trigger)
 /*====================------------------------------------====================*/
 static void      o___SEARCH__________________o (void) {;}
 
-char         /*===[[ gather entries in dir ]]=============[ ------ [ ------ ]=*/
-RPTG_regex         (
-      /*---(formal parameters)+-------------+---------------------------------*/
-      int         a_level     ,             /* depth of search                */
-      tPTRS      *a_ptrs      ,             /* ptrs of directory to scan      */
-      char       *a_path      )             /* full path of directory to scan */
-{  /*---(local variables)--+-----------+-*/
-   char        rce         = -10;           /* return code for errors         */
-   tENTRY      *x_dir       = NULL;          /* directory data                 */
-   tPTRS      *x_ptrs      = NULL;          /* current entry                  */
-   tENTRY      *x_data      = NULL;          /* current entry data             */
-   char        rc          = 0;
-   char        x_path      [500];
-   int         i           = 0;
-   char        x_allowed   = '-';
-   char        x_comma     [20] = "";
-   long        x_days      =   0;
-   /*---(header)-------------------------*/
-   DEBUG_GRAF   yLOG_enter   (__FUNCTION__);
-   DEBUG_GRAF   yLOG_value   ("a_level"   , a_level);
-   DEBUG_GRAF   yLOG_point   ("a_ptrs"    , a_ptrs);
-   DEBUG_GRAF   yLOG_info    ("a_path"    , a_path);
-   /*---(defense)------------------------*/
-   --rce;  if (a_level >  my.maxlevel) {
-      DEBUG_GRAF   yLOG_note    ("max recursion reached, return");
-      DEBUG_GRAF   yLOG_exit    (__FUNCTION__);
-      return 0;
-   }
-   --rce;  if (my.regex_len  <= 0) {
-      DEBUG_GRAF   yLOG_note    ("regex not loaded, failed");
-      DEBUG_GRAF   yLOG_exit    (__FUNCTION__);
-      return rce;
-   }
-   --rce;  if (a_ptrs == NULL) {
-      DEBUG_GRAF   yLOG_note    ("directory pointer NULL, failed");
-      DEBUG_GRAF   yLOG_exit    (__FUNCTION__);
-      return rce;
-   }
-   DEBUG_GRAF   yLOG_point   ("dir_data"  , a_ptrs->data);
-   --rce;  if (a_ptrs->data == NULL) {
-      DEBUG_GRAF   yLOG_note    ("directory data payload NULL, failed");
-      DEBUG_GRAF   yLOG_exit    (__FUNCTION__);
-      return rce;
-   }
-   x_dir = a_ptrs->data;
-   DEBUG_GRAF   yLOG_point   ("dir_name"  , x_dir->name);
-   --rce;  if (x_dir->name == NULL) {
-      DEBUG_GRAF   yLOG_note    ("directory name NULL, failed");
-      DEBUG_GRAF   yLOG_exit    (__FUNCTION__);
-      return rce;
-   }
-   DEBUG_GRAF   yLOG_info    ("dir_name"  , x_dir->name);
-   /*---(name directory)--------------*/
-   if      (a_level == 1)  sprintf (x_path, "%s"   , x_dir->name);
-   else if (a_level == 2)  sprintf (x_path, "/%s"  , x_dir->name);
-   else                    sprintf (x_path, "%s/%s", a_path, x_dir->name);
-   DEBUG_GRAF   yLOG_info    ("x_path"    , x_path);
-   /*> OPT_VERBOSE  printf ("%s\n", x_path);                                          <*/
-   /*---(check start path)---------------*/
-   DEBUG_GRAF   yLOG_value   ("my.level"  , my.level);
-   if (a_level <= my.level) {
-      DEBUG_GRAF   yLOG_note    ("using --start path");
-      x_ptrs = root_stack [a_level];
-      x_data = x_ptrs->data;
-      DEBUG_GRAF   yLOG_info    ("entry"     , x_data->name);
-      RPTG_regex (a_level + 1, x_ptrs, x_path);
-      DEBUG_GRAF   yLOG_exit    (__FUNCTION__);
-      return 0;
-   }
-   /*---(spin through entries)-----------*/
-   x_ptrs = a_ptrs->c_head;
-   while (x_ptrs != NULL) {
-      x_data = x_ptrs->data;
-      if (x_data != NULL) {
-         DEBUG_GRAF   yLOG_info    ("entry"     , x_data->name);
-         x_days = (my.runtime - x_data->changed) / (365 * 24 * 60);
-         if (x_data->type != ENTRY_DIR) {
-            /*---(non-regex filtering)---*/
-            if (my.find == 'y') {
-               /*---(days)---------------*/
-               if      (my.find_days  == 'j' && x_days >=   2) { x_ptrs = x_ptrs->s_next; continue; }
-               else if (my.find_days  == 'w' && x_days >=   7) { x_ptrs = x_ptrs->s_next; continue; }
-               else if (my.find_days  == 'm' && x_days >=  30) { x_ptrs = x_ptrs->s_next; continue; }
-               else if (my.find_days  == 'y' && x_days >= 365) { x_ptrs = x_ptrs->s_next; continue; }
-               else if (my.find_days  == 'o' && x_days <= 365) { x_ptrs = x_ptrs->s_next; continue; }
-               /*---(size)---------------*/
-               if      (my.find_size  == 's' && x_data->size >=   3) { x_ptrs = x_ptrs->s_next; continue; }
-               else if (my.find_size  == 'k' && (x_data->size < 4 || x_data->size > 6)) { x_ptrs = x_ptrs->s_next; continue; }
-               else if (my.find_size  == 'm' && (x_data->size < 7 || x_data->size > 9)) { x_ptrs = x_ptrs->s_next; continue; }
-               else if (my.find_size  == 'g' && x_data->size <=   9) { x_ptrs = x_ptrs->s_next; continue; }
-               /*---(name quality)-------*/
-               if      (my.find_name  == 'p' && x_data->ascii != '+') { x_ptrs = x_ptrs->s_next; continue; }
-               else if (my.find_name  == 'e' && x_data->ascii != '#') { x_ptrs = x_ptrs->s_next; continue; }
-               else if (my.find_name  == 's' && x_data->ascii != '>') { x_ptrs = x_ptrs->s_next; continue; }
-               else if (my.find_name  == 'j' && x_data->ascii != 'X') { x_ptrs = x_ptrs->s_next; continue; }
-               else if (my.find_name  == 'b' && strchr ("+#>X", x_data->ascii) == NULL) { x_ptrs = x_ptrs->s_next; continue; }
-               /*---(mime-cat)-----------*/
-               if (my.find_cat != '-') {
-                  if (my.find_cat != x_data->cat) {
-                     x_ptrs = x_ptrs->s_next;
-                     continue;
-                  }
-               }
-               /*---(mime-type)----------*/
-               if (my.find_mime[0] != '\0') {
-                  if (my.find_mime [0] != x_data->ext [0] || strcmp (my.find_mime, x_data->ext) != 0) {
-                     x_ptrs = x_ptrs->s_next;
-                     continue;
-                  }
-               }
-               /*---(done)---------------*/
-            }
-            /*---(regex filtering)-------*/
-            rc = regexec (&(my.regex_comp), x_data->name, 0, NULL, 0);
-            if (rc == 0 && my.total < my.limit) {
-               ++my.total;
-               if (my.count != 'y' && (my.number == 0  || my.number == my.total)) {
-                  if (my.show_cat   == 'y')  printf ("%c  "    , x_data->cat);
-                  if (my.show_mime  == 'y')  printf ("%-5s  "  , x_data->ext);
-                  if (my.show_days  == 'y')  printf ("%4d  "   , x_days);
-                  if (my.show_size  == 'y')  printf ("%1d  "   , x_data->size);
-                  if (my.show_bytes == 'y') { FILE_commas (x_data->bytes, x_comma); printf ("%11.11s  ", x_comma); }
-                  if (my.show_level == 'y')  printf ("%2d  "   , x_data->lvl);
-                  if (my.show_ascii == 'y')  printf ("%c  "    , x_data->ascii);
-                  printf ("%s/%s\n", x_path, x_data->name);
-               }
-               for (i = 0; i < n_mime; ++i) {
-                  if (g_mime [i].cat       != x_data->cat)        continue;
-                  if (strcmp (g_mime [i].ext, x_data->ext) != 0)  continue;
-                  DEBUG_GRAF   yLOG_info    ("type"      , g_mime [i].ext);
-                  ++(g_mime [i].n_found);
-                  g_mime [i].b_found += x_data->bytes;
-                  ++(g_mime [0].n_found);
-                  g_mime [0].b_found += x_data->bytes;
-                  break;
-               }
-            }
-         } else {
-            x_allowed = '-';
-            if (my.uid == 0)                                                x_allowed = 'r';
-            else if (((x_data->oth % 4) % 2) == 1)                          x_allowed = 'o';
-            else if (x_data->gid == my.gid && ((x_data->grp % 4) % 2) == 1) x_allowed = 'g';
-            else if (x_data->uid == my.uid && ((x_data->own % 4) % 2) == 1) x_allowed = 'u';
-            DEBUG_GRAF   printf ("%c   ", x_allowed);
-            DEBUG_GRAF   printf ("%c %d   ", x_data->oth, (x_data->oth % 4) % 2);
-            DEBUG_GRAF   printf ("%4d %4d %c %d   ", my.gid, x_data->gid, x_data->grp, (x_data->grp % 4) % 2);
-            DEBUG_GRAF   printf ("%4d %4d %c %d   ", my.uid, x_data->uid, x_data->own, (x_data->own % 4) % 2);
-            DEBUG_GRAF   printf ("%s/%s\n", x_path, x_data->name);
-            if (x_allowed != '-')  RPTG_regex (a_level + 1, x_ptrs, x_path);
-         }
-      }
-      x_ptrs = x_ptrs->s_next;
-   }
-   /*---(complete)-----------------------*/
-   DEBUG_GRAF   yLOG_exit    (__FUNCTION__);
+char
+RPTG__dir_header        (void)
+{
+   yPARSE_spacer (1);
+   yPARSE_printf ("o_format"    , "O"     , "dirtree"            );
+   yPARSE_printf ("o_label0"    , "O"     , "total bytes"        );
+   yPARSE_spacer (1);
    return 0;
 }
 
-char         /*===[[ output the dir tree ]]===============[ ------ [ ------ ]=*/
-RPTG_dirtree       (
-      /*---(formal parameters)+-------------+---------------------------------*/
-      int         a_level     ,             /* depth of search                */
-      tPTRS      *a_ptrs      ,             /* ptrs of directory to scan      */
-      char       *a_path      )             /* full path of directory to scan */
-{  /*---(local variables)--+-----------+-*/
-   char        rce         = -10;           /* return code for errors         */
-   tENTRY      *x_dir       = NULL;          /* directory data                 */
-   tPTRS      *x_ptrs      = NULL;          /* current entry                  */
-   tENTRY      *x_data      = NULL;          /* current entry data             */
-   char        rc          = 0;
-   char        x_path      [500];
-   int         i           = 0;
-   char        x_prefix    [100] = "";
-   char        x_temp      [200] = "";
-   char        x_cum       [20]  = "";
+char
+RPTG__dir_callback    (char a_serious, tENTRY *a_data, char *a_full)
+{
+   /*---(local variables)--+-----------+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   static int  c           =    0;
+   char        t           [LEN_HUND]  = "";
+   llong       x_adj       =    0;
    /*---(header)-------------------------*/
-   DEBUG_GRAF   yLOG_enter   (__FUNCTION__);
-   DEBUG_GRAF   yLOG_value   ("a_level"   , a_level);
-   DEBUG_GRAF   yLOG_point   ("a_ptrs"    , a_ptrs);
-   DEBUG_GRAF   yLOG_info    ("a_path"    , a_path);
+   DEBUG_DATA   yLOG_complex ("callback"  , "%p, %p", a_data, a_full);
    /*---(defense)------------------------*/
-   --rce;  if (a_level >  my.maxlevel) {
-      DEBUG_GRAF   yLOG_note    ("max recursion reached, return");
-      DEBUG_GRAF   yLOG_exit    (__FUNCTION__);
+   --rce;  if (a_data == NULL) {
+      return rce;
+   }
+   --rce;  if (a_full == NULL) {
+      return rce;
+   }
+   /*---(permissions)--------------------*/
+   if (a_data->type != ENTRY_DIR) {
+      DEBUG_DATA  yLOG_note     ("not a directory, skip");
       return 0;
    }
-   --rce;  if (a_ptrs == NULL) {
-      DEBUG_GRAF   yLOG_note    ("directory pointer NULL, failed");
-      DEBUG_GRAF   yLOG_exit    (__FUNCTION__);
-      return rce;
-   }
-   DEBUG_GRAF   yLOG_point   ("dir_data"  , a_ptrs->data);
-   --rce;  if (a_ptrs->data == NULL) {
-      DEBUG_GRAF   yLOG_note    ("directory data payload NULL, failed");
-      DEBUG_GRAF   yLOG_exit    (__FUNCTION__);
-      return rce;
-   }
-   x_dir = a_ptrs->data;
-   DEBUG_GRAF   yLOG_point   ("dir_name"  , x_dir->name);
-   --rce;  if (x_dir->name == NULL) {
-      DEBUG_GRAF   yLOG_note    ("directory name NULL, failed");
-      DEBUG_GRAF   yLOG_exit    (__FUNCTION__);
-      return rce;
-   }
-   DEBUG_GRAF   yLOG_info    ("dir_name"  , x_dir->name);
-   /*---(header)-------------------------*/
-   if (a_level == 1) {
-      printf ("#!/usr/local/bin/hyleoroi\n");
-      printf ("#   hyleoroi -- tree visualization input file\n");
-      printf ("\n\n\n");
-      printf ("SIMPLE\n");
-      printf ("\n\n\n");
-      printf ("#--context  ---values------------------------------- \n");
-      printf ("source      heilos-phaeton                           \n");
-      printf ("label       full directory tree for 2017-05-21       \n");
-      printf ("format      dirtree                                  \n");
-      printf ("\n\n\n");
-   }
-   /*---(prefix)-------------------------*/
-   for (i = 1; i < a_level; ++i)  strcat (x_prefix, "   ");
-   /*---(name directory)--------------*/
-   if      (a_level == 1)  sprintf (x_path, "%s"   , x_dir->name);
-   else if (a_level == 2)  sprintf (x_path, "/%s"  , x_dir->name);
-   else                    sprintf (x_path, "%s/%s", a_path, x_dir->name);
-   DEBUG_GRAF   yLOG_info    ("x_path"    , x_path);
-   /*> OPT_VERBOSE  printf ("%s\n", x_path);                                          <*/
-   /*> printf ("%s%s\n", x_prefix, x_path);                                           <*/
-   sprintf (x_temp, "%s%s", x_prefix, x_dir->name);
-   /*> FILE_commas (x_dir->bcum, x_cum);                                               <*/
-   /*> printf  ("%-100.100s %14s\n", x_temp, x_cum);                                  <*/
-   printf  ("%-100.100s | %14ld\n", x_temp, x_dir->bcum);
-   /*---(check start path)---------------*/
-   DEBUG_GRAF   yLOG_value   ("my.level"  , my.level);
-   if (a_level <= my.level) {
-      DEBUG_GRAF   yLOG_note    ("using --start path");
-      x_ptrs = root_stack [a_level];
-      x_data = x_ptrs->data;
-      DEBUG_GRAF   yLOG_info    ("entry"     , x_data->name);
-      RPTG_dirtree (a_level + 1, x_ptrs, x_path);
-      DEBUG_GRAF   yLOG_exit    (__FUNCTION__);
-      return 0;
-   }
-   /*---(spin through entries)-----------*/
-   x_ptrs = a_ptrs->c_head;
-   while (x_ptrs != NULL) {
-      x_data = x_ptrs->data;
-      if (x_data != NULL) {
-         DEBUG_GRAF   yLOG_info    ("entry"     , x_data->name);
-         if (x_data->type == ENTRY_DIR) {
-            RPTG_dirtree (a_level + 1, x_ptrs, x_path);
-         }
-      }
-      x_ptrs = x_ptrs->s_next;
-   }
+   /*---(report out)---------------------*/
+   /*> if (strcmp (a_data->name, "/"      ) == 0 && my.dir_all != 'y') x_adj = my.empty;   <*/
+   /*> if (strcmp (a_data->name, "(empty)") == 0 && my.dir_all != 'y') return 1;      <*/
+   strlcpy (t, a_data->name, LEN_HUND);
+   strldchg (t, '.', 0, LEN_HUND);
+   yPARSE_vprintf (c, "node", a_data->lvl, t, a_full, a_data->bcum, a_data->ccum, 0, 0, 0, 0);
+   ++c;
    /*---(complete)-----------------------*/
-   DEBUG_GRAF   yLOG_exit    (__FUNCTION__);
-   return 0;
+   return 1;
 }
+
+char
+RPTG_dirtree      (void)
+{
+   /*---(locals)-----------+-----------+-*/
+   char        rc          =    0;
+   int         i           =    0;
+   int         n           =    0;
+   char        x_save      = MIME_TOTAL;
+   /*---(header)-------------------------*/
+   DEBUG_CONF   yLOG_enter   (__FUNCTION__);
+   /*---(header)-------------------------*/
+   yPARSE_planned (NULL, "stdout", NULL);
+   yPARSE_header  (P_FULLPATH, P_VERNUM, P_VERTXT, P_ONELINE, "filesystem directory heirarchy", RPTG__dir_header);
+   yPARSE_handler_plus ("node", "sLDhlllll", 0.0, NULL, NULL, "lvl,name,full,size,cnt,-,-,-,-,-");
+   /*---(process all)--------------------*/
+   rc = ENTRY_walk (WALK_ALL, RPTG__dir_callback);
+   /*---(footer)-------------------------*/
+   yPARSE_close ();
+   /*---(complete)-----------------------*/
+   DEBUG_CONF   yLOG_exit    (__FUNCTION__);
+   return 0;
+
+
+   return rc;
+}
+
+/*> char         /+===[[ output the dir tree ]]===============[ ------ [ ------ ]=+/             <* 
+ *> RPTG_dirtree       (                                                                         <* 
+ *>       /+---(formal parameters)+-------------+---------------------------------+/             <* 
+ *>       int         a_level     ,             /+ depth of search                +/             <* 
+ *>       tPTRS      *a_ptrs      ,             /+ ptrs of directory to scan      +/             <* 
+ *>       char       *a_path      )             /+ full path of directory to scan +/             <* 
+ *> {  /+---(local variables)--+-----------+-+/                                                  <* 
+ *>    char        rce         = -10;           /+ return code for errors         +/             <* 
+ *>    tENTRY      *x_dir       = NULL;          /+ directory data                 +/            <* 
+ *>    tPTRS      *x_ptrs      = NULL;          /+ current entry                  +/             <* 
+ *>    tENTRY      *x_data      = NULL;          /+ current entry data             +/            <* 
+ *>    char        rc          = 0;                                                              <* 
+ *>    char        x_path      [500];                                                            <* 
+ *>    int         i           = 0;                                                              <* 
+ *>    char        x_prefix    [100] = "";                                                       <* 
+ *>    char        x_temp      [200] = "";                                                       <* 
+ *>    char        x_cum       [20]  = "";                                                       <* 
+ *>    /+---(header)-------------------------+/                                                  <* 
+ *>    DEBUG_GRAF   yLOG_enter   (__FUNCTION__);                                                 <* 
+ *>    DEBUG_GRAF   yLOG_value   ("a_level"   , a_level);                                        <* 
+ *>    DEBUG_GRAF   yLOG_point   ("a_ptrs"    , a_ptrs);                                         <* 
+ *>    DEBUG_GRAF   yLOG_info    ("a_path"    , a_path);                                         <* 
+ *>    /+---(defense)------------------------+/                                                  <* 
+ *>    --rce;  if (a_level >  my.maxlevel) {                                                     <* 
+ *>       DEBUG_GRAF   yLOG_note    ("max recursion reached, return");                           <* 
+ *>       DEBUG_GRAF   yLOG_exit    (__FUNCTION__);                                              <* 
+ *>       return 0;                                                                              <* 
+ *>    }                                                                                         <* 
+ *>    --rce;  if (a_ptrs == NULL) {                                                             <* 
+ *>       DEBUG_GRAF   yLOG_note    ("directory pointer NULL, failed");                          <* 
+ *>       DEBUG_GRAF   yLOG_exit    (__FUNCTION__);                                              <* 
+ *>       return rce;                                                                            <* 
+ *>    }                                                                                         <* 
+ *>    DEBUG_GRAF   yLOG_point   ("dir_data"  , a_ptrs->data);                                   <* 
+ *>    --rce;  if (a_ptrs->data == NULL) {                                                       <* 
+ *>       DEBUG_GRAF   yLOG_note    ("directory data payload NULL, failed");                     <* 
+ *>       DEBUG_GRAF   yLOG_exit    (__FUNCTION__);                                              <* 
+ *>       return rce;                                                                            <* 
+ *>    }                                                                                         <* 
+ *>    x_dir = a_ptrs->data;                                                                     <* 
+ *>    DEBUG_GRAF   yLOG_point   ("dir_name"  , x_dir->name);                                    <* 
+ *>    --rce;  if (x_dir->name == NULL) {                                                        <* 
+ *>       DEBUG_GRAF   yLOG_note    ("directory name NULL, failed");                             <* 
+ *>       DEBUG_GRAF   yLOG_exit    (__FUNCTION__);                                              <* 
+ *>       return rce;                                                                            <* 
+ *>    }                                                                                         <* 
+ *>    DEBUG_GRAF   yLOG_info    ("dir_name"  , x_dir->name);                                    <* 
+ *>    /+---(header)-------------------------+/                                                  <* 
+ *>    if (a_level == 1) {                                                                       <* 
+ *>       printf ("#!/usr/local/bin/hyleoroi\n");                                                <* 
+ *>       printf ("#   hyleoroi -- tree visualization input file\n");                            <* 
+ *>       printf ("\n\n\n");                                                                     <* 
+ *>       printf ("SIMPLE\n");                                                                   <* 
+ *>       printf ("\n\n\n");                                                                     <* 
+ *>       printf ("#--context  ---values------------------------------- \n");                  <* 
+ *>       printf ("source      heilos-phaeton                           \n");                  <* 
+ *>       printf ("label       full directory tree for 2017-05-21       \n");                  <* 
+ *>       printf ("format      dirtree                                  \n");                  <* 
+ *>       printf ("\n\n\n");                                                                     <* 
+ *>    }                                                                                         <* 
+ *>    /+---(prefix)-------------------------+/                                                  <* 
+ *>    for (i = 1; i < a_level; ++i)  strcat (x_prefix, "   ");                                  <* 
+ *>    /+---(name directory)--------------+/                                                     <* 
+ *>    if      (a_level == 1)  sprintf (x_path, "%s"   , x_dir->name);                           <* 
+ *>    else if (a_level == 2)  sprintf (x_path, "/%s"  , x_dir->name);                           <* 
+ *>    else                    sprintf (x_path, "%s/%s", a_path, x_dir->name);                   <* 
+ *>    DEBUG_GRAF   yLOG_info    ("x_path"    , x_path);                                         <* 
+ *>    /+> OPT_VERBOSE  printf ("%s\n", x_path);                                          <+/    <* 
+ *>    /+> printf ("%s%s\n", x_prefix, x_path);                                           <+/    <* 
+ *>    sprintf (x_temp, "%s%s", x_prefix, x_dir->name);                                          <* 
+ *>    /+> FILE_commas (x_dir->bcum, x_cum);                                               <+/   <* 
+*>    /+> printf  ("%-100.100s %14s\n", x_temp, x_cum);                                  <+/    <* 
+*>    printf  ("%-100.100s | %14ld\n", x_temp, x_dir->bcum);                                    <* 
+*>    /+---(check start path)---------------+/                                                  <* 
+*>    DEBUG_GRAF   yLOG_value   ("my.level"  , my.level);                                       <* 
+*>    if (a_level <= my.level) {                                                                <* 
+   *>       DEBUG_GRAF   yLOG_note    ("using --start path");                                      <* 
+      *>       x_ptrs = root_stack [a_level];                                                         <* 
+      *>       x_data = x_ptrs->data;                                                                 <* 
+      *>       DEBUG_GRAF   yLOG_info    ("entry"     , x_data->name);                                <* 
+      *>       RPTG_dirtree (a_level + 1, x_ptrs, x_path);                                            <* 
+      *>       DEBUG_GRAF   yLOG_exit    (__FUNCTION__);                                              <* 
+      *>       return 0;                                                                              <* 
+      *>    }                                                                                         <* 
+      *>    /+---(spin through entries)-----------+/                                                  <* 
+      *>    x_ptrs = a_ptrs->c_head;                                                                  <* 
+      *>    while (x_ptrs != NULL) {                                                                  <* 
+         *>       x_data = x_ptrs->data;                                                                 <* 
+            *>       if (x_data != NULL) {                                                                  <* 
+               *>          DEBUG_GRAF   yLOG_info    ("entry"     , x_data->name);                             <* 
+                  *>          if (x_data->type == ENTRY_DIR) {                                                    <* 
+                     *>             RPTG_dirtree (a_level + 1, x_ptrs, x_path);                                      <* 
+                        *>          }                                                                                   <* 
+                        *>       }                                                                                      <* 
+                        *>       x_ptrs = x_ptrs->s_next;                                                               <* 
+                        *>    }                                                                                         <* 
+                        *>    /+---(complete)-----------------------+/                                                  <* 
+                        *>    DEBUG_GRAF   yLOG_exit    (__FUNCTION__);                                                 <* 
+                        *>    return 0;                                                                                 <* 
+                        *> }                                                                                            <*/
 
 char
 RPTG_summ          (void)

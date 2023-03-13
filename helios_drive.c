@@ -65,6 +65,7 @@ DRIVE__mtab_read   (void)
    /*---(locals)-----------+-----------+-*/
    char        rce         =  -10;
    char        rc          =    0;
+   int         c           =    0;
    FILE       *f           = NULL;
    int         fd          =   -1;
    char        x_recd      [MAX_RECD];
@@ -633,7 +634,16 @@ DRIVE__stats       (cchar *a_part, llong *a_size, char *a_serial)
    DEBUG_ENVI   yLOG_info    ("a_part"    , a_part);
    x_len = strlen (a_part);
    DEBUG_ENVI   yLOG_value   ("x_len"     , x_len);
-   --rce;  if (x_len < 3 || strchr ("1234567890", a_part [x_len - 1]) == NULL) {
+   --rce;  if (x_len < 3) {
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   --rce;  if (strncmp ("/dev/sda", a_part, 8) == 0) {
+      if (strchr ("1234567890", a_part [x_len - 1]) == NULL) {
+         DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+         return rce;
+      }
+   } else if (strcmp ("/dev/root", a_part) != 0) {
       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -654,9 +664,9 @@ DRIVE__stats       (cchar *a_part, llong *a_size, char *a_serial)
    /*---(change device file)-------------*/
    DEBUG_ENVI   yLOG_note    ("get serial number");
    strlcpy (x_full, a_part, LEN_FULL);
-   x_len = strlen (x_full);
-   x_full [--x_len] = '\0';
-   if (x_full [x_len - 1] == '1')  x_full [--x_len] = '\0';
+   /*> x_len = strlen (x_full);                                                       <* 
+    *> x_full [--x_len] = '\0';                                                       <* 
+    *> if (x_full [x_len - 1] == '1')  x_full [--x_len] = '\0';                       <*/
    DEBUG_ENVI   yLOG_info    ("x_full"    , x_full);
    /*---(get serial number)--------------*/
    fd = open (x_full, O_RDONLY);
@@ -760,7 +770,7 @@ DRIVE_inventory         (void)
    /*---(header)-------------------------*/
    DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
    /*---(configuration)------------------*/
-   yLOG_stage ('1');
+   /*> yLOG_stage ('1');                                                              <*/
    rc = CONF_read    ();
    DEBUG_ENVI   yLOG_value   ("config"    , rc);
    --rce;  if (rc < 0) {
@@ -768,7 +778,7 @@ DRIVE_inventory         (void)
       return rce;
    }
    /*---(establish drive)----------------*/
-   yLOG_stage ('2');
+   /*> yLOG_stage ('2');                                                              <*/
    rc = DRIVE_populate (&x_drive, "/", my.runtime, NULL);
    DEBUG_ENVI   yLOG_value   ("drive"     , rc);
    --rce;  if (rc < 0) {
@@ -776,7 +786,7 @@ DRIVE_inventory         (void)
       return rce;
    }
    /*---(clear mime tables)--------------*/
-   yLOG_stage ('3');
+   /*> yLOG_stage ('3');                                                              <*/
    rc = MIME_reset_all ();
    DEBUG_ENVI   yLOG_value   ("mime"      , rc);
    --rce;  if (rc < 0) {
@@ -784,7 +794,7 @@ DRIVE_inventory         (void)
       return rce;
    }
    /*---(build root)---------------------*/
-   yLOG_stage ('4');
+   /*> yLOG_stage ('4');                                                              <*/
    rc  = ENTRY_fullroot (&x_root, x_drive);
    DEBUG_ENVI   yLOG_value   ("root"      , rc);
    --rce;  if (rc < 0) {
@@ -792,7 +802,7 @@ DRIVE_inventory         (void)
       return rce;
    }
    /*---(read in data)-------------------*/
-   yLOG_stage ('5');
+   /*> yLOG_stage ('5');                                                              <*/
    rc = ENTRY__level_read (x_root, "", STYPE_NORMAL);
    DEBUG_ENVI   yLOG_value   ("levels"    , rc);
    --rce;  if (rc < 0) {
@@ -800,15 +810,17 @@ DRIVE_inventory         (void)
       return rce;
    }
    /*---(create (empty) placeholder)-----*/
-   yLOG_stage ('6');
-   /*> rc = ENTRY_tail (x_drive, x_root);                                             <* 
-    *> DEBUG_ENVI   yLOG_value   ("(empty)"   , rc);                                  <* 
-    *> --rce;  if (rc < 0) {                                                          <* 
-    *>    DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);                              <* 
-    *>    return rce;                                                                 <* 
-    *> }                                                                              <*/
+   /*> yLOG_stage ('6');                                                              <*/
+   if (strcmp (my.path, "") == 0) {
+      rc = ENTRY_tail (x_drive, x_root);
+      DEBUG_ENVI   yLOG_value   ("(empty)"   , rc);
+      --rce;  if (rc < 0) {
+         DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+         return rce;
+      }
+   }
    /*---(write the database)-------------*/
-   yLOG_stage ('7');
+   /*> yLOG_stage ('7');                                                              <*/
    rc = WRITE_all (my.file_data, NULL);
    DEBUG_ENVI   yLOG_value   ("write"     , rc);
    --rce;  if (rc < 0) {
@@ -816,7 +828,7 @@ DRIVE_inventory         (void)
       return rce;
    }
    /*---(write mime file)----------------*/
-   yLOG_stage ('8');
+   /*> yLOG_stage ('8');                                                              <*/
    rc = MIME_write ('f');
    DEBUG_ENVI   yLOG_value   ("mime"      , rc);
    --rce;  if (rc < 0) {
