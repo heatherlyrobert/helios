@@ -119,7 +119,7 @@ PROG__init              (int a_argc, char *a_argv[])
    /*---(header)-------------------------*/
    DEBUG_PROG   yLOG_enter   (__FUNCTION__);
    /*---(update database)----------------*/
-   strlcpy (my.progname, a_argv [0], LEN_TITLE);
+   ystrlcpy (my.progname, a_argv [0], LEN_TITLE);
    DEBUG_PROG   yLOG_info    ("progname"  , my.progname);
    my.updatedb     =  '-';
    if (strcmp (my.progname, "helios_update") == 0)     my.updatedb = 'y';
@@ -128,7 +128,7 @@ PROG__init              (int a_argc, char *a_argv[])
    /*---(defaults)-----------------------*/
    my.run_as   = IAM_HELIOS;
    my.run_mode = ACT_NONE;
-   strlcpy (my.run_file, "", LEN_PATH);
+   ystrlcpy (my.run_file, "", LEN_PATH);
    /*---(begin)--------------------------*/
    rc = yJOBS_runas (a_argv [0], &(my.run_as), P_FOCUS, P_NICHE, P_SUBJECT, P_PURPOSE, P_NAMESAKE, P_PRONOUNCE, P_HERITAGE, P_BRIEFLY, P_IMAGERY, P_REASON, P_ONELINE, P_HOMEDIR, P_BASENAME, P_FULLPATH, P_SUFFIX, P_CONTENT, P_SYSTEM, P_LANGUAGE, P_COMPILER, P_CODESIZE, P_DEPSTDC, P_AUTHOR, P_CREATED, P_VERMAJOR, P_VERMINOR, P_VERNUM, P_VERTXT, NULL);
    DEBUG_PROG  yLOG_value   ("runas"     , rc);
@@ -175,12 +175,12 @@ PROG__init              (int a_argc, char *a_argv[])
    my.find_days    =  '-';
    my.find_size    =  '-';
    /*---(regex handling)-----------------*/
-   strlcpy (my.regex, ".", MAX_REGEX);
+   ystrlcpy (my.regex, ".", MAX_REGEX);
    my.regex_len    =    1;
    my.count        =  '-';
    my.total        =    0;
    /*---(others)-------------------------*/
-   strlcpy (my.mpoint, "/", LEN_FULL);
+   ystrlcpy (my.mpoint, "/", LEN_FULL);
    ENTRY_init  ();
    CONF_init   ();
    my.path  [0]    = '\0';
@@ -273,7 +273,7 @@ PROG__args              (int a_argc, char *a_argv[])
       else if (strcmp (a, "--mimes"        ) == 0 && i + 1 < a_argc)   RPTG_config_mimes_set (a_argv [++i]);
       else if (strstr (MIME_OPTIONS     , a) != NULL)                RPTG_config_mimes_add (a);
       else if (strstr (MIME_NEGS        , a) != NULL)                RPTG_config_mimes_sub (a);
-      else if (strcmp (a, "--ext"          ) == 0 && i + 1 < a_argc)   strlcpy (my.ext, a_argv [++i], LEN_TERSE);
+      else if (strcmp (a, "--ext"          ) == 0 && i + 1 < a_argc)   ystrlcpy (my.ext, a_argv [++i], LEN_TERSE);
       else if (strcmp (a, "--sizes"        ) == 0 && i + 1 < a_argc)   RPTG_config_sizes_set (a_argv [++i]);
       else if (strstr (SIZES_OPTIONS    , a) != NULL)                RPTG_config_sizes_add (a);
       else if (strstr (SIZES_NEGS       , a) != NULL)                RPTG_config_sizes_sub (a);
@@ -326,7 +326,7 @@ PROG__args              (int a_argc, char *a_argv[])
    IF_RUNNING {
       rc = yEXEC_maxname (a_argc, a_argv, &x_max);
       printf ("x_max = %d\n", x_max);
-      strlcpy (a_argv [0], P_ONELINE, x_max);
+      ystrlcpy (a_argv [0], P_ONELINE, x_max);
    }
    /*---(fix limits)---------------------*/
    if (my.maxlevel <=  0)       my.maxlevel = 99;

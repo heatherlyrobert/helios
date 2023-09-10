@@ -42,10 +42,10 @@ DRIVE_init         (void)
    s_nmtab = 0;
    for (i = 0; i < MAX_MOUNTS; ++i) {
       s_mtabs [i].follow = '-';
-      strlcpy (s_mtabs [i].device, "", LEN_LABEL);
-      strlcpy (s_mtabs [i].path  , "", LEN_PATH);
+      ystrlcpy (s_mtabs [i].device, "", LEN_LABEL);
+      ystrlcpy (s_mtabs [i].path  , "", LEN_PATH);
       s_mtabs [i].len    = 0;
-      strlcpy (s_mtabs [i].type  , "", LEN_LABEL);
+      ystrlcpy (s_mtabs [i].type  , "", LEN_LABEL);
       s_mtabs [i].drive  = NULL;
    }
    DRIVE__mtab_read ();
@@ -99,7 +99,7 @@ DRIVE__mtab_read   (void)
       /*---(check partition)-------------*/
       p = strtok_r (x_recd, q, &r);
       if (p == NULL)                        continue;
-      strltrim (p, ySTR_BOTH, LEN_FULL);
+      ystrltrim (p, ySTR_BOTH, LEN_FULL);
       DEBUG_ENVI   yLOG_info    ("device"    , p);
       if        (strcmp (p, "proc") == 0){
          DEBUG_ENVI   yLOG_note    ("proc, can not reasonably follow (wonderland)");
@@ -117,20 +117,20 @@ DRIVE__mtab_read   (void)
          DEBUG_ENVI   yLOG_note    ("device entry");
          s_mtabs [s_nmtab].follow = 'y';
       }
-      strlcpy (s_mtabs [s_nmtab].device, p, LEN_LABEL);
+      ystrlcpy (s_mtabs [s_nmtab].device, p, LEN_LABEL);
       /*---(match mountpoint)------------*/
       p = strtok_r (NULL  , q, &r);
       if (p == NULL)                        continue;
-      strltrim (p, ySTR_BOTH, LEN_HUND);
+      ystrltrim (p, ySTR_BOTH, LEN_HUND);
       DEBUG_ENVI   yLOG_info    ("mpoint"    , p);
-      strlcpy (s_mtabs [s_nmtab].path  , p, LEN_PATH);
+      ystrlcpy (s_mtabs [s_nmtab].path  , p, LEN_PATH);
       s_mtabs [s_nmtab].len = strlen (p);
       /*---(gather type)-----------------*/
       p = strtok_r (NULL  , q, &r);
       if (p == NULL)                        continue;
-      strltrim (p, ySTR_BOTH, LEN_LABEL);
+      ystrltrim (p, ySTR_BOTH, LEN_LABEL);
       DEBUG_ENVI   yLOG_info    ("type"      , p);
-      strlcpy (s_mtabs [s_nmtab].type  , p, LEN_LABEL);
+      ystrlcpy (s_mtabs [s_nmtab].type  , p, LEN_LABEL);
       /*---(done)------------------------*/
       ++s_nmtab;
    }
@@ -155,8 +155,8 @@ DRIVE_mtab_find         (cchar *a_path, tDRIVE **a_drive, char *a_mtab, char *a_
    if (a_drive  != NULL)   *a_drive = NULL;
    if (a_mtab   != NULL)   *a_mtab  = -1;
    if (a_follow != NULL)   *a_follow = '-';
-   if (a_device != NULL)   strlcpy (a_device, "", LEN_LABEL);
-   if (a_type   != NULL)   strlcpy (a_type  , "", LEN_LABEL);
+   if (a_device != NULL)   ystrlcpy (a_device, "", LEN_LABEL);
+   if (a_type   != NULL)   ystrlcpy (a_type  , "", LEN_LABEL);
    /*---(defense)------------------------*/
    --rce;  if (a_path == NULL) {
       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
@@ -176,8 +176,8 @@ DRIVE_mtab_find         (cchar *a_path, tDRIVE **a_drive, char *a_mtab, char *a_
       if (a_drive  != NULL)   *a_drive  = s_mtabs [i].drive;
       if (a_mtab   != NULL)   *a_mtab   =  i;
       if (a_follow != NULL)   *a_follow = s_mtabs [i].follow;
-      if (a_device != NULL)   strlcpy (a_device, s_mtabs [i].device, LEN_LABEL);
-      if (a_type   != NULL)   strlcpy (a_type  , s_mtabs [i].type  , LEN_LABEL);
+      if (a_device != NULL)   ystrlcpy (a_device, s_mtabs [i].device, LEN_LABEL);
+      if (a_type   != NULL)   ystrlcpy (a_type  , s_mtabs [i].type  , LEN_LABEL);
       DEBUG_ENVI   yLOG_note    ("found, successful");
       DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
       return 1;
@@ -201,11 +201,11 @@ DRIVE__wipe         (tDRIVE *a_drive)
    /*---(header)-------------------------*/
    DEBUG_ENVI   yLOG_senter  (__FUNCTION__);
    /*---(clear entries)------------------*/
-   strlcpy (a_drive->host  , my.host, LEN_LABEL);
-   strlcpy (a_drive->serial, "-"    , LEN_LABEL);
-   strlcpy (a_drive->device, "-"    , LEN_FULL);
-   strlcpy (a_drive->mpoint, "-"    , LEN_FULL);
-   strlcpy (a_drive->type  , "-"    , LEN_LABEL);
+   ystrlcpy (a_drive->host  , my.host, LEN_LABEL);
+   ystrlcpy (a_drive->serial, "-"    , LEN_LABEL);
+   ystrlcpy (a_drive->device, "-"    , LEN_FULL);
+   ystrlcpy (a_drive->mpoint, "-"    , LEN_FULL);
+   ystrlcpy (a_drive->type  , "-"    , LEN_LABEL);
    a_drive->size           = 0;
    a_drive->written        = 0;
    /*---(statistics)---------------------*/
@@ -472,19 +472,19 @@ DRIVE_manual       (tDRIVE **a_drive, uchar a_ref, char *a_host, char *a_serial,
       DEBUG_INPT   yLOG_value   ("u_drive*"  , u_drive);
    }
    /*---(write host)---------------------*/
-   strlcpy (x_drive->host    , a_host   , LEN_LABEL);
+   ystrlcpy (x_drive->host    , a_host   , LEN_LABEL);
    DEBUG_INPT   yLOG_info    ("host"      , x_drive->host);
    /*---(write serial)-------------------*/
-   strlcpy (x_drive->serial  , a_serial , LEN_LABEL);
+   ystrlcpy (x_drive->serial  , a_serial , LEN_LABEL);
    DEBUG_INPT   yLOG_info    ("serial"    , x_drive->serial);
    /*---(write device)-------------------*/
-   strlcpy (x_drive->device  , a_device , LEN_FULL);
+   ystrlcpy (x_drive->device  , a_device , LEN_FULL);
    DEBUG_INPT   yLOG_info    ("device"    , x_drive->device);
    /*---(write mountpoint)---------------*/
-   strlcpy (x_drive->mpoint  , a_mpoint , LEN_FULL);
+   ystrlcpy (x_drive->mpoint  , a_mpoint , LEN_FULL);
    DEBUG_INPT   yLOG_info    ("mpoint"    , x_drive->mpoint);
    /*---(write mountpoint)---------------*/
-   strlcpy (x_drive->type    , a_type   , LEN_LABEL);
+   ystrlcpy (x_drive->type    , a_type   , LEN_LABEL);
    DEBUG_INPT   yLOG_info    ("type"      , x_drive->type);
    /*---(size and time)------------------*/
    x_drive->size    = a_size;
@@ -516,8 +516,8 @@ DRIVE__mtab        (cchar *a_mount, char *a_part, char *a_type)
    /*---(header)-------------------------*/
    DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
    /*---(prepare)------------------------*/
-   if (a_part != NULL)   strlcpy (a_part, "", LEN_FULL);
-   if (a_type != NULL)   strlcpy (a_type, "", LEN_LABEL);
+   if (a_part != NULL)   ystrlcpy (a_part, "", LEN_FULL);
+   if (a_type != NULL)   ystrlcpy (a_type, "", LEN_LABEL);
    /*---(defense)------------------------*/
    DEBUG_ENVI   yLOG_point   ("a_mount"   , a_mount);
    --rce;  if (a_mount == NULL) {
@@ -557,17 +557,17 @@ DRIVE__mtab        (cchar *a_mount, char *a_part, char *a_type)
       /*---(check partition)-------------*/
       p = strtok_r (x_recd, q, &r);
       if (p == NULL)                        continue;
-      strltrim (p, ySTR_BOTH, LEN_FULL);
+      ystrltrim (p, ySTR_BOTH, LEN_FULL);
       DEBUG_ENVI   yLOG_info    ("device"    , p);
       if (p[0] != '/')  {
          DEBUG_ENVI   yLOG_note    ("not a device entry");
          continue;
       }
-      strlcpy (a_part, p, LEN_FULL);
+      ystrlcpy (a_part, p, LEN_FULL);
       /*---(match mountpoint)------------*/
       p = strtok_r (NULL  , q, &r);
       if (p == NULL)                        continue;
-      strltrim (p, ySTR_BOTH, LEN_HUND);
+      ystrltrim (p, ySTR_BOTH, LEN_HUND);
       DEBUG_ENVI   yLOG_info    ("mpoint"    , p);
       if (strcmp (p, a_mount) != 0) {
          DEBUG_ENVI   yLOG_note    ("does not match requested mount point");
@@ -576,9 +576,9 @@ DRIVE__mtab        (cchar *a_mount, char *a_part, char *a_type)
       /*---(gather type)-----------------*/
       p = strtok_r (NULL  , q, &r);
       if (p == NULL)                        continue;
-      strltrim (p, ySTR_BOTH, LEN_LABEL);
+      ystrltrim (p, ySTR_BOTH, LEN_LABEL);
       DEBUG_ENVI   yLOG_info    ("type"      , p);
-      strlcpy (a_type, p, LEN_LABEL);
+      ystrlcpy (a_type, p, LEN_LABEL);
       /*---(done)------------------------*/
       break;
    }
@@ -586,8 +586,8 @@ DRIVE__mtab        (cchar *a_mount, char *a_part, char *a_type)
    fclose (f);
    /*---(clean up if an error)-----------*/
    if (rc < 0) {
-      strlcpy (a_part, "", LEN_FULL);
-      strlcpy (a_type, "", LEN_LABEL);
+      ystrlcpy (a_part, "", LEN_FULL);
+      ystrlcpy (a_type, "", LEN_LABEL);
    }
    /*---(complete)-----------------------*/
    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
@@ -613,7 +613,7 @@ DRIVE__stats       (cchar *a_part, llong *a_size, char *a_serial)
    DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
    /*---(prepare)------------------------*/
    if (a_size   != NULL)   *a_size  = 0;
-   if (a_serial != NULL)   strlcpy (a_serial, "", LEN_LABEL);
+   if (a_serial != NULL)   ystrlcpy (a_serial, "", LEN_LABEL);
    /*---(defense)------------------------*/
    DEBUG_ENVI   yLOG_point   ("a_part"    , a_part);
    --rce;  if (a_part == NULL) {
@@ -663,7 +663,7 @@ DRIVE__stats       (cchar *a_part, llong *a_size, char *a_serial)
    DEBUG_ENVI   yLOG_value   ("*a_size"   , *a_size);
    /*---(change device file)-------------*/
    DEBUG_ENVI   yLOG_note    ("get serial number");
-   strlcpy (x_full, a_part, LEN_FULL);
+   ystrlcpy (x_full, a_part, LEN_FULL);
    /*> x_len = strlen (x_full);                                                       <* 
     *> x_full [--x_len] = '\0';                                                       <* 
     *> if (x_full [x_len - 1] == '1')  x_full [--x_len] = '\0';                       <*/
@@ -682,8 +682,8 @@ DRIVE__stats       (cchar *a_part, llong *a_size, char *a_serial)
       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   strlcpy   (a_serial, hd.serial_no, LEN_LABEL);
-   strltrim (a_serial, ySTR_BOTH, LEN_LABEL);
+   ystrlcpy   (a_serial, hd.serial_no, LEN_LABEL);
+   ystrltrim (a_serial, ySTR_BOTH, LEN_LABEL);
    DEBUG_ENVI   yLOG_info    ("a_serial"  , a_serial);
    /*---(complete)-----------------------*/
    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
@@ -736,10 +736,10 @@ DRIVE_populate          (tDRIVE **a_drive, char *a_mount, long a_time, char *a_i
       return rce;
    }
    /*---(populate)-----------------------*/
-   strlcpy (x_drive->device   , x_device, LEN_FULL);
-   strlcpy (x_drive->mpoint   , a_mount , LEN_FULL);
-   strlcpy (x_drive->type     , x_type  , LEN_LABEL);
-   strlcpy (x_drive->serial   , x_serial, LEN_LABEL);
+   ystrlcpy (x_drive->device   , x_device, LEN_FULL);
+   ystrlcpy (x_drive->mpoint   , a_mount , LEN_FULL);
+   ystrlcpy (x_drive->type     , x_type  , LEN_LABEL);
+   ystrlcpy (x_drive->serial   , x_serial, LEN_LABEL);
    x_drive->size    = x_size;
    x_drive->written = a_time;
    /*---(save back)----------------------*/

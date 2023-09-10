@@ -77,7 +77,7 @@ ENTRY__wipe             (tPTRS *a_curr)
    x_data->ccum       =   0;
    /*---(categorization)-----------------*/
    x_data->cat        = MIME_HUH;
-   strlcpy (x_data->ext, "-", LEN_TERSE);
+   ystrlcpy (x_data->ext, "-", LEN_TERSE);
    /*---(name)---------------------------*/
    x_data->ascii      = '-';
    x_data->len        =   0;
@@ -364,7 +364,7 @@ ENTRY_init              (void)
    g_looked   = 0;
    g_matched  = 0;
    g_found    = NULL;
-   strlcpy (g_path, "", LEN_RECD);
+   ystrlcpy (g_path, "", LEN_RECD);
    /*---(complete)-----------------------*/
    DEBUG_ENVI   yLOG_sexit   (__FUNCTION__);
    return 0;
@@ -612,7 +612,7 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
    }
    x_stat = *a_stat;
    /*---(prepare)-------------------------*/
-   strlcpy (x_name, a_name, LEN_RECD);
+   ystrlcpy (x_name, a_name, LEN_RECD);
    x_len = strlen (x_name);
    /*---(special types)-------------------*/
    if        (a_stype == STYPE_LINK) {
@@ -808,9 +808,9 @@ ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_sty
    if (rc >= 0) {
       DEBUG_RPTG   yLOG_complex ("results"   , "%c, %s", x_cat, p);
       if (a_cat != NULL)  *a_cat  = x_cat;
-      strlcpy  (x_ext, p, LEN_TERSE);
-      strllower(x_ext, LEN_TERSE);
-      if (a_ext != NULL)  strlcpy (a_ext, x_ext, LEN_TERSE);
+      ystrlcpy  (x_ext, p, LEN_TERSE);
+      ystrllower(x_ext, LEN_TERSE);
+      if (a_ext != NULL)  ystrlcpy (a_ext, x_ext, LEN_TERSE);
    }
    /*---(complete)-----------------------*/
    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
@@ -913,7 +913,7 @@ ENTRY__populate         (tPTRS *a_ptrs, char *a_full)
    /*---(name trouble fix)----------------*/
    if  (x_data->ascii == ASCII_CRAZY) {
       DEBUG_ENVI   yLOG_note    ("name has unprintable characters, resave");
-      strlmark (x_data->name, ySTR_PRINT, LEN_HUND);
+      ystrlmark (x_data->name, ySTR_PRINT, LEN_HUND);
       DEBUG_ENVI   yLOG_info    ("new_name"  , x_data->name);
    }
    /*---(complete)------------------------*/
@@ -943,7 +943,7 @@ ENTRY_manual       (tENTRY *a_entry, char *a_name, char a_type, char a_stype, ch
       return rce;
    }
    DEBUG_INPT   yLOG_info    ("a_name"    , a_name);
-   strlcpy (a_entry->name, a_name, LEN_HUND);
+   ystrlcpy (a_entry->name, a_name, LEN_HUND);
    a_entry->len = strlen (a_name);
    DEBUG_INPT   yLOG_value   ("a_type"    , a_type);
    if (a_type  !=  0)    a_entry->type  = a_type;
@@ -953,7 +953,7 @@ ENTRY_manual       (tENTRY *a_entry, char *a_name, char a_type, char a_stype, ch
    if (a_cat   !=  0)    a_entry->cat = a_cat;
    DEBUG_INPT   yLOG_point   ("a_ext"     , a_ext);
    if (a_ext != NULL) {
-      strlcpy (a_entry->ext , a_ext, LEN_TERSE);
+      ystrlcpy (a_entry->ext , a_ext, LEN_TERSE);
       DEBUG_INPT   yLOG_info    ("a_ext"     , a_ext);
    }
    /*---(complete)-----------------------*/
@@ -1026,7 +1026,7 @@ ENTRY__level_prep       (tPTRS *a_parent, char *a_path, char *a_newpath, char *a
    DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
    DEBUG_ENVI   yLOG_complex ("args"      , "%p, %p, %p", a_parent, a_path, a_newpath);
    /*---(defaults)-----------------------*/
-   if (a_newpath != NULL)  strlcpy (a_newpath, "", LEN_PATH);
+   if (a_newpath != NULL)  ystrlcpy (a_newpath, "", LEN_PATH);
    /*---(defense)------------------------*/
    --rce;  if (a_parent == NULL) {
       DEBUG_ENVI   yLOG_exitr    (__FUNCTION__, rce);
@@ -1079,7 +1079,7 @@ ENTRY__level_prep       (tPTRS *a_parent, char *a_path, char *a_newpath, char *a
    x_len = strlen (x_path);
    DEBUG_ENVI   yLOG_complex ("path"      , "%d[%s]", x_len, x_path);
    /*---(save back)-----------------------*/
-   if (a_newpath != NULL)  strlcpy (a_newpath, x_path, LEN_PATH);
+   if (a_newpath != NULL)  ystrlcpy (a_newpath, x_path, LEN_PATH);
    /*---(check begin)---------------------*/
    if (strcmp (my.path, "") != 0) {
       if (strncmp (my.path, x_path, strlen (my.path)) == 0) {
@@ -1276,7 +1276,7 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
             DEBUG_ENVI   yLOG_note    ("dir_silent entry, deleting after recursing, leave in total");
             DEBUG_ENVI   yLOG_info    ("killing"   , x_data->name);
             MIME_del_seen (x_data->ext, x_data->bytes, x_full);
-            strlcpy (x_data->ext, EXT_PRIVATE, LEN_TERSE);
+            ystrlcpy (x_data->ext, EXT_PRIVATE, LEN_TERSE);
             MIME_add_seen (EXT_PRIVATE, NULL, x_data->bytes, x_full);
             ENTRY__free (&x_curr);
             break;
@@ -1401,7 +1401,7 @@ ENTRY__callback   (char a_serious, tENTRY *a_data, char *a_full)
    /*---(check for path)-----------------*/
    if (my.path [0] != a_full [0])       return 0;
    if (strcmp (my.path, a_full) != 0)   return 0;
-   strlcpy (g_spath, a_full, LEN_RECD);
+   ystrlcpy (g_spath, a_full, LEN_RECD);
    DEBUG_DATA   yLOG_complex ("final"     , "%s, %s, %s", a_data->name, a_full, g_spath);
    /*---(complete)-----------------------*/
    return 1;
@@ -1417,7 +1417,7 @@ ENTRY_start             (void)
    DEBUG_DATA   yLOG_enter   (__FUNCTION__);
    /*---(prepare)------------------------*/
    s_start = NULL;
-   strlcpy (g_spath, "", LEN_RECD);
+   ystrlcpy (g_spath, "", LEN_RECD);
    /*---(defense)------------------------*/
    if (strcmp (my.path, "") == 0) {
       DEBUG_DATA   yLOG_exit    (__FUNCTION__);
@@ -1643,18 +1643,18 @@ ENTRY_walk              (char a_trigger, void *a_callback)
    g_looked   = 0;
    g_matched  = 0;
    g_found    = NULL;
-   strlcpy (g_path, "", LEN_RECD);
+   ystrlcpy (g_path, "", LEN_RECD);
    /*---(execute walk)-------------------*/
    DEBUG_DATA   yLOG_point   ("h_ptrs"    , h_ptrs);
    DEBUG_DATA   yLOG_point   ("s_start"   , s_start);
    if (s_start != NULL) {
       DEBUG_DATA   yLOG_note    ("start has been identified");
       x_begin = s_start;
-      strlcpy (x_path, g_spath, LEN_RECD);
+      ystrlcpy (x_path, g_spath, LEN_RECD);
    } else if (h_ptrs != NULL) {
       DEBUG_DATA   yLOG_note    ("no start, use head");
       x_begin = h_ptrs;
-      strlcpy (x_path, h_ptrs->data->name, LEN_RECD);
+      ystrlcpy (x_path, h_ptrs->data->name, LEN_RECD);
    }
    DEBUG_DATA   yLOG_info    ("x_path"    , x_path);
    rc = ENTRY__walker (a_trigger, x_begin, x_path, a_callback);
@@ -1715,7 +1715,7 @@ TREE__unit_callback     (char a_serious, tENTRY *a_data, char *a_path)
    DEBUG_DATA   yLOG_complex ("entry"     , "%2d, %2d, %-20.20s", g_matched, g_target, a_data->name);
    if (a_serious == 'y') {
       g_found = a_data;
-      strlcpy (g_path, a_path, LEN_RECD);
+      ystrlcpy (g_path, a_path, LEN_RECD);
    }
    return 1;
 }

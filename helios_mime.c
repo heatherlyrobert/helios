@@ -109,16 +109,16 @@ MIME__purge             (void)
    /*---(purge cats)---------------------*/
    DEBUG_STATS  yLOG_note    ("initialize cats table");
    for (i = 0; i < MAX_CAT; ++i) {
-      strlcpy (s_cats [i].name, "", LEN_TERSE);
+      ystrlcpy (s_cats [i].name, "", LEN_TERSE);
       s_cats [i].cat       = '-';
-      strlcpy (s_cats [i].desc, "", LEN_DESC);
+      ystrlcpy (s_cats [i].desc, "", LEN_DESC);
    }
    /*---(purge mime)---------------------*/
    DEBUG_STATS  yLOG_note    ("initialize mime table");
    for (i = 0; i < MAX_MIME; ++i) {
-      strlcpy (g_mime [i].ext , "", LEN_TERSE);
+      ystrlcpy (g_mime [i].ext , "", LEN_TERSE);
       g_mime [i].cat       = '-';
-      strlcpy (g_mime [i].desc, "", LEN_DESC);
+      ystrlcpy (g_mime [i].desc, "", LEN_DESC);
       g_mime [i].like      = '-';
    }
    /*---(reset totals)-------------------*/
@@ -201,7 +201,7 @@ MIME__action            (uchar *a_ext, int *a_cindex, int *a_mindex, uchar *a_ca
       DEBUG_STATS  yLOG_snote   (a_full);
    }
    /*---(prepare)------------------------*/
-   strlcpy (x_ext, a_ext, LEN_TERSE);
+   ystrlcpy (x_ext, a_ext, LEN_TERSE);
    for (i = 0; i < x_len; ++i)   x_ext [i] = tolower (x_ext [i]);
    if (a_bytes < 0)  x_inc = -1;
    /*---(find mime)----------------------*/
@@ -322,7 +322,7 @@ MIME_add_man            (uchar *a_ext, uchar *a_cat, long a_bytes)
       return rce;
    }
    /*---(make copy)----------------------*/
-   strlcpy (x_ext, a_ext, LEN_TERSE);
+   ystrlcpy (x_ext, a_ext, LEN_TERSE);
    --rce;  if (strchr ("123456789", x_ext [0]) == NULL) {
       DEBUG_STATS  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
@@ -438,9 +438,9 @@ MIME__read_one          (int a_line, uchar *a_verb)
    /*---(save)---------------------------*/
    switch (a_verb [0]) {
    case 'C' :
-      strlcpy (s_cats [s_ncat].name, x_name, LEN_TERSE);
+      ystrlcpy (s_cats [s_ncat].name, x_name, LEN_TERSE);
       s_cats [s_ncat].cat     = x_cat;
-      strlcpy (s_cats [s_ncat].desc, x_desc, LEN_DESC);
+      ystrlcpy (s_cats [s_ncat].desc, x_desc, LEN_DESC);
       s_cats [s_ncat].n_seen  = x_scount;
       s_cats [s_ncat].b_seen  = x_ssize;
       s_cats [s_ncat].n_kept  = x_kcount;
@@ -450,9 +450,9 @@ MIME__read_one          (int a_line, uchar *a_verb)
       if (x_cat == MIME_EMPTY)  my.empty = x_ssize;
       break;
    case 'e' :
-      strlcpy (g_mime [n_mime].ext , x_name, LEN_TERSE);
+      ystrlcpy (g_mime [n_mime].ext , x_name, LEN_TERSE);
       g_mime [n_mime].cat     = x_cat;
-      strlcpy (g_mime [n_mime].desc, x_desc, LEN_DESC);
+      ystrlcpy (g_mime [n_mime].desc, x_desc, LEN_DESC);
       g_mime [n_mime].like    = x_like;
       g_mime [n_mime].n_seen  = x_scount;
       g_mime [n_mime].b_seen  = x_ssize;
@@ -491,9 +491,9 @@ static void  o___OUTPUT__________o () { return; }
 char
 MIME__write_clear       (void)
 {
-   strlcpy (s_head, "", LEN_RECD);
-   strlcpy (s_cols, "", LEN_RECD);
-   strlcpy (s_recd, "", LEN_RECD);
+   ystrlcpy (s_head, "", LEN_RECD);
+   ystrlcpy (s_cols, "", LEN_RECD);
+   ystrlcpy (s_recd, "", LEN_RECD);
    return 0;
 }
 
@@ -644,7 +644,7 @@ MIME__tree_line         (char a_lvl, uchar *a_ext, llong a_size, llong a_count, 
    /*---(header)-------------------------*/
    DEBUG_STATS  yLOG_enter   (__FUNCTION__);
    /*---(default)------------------------*/
-   strlcpy (s_recd, "", LEN_RECD);
+   ystrlcpy (s_recd, "", LEN_RECD);
    /*---(main)---------------------------*/
    DEBUG_STATS  yLOG_complex ("node"      , "%2d %-10.10s %10ld %10d %s", a_lvl, a_ext, a_size, a_count, a_desc);
    if (a_size > 0)  yPARSE_vprintf (c, "node", a_lvl, a_ext, a_desc, a_size, a_count, a_size / a_count, 0, 0, 0);
@@ -747,15 +747,15 @@ MIME__unit              (char *a_question, char *a_ext, int n)
             s_cats [n].n_found, s_cats [n].b_found);
    }
    else if (strcmp (a_question, "s_head"        ) == 0) {
-      strlencode (s_head, ySTR_NORM, LEN_RECD);
+      ystrlencode (s_head, ySTR_NORM, LEN_RECD);
       snprintf (unit_answer, LEN_FULL, "MIME s_head      : [%.79s]", s_head);
    }
    else if (strcmp (a_question, "s_cols"        ) == 0) {
-      strlencode (s_cols, ySTR_NORM, LEN_RECD);
+      ystrlencode (s_cols, ySTR_NORM, LEN_RECD);
       snprintf (unit_answer, LEN_FULL, "MIME s_cols      : [%.79s]", s_cols);
    }
    else if (strcmp (a_question, "s_recd"        ) == 0) {
-      strlencode (s_recd, ySTR_NORM, LEN_RECD);
+      ystrlencode (s_recd, ySTR_NORM, LEN_RECD);
       snprintf (unit_answer, LEN_FULL, "MIME s_recd      : [%.79s]", s_recd);
    }
    /*---(complete)-----------------------*/

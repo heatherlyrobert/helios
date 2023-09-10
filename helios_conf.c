@@ -46,10 +46,10 @@ CONF__purge             (void)
    int         i           =    0;
    for (i = 0; i < MAX_CONFS; ++i) {
       g_confs [i].type     = '-';
-      strlcpy (g_confs [i].path  , "", LEN_HUND);
+      ystrlcpy (g_confs [i].path  , "", LEN_HUND);
       g_confs [i].len      =   0;
       g_confs [i].uses     =   0;
-      strlcpy (g_confs [i].reason, "", LEN_DESC);
+      ystrlcpy (g_confs [i].reason, "", LEN_DESC);
    }
    g_nconf = 0;
    return 0;

@@ -240,7 +240,7 @@ api_ysort__slotter      (uchar a_lvl, void *a_two, uchar a_order)
    if (a_lvl < x_len)    x_slot = x_two->data->name [a_lvl];
    else                  x_slot = 0;
    /*---(slot)---------------------------*/
-   DEBUG_SORT   yLOG_schar   (chrvisible (x_slot));
+   DEBUG_SORT   yLOG_schar   (ychrvisible (x_slot));
    /*---(complete)-----------------------*/
    DEBUG_SORT   yLOG_sexit   (__FUNCTION__);
    return x_slot;

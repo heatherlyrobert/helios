@@ -24,7 +24,7 @@ FILE__check             (char *a_name, char a_mode)
    /*---(header)-------------------------*/
    DEBUG_FILE   yLOG_enter   (__FUNCTION__);
    /*---(prepare)------------------------*/
-   strlcpy (s_name, "", LEN_RECD);
+   ystrlcpy (s_name, "", LEN_RECD);
    /*---(defense)------------------------*/
    DEBUG_FILE   yLOG_point   ("a_name"    , a_name);
    --rce;  if (a_name == NULL) {
@@ -77,7 +77,7 @@ FILE__check             (char *a_name, char a_mode)
       return rce;
    }
    /*---(save name)----------------------*/
-   strlcpy (s_name, a_name, LEN_RECD);
+   ystrlcpy (s_name, a_name, LEN_RECD);
    /*---(complete)-----------------------*/
    DEBUG_FILE   yLOG_exit    (__FUNCTION__);
    return 0;
@@ -115,11 +115,11 @@ FILE_open               (FILE **a_file, char *a_name, char a_mode)
    --rce;  switch (a_mode) {
    case 'r' :
       DEBUG_FILE   yLOG_note    ("open as read-binary");
-      strlcpy (x_mode, "rb", LEN_LABEL);
+      ystrlcpy (x_mode, "rb", LEN_LABEL);
       break;
    case 'w' :
       DEBUG_FILE   yLOG_note    ("open as write-binary");
-      strlcpy (x_mode, "wb", LEN_LABEL);
+      ystrlcpy (x_mode, "wb", LEN_LABEL);
       break;
    default  :
       DEBUG_FILE   yLOG_note    ("mode not understood");
@@ -189,7 +189,7 @@ FILE__close             (FILE **a_file)
    /*---(permissions)--------------------*/
    chmod (s_name, 0755);
    /*---(ground)-------------------------*/
-   strlcpy (s_name, "", LEN_RECD);
+   ystrlcpy (s_name, "", LEN_RECD);
    *a_file = NULL;
    /*---(complete)-----------------------*/
    DEBUG_FILE   yLOG_exit    (__FUNCTION__);
@@ -657,8 +657,8 @@ FILE_percents      (long a_number, long a_total, char *a_string)
 char
 FILE_commas        (llong a_number, char *a_string)
 {
-   if (a_number == 0)  strlcpy (a_string, "-", LEN_LABEL);
-   else  strl4comma (a_number, a_string, 0, 'c', '-', LEN_LABEL);
+   if (a_number == 0)  ystrlcpy (a_string, "-", LEN_LABEL);
+   else  ystrl4comma (a_number, a_string, 0, 'c', '-', LEN_LABEL);
    return 0;
 }
 
@@ -666,9 +666,9 @@ char
 FILE_uncommas      (char *a_string, llong *a_number)
 {
    double     x_val;
-   /*> if (strcmp (strltrim (a_string, ySTR_BOTH, LEN_LABEL), "-") == 0)  x_val = 0;   <* 
-    *> else                              strl2comma (a_string, &x_val, LEN_LABEL);     <*/
-   strl2comma (a_string, &x_val, LEN_LABEL);
+   /*> if (strcmp (ystrltrim (a_string, ySTR_BOTH, LEN_LABEL), "-") == 0)  x_val = 0;   <* 
+    *> else                              ystrl2comma (a_string, &x_val, LEN_LABEL);     <*/
+   ystrl2comma (a_string, &x_val, LEN_LABEL);
    DEBUG_INPT   yLOG_double ("x_val"     , x_val);
    *a_number = x_val;
    DEBUG_INPT   yLOG_llong   ("a_number"  , *a_number);

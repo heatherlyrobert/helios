@@ -34,7 +34,7 @@ RPTG_init           (void)
    s_bytes   =   0;
    my.r_uid  =  -1;
    my.r_gid  =  -1;
-   strlcpy (my.ext, "", LEN_TERSE);
+   ystrlcpy (my.ext, "", LEN_TERSE);
    return 0;
 }
 
@@ -45,8 +45,8 @@ RPTG_init           (void)
 /*====================------------------------------------====================*/
 static void      o___TYPE____________________o (void) {;}
 
-char RPTG_config_types_all   (void) { strlcpy (my.types, ENTRY_ALL , LEN_LABEL); return 0; }
-char RPTG_config_types_none  (void) { strlcpy (my.types, "········", LEN_LABEL); return 0; }
+char RPTG_config_types_all   (void) { ystrlcpy (my.types, ENTRY_ALL , LEN_LABEL); return 0; }
+char RPTG_config_types_none  (void) { ystrlcpy (my.types, "········", LEN_LABEL); return 0; }
 
 char
 RPTG_config_types_add   (uchar *a_option)
@@ -129,8 +129,8 @@ RPTG_filter_type        (uchar a_type, uchar a_stype)
 /*====================------------------------------------====================*/
 static void      o___MIME____________________o (void) {;}
 
-char RPTG_config_mimes_all   (void) { strlcpy (my.mimes, MIME_ALL        , LEN_LABEL); return 0; }
-char RPTG_config_mimes_none  (void) { strlcpy (my.mimes, "··············", LEN_LABEL); return 0; }
+char RPTG_config_mimes_all   (void) { ystrlcpy (my.mimes, MIME_ALL        , LEN_LABEL); return 0; }
+char RPTG_config_mimes_none  (void) { ystrlcpy (my.mimes, "··············", LEN_LABEL); return 0; }
 
 char
 RPTG_config_mimes_add   (uchar *a_option)
@@ -296,8 +296,8 @@ RPTG_filter_mime        (uchar a_cat, uchar *a_ext)
 /*====================------------------------------------====================*/
 static void      o___SIZE____________________o (void) {;}
 
-char RPTG_config_sizes_all   (void) { strlcpy (my.sizes, SIZES_ALL             , LEN_LABEL); return 0; }
-char RPTG_config_sizes_none  (void) { strlcpy (my.sizes, "···················" , LEN_LABEL); return 0; }
+char RPTG_config_sizes_all   (void) { ystrlcpy (my.sizes, SIZES_ALL             , LEN_LABEL); return 0; }
+char RPTG_config_sizes_none  (void) { ystrlcpy (my.sizes, "···················" , LEN_LABEL); return 0; }
 
 char
 RPTG_config_sizes_add   (uchar *a_option)
@@ -420,8 +420,8 @@ RPTG_filter_size        (uchar a_size)
 /*====================------------------------------------====================*/
 static void      o___AGE_____________________o (void) {;}
 
-char RPTG_config_ages_all    (void) { strlcpy (my.ages , AGES_ALL , LEN_LABEL); return 0; }
-char RPTG_config_ages_none   (void) { strlcpy (my.ages , "·······", LEN_LABEL); return 0; }
+char RPTG_config_ages_all    (void) { ystrlcpy (my.ages , AGES_ALL , LEN_LABEL); return 0; }
+char RPTG_config_ages_none   (void) { ystrlcpy (my.ages , "·······", LEN_LABEL); return 0; }
 
 char
 RPTG_config_ages_add   (uchar *a_option)
@@ -513,8 +513,8 @@ RPTG_filter_age         (long a_days)
 /*====================------------------------------------====================*/
 static void      o___ASCII___________________o (void) {;}
 
-char RPTG_config_ascii_all   (void) { strlcpy (my.ascii, ASCII_ALL, LEN_LABEL); return 0; }
-char RPTG_config_ascii_none  (void) { strlcpy (my.ascii, "······" , LEN_LABEL); return 0; }
+char RPTG_config_ascii_all   (void) { ystrlcpy (my.ascii, ASCII_ALL, LEN_LABEL); return 0; }
+char RPTG_config_ascii_none  (void) { ystrlcpy (my.ascii, "······" , LEN_LABEL); return 0; }
 
 char
 RPTG_config_ascii_add  (uchar *a_option)
@@ -565,11 +565,11 @@ RPTG_config_ascii_set  (uchar *a_ascii)
    RPTG_config_ascii_none ();
    for (i = 0; i < strlen (a_ascii); ++i) {
       switch (a_ascii [i]) {
-      case ASCII_UPPER  :  strlcpy (t, "--upper"  , LEN_LABEL);  break;
-      case ASCII_PUNCT  :  strlcpy (t, "--punct"  , LEN_LABEL);  break; 
-      case ASCII_EXTEND :  strlcpy (t, "--extend" , LEN_LABEL);  break;
-      case ASCII_SPACE  :  strlcpy (t, "--space"  , LEN_LABEL);  break;
-      case ASCII_CRAZY  :  strlcpy (t, "--crazy"  , LEN_LABEL);  break;
+      case ASCII_UPPER  :  ystrlcpy (t, "--upper"  , LEN_LABEL);  break;
+      case ASCII_PUNCT  :  ystrlcpy (t, "--punct"  , LEN_LABEL);  break; 
+      case ASCII_EXTEND :  ystrlcpy (t, "--extend" , LEN_LABEL);  break;
+      case ASCII_SPACE  :  ystrlcpy (t, "--space"  , LEN_LABEL);  break;
+      case ASCII_CRAZY  :  ystrlcpy (t, "--crazy"  , LEN_LABEL);  break;
       }
       RPTG_config_ascii_add (t);
    }
@@ -767,7 +767,7 @@ RPTG_perms_dir          (int a_uid, char a_own, int a_gid, char a_grp, char a_ot
 /*====================------------------------------------====================*/
 static void      o___FORMAT__________________o (void) {;}
 
-char RPTG_config_col_none    (void) { strlcpy (my.columns, "··········", LEN_LABEL); if (my.output == OUTPUT_PREFIX)  my.output = OUTPUT_NORMAL;  return 0; }
+char RPTG_config_col_none    (void) { ystrlcpy (my.columns, "··········", LEN_LABEL); if (my.output == OUTPUT_PREFIX)  my.output = OUTPUT_NORMAL;  return 0; }
 
 char
 RPTG_config_columns      (uchar *a_option)
@@ -825,7 +825,7 @@ RPTG__title             (void)
    char        s           [LEN_LABEL] = "";
    char        t           [LEN_PATH]  = "";
    /*---(prepare)------------------------*/
-   strlcpy (s_recd, "", LEN_RECD);
+   ystrlcpy (s_recd, "", LEN_RECD);
    /*---(quick out)----------------------*/
    if (my.headers != 'y')            return 0;
    if (my.output  == OUTPUT_SILENT)  return 0;
@@ -835,37 +835,37 @@ RPTG__title             (void)
    DEBUG_RPTG   yLOG_enter   (__FUNCTION__);
    /*---(shared)-------------------------*/
    printf ("## HELIOS-PHAETON (locate) -- filesystem searching and indexing services\n");
-   if (my.path [0] != '\0')  strlcpy (t, my.path  , LEN_PATH);
-   else                      strlcpy (t, "<none>" , LEN_PATH);
-   if (my.maxlevel >= 99)    strlcpy (s, "<unset>", LEN_LABEL);
+   if (my.path [0] != '£')  ystrlcpy (t, my.path  , LEN_PATH);
+   else                      ystrlcpy (t, "<none>" , LEN_PATH);
+   if (my.maxlevel >= 99)    ystrlcpy (s, "<unset>", LEN_LABEL);
    else                      sprintf (t, "%d"     , my.maxlevel);
    /*---(individual)---------------------*/
    DEBUG_RPTG   yLOG_char    ("my.output" , my.output);
    switch (my.output) {
    case OUTPUT_NORMAL   :
-      strlcat (s_recd, "##    report option (name only) --normal", LEN_RECD);
+      ystrlcat (s_recd, "##    report option (name only) --normal", LEN_RECD);
       break;
    case OUTPUT_PREFIX   :
-      strlcat (s_recd, "##    report option (prefixed)", LEN_RECD);
-      if (my.columns [0] != (uchar) '·')  strlcat (s_recd, " --show-mime"  , LEN_RECD);
-      if (my.columns [1] != (uchar) '·')  strlcat (s_recd, " --show-age"   , LEN_RECD);
-      if (my.columns [2] != (uchar) '·')  strlcat (s_recd, " --show-size"  , LEN_RECD);
-      if (my.columns [3] != (uchar) '·')  strlcat (s_recd, " --show-level" , LEN_RECD);
-      if (my.columns [4] != (uchar) '·')  strlcat (s_recd, " --show-naming", LEN_RECD);
-      if (my.columns [5] != (uchar) '·')  strlcat (s_recd, " --show-find"  , LEN_RECD);
-      if (my.columns [6] != (uchar) '·')  strlcat (s_recd, " --show-type"  , LEN_RECD);
-      if (my.columns [7] != (uchar) '·')  strlcat (s_recd, " --show-perms" , LEN_RECD);
-      if (my.columns [8] != (uchar) '·')  strlcat (s_recd, " --show-drive" , LEN_RECD);
-      if (my.columns [9] != (uchar) '·')  strlcat (s_recd, " --show-base"  , LEN_RECD);
+      ystrlcat (s_recd, "##    report option (prefixed)", LEN_RECD);
+      if (my.columns [0] != (uchar) '·')  ystrlcat (s_recd, " --show-mime"  , LEN_RECD);
+      if (my.columns [1] != (uchar) '·')  ystrlcat (s_recd, " --show-age"   , LEN_RECD);
+      if (my.columns [2] != (uchar) '·')  ystrlcat (s_recd, " --show-size"  , LEN_RECD);
+      if (my.columns [3] != (uchar) '·')  ystrlcat (s_recd, " --show-level" , LEN_RECD);
+      if (my.columns [4] != (uchar) '·')  ystrlcat (s_recd, " --show-naming", LEN_RECD);
+      if (my.columns [5] != (uchar) '·')  ystrlcat (s_recd, " --show-find"  , LEN_RECD);
+      if (my.columns [6] != (uchar) '·')  ystrlcat (s_recd, " --show-type"  , LEN_RECD);
+      if (my.columns [7] != (uchar) '·')  ystrlcat (s_recd, " --show-perms" , LEN_RECD);
+      if (my.columns [8] != (uchar) '·')  ystrlcat (s_recd, " --show-drive" , LEN_RECD);
+      if (my.columns [9] != (uchar) '·')  ystrlcat (s_recd, " --show-base"  , LEN_RECD);
       break;
    case OUTPUT_DETAIL   :
-      strlcat (s_recd, "##    report option (key statistics) --detail", LEN_RECD);
+      ystrlcat (s_recd, "##    report option (key statistics) --detail", LEN_RECD);
       break;
    case OUTPUT_ANALYSIS :
-      strlcat (s_recd, "##    report option (kitchen sink) --analysis", LEN_RECD);
+      ystrlcat (s_recd, "##    report option (kitchen sink) --analysis", LEN_RECD);
       break;
    case OUTPUT_GYGES    :
-      strlcat (s_recd, "##    report option (kitchen sink for gyges) --gyges", LEN_RECD);
+      ystrlcat (s_recd, "##    report option (kitchen sink for gyges) --gyges", LEN_RECD);
       break;
    }
    /*---(output)-------------------------*/
@@ -899,7 +899,7 @@ char
 RPTG__columns           (char a_force)
 {
    /*---(prepare)------------------------*/
-   strlcpy (s_recd, "", LEN_RECD);
+   ystrlcpy (s_recd, "", LEN_RECD);
    /*---(quick out)----------------------*/
    if (my.headers != 'y')            return 0;
    if (my.output  == OUTPUT_SILENT)  return 0;
@@ -907,48 +907,48 @@ RPTG__columns           (char a_force)
    if (my.total % 25 != 0 && a_force != 'y')  return 0;
    /*---(shared)-------------------------*/
    printf ("\n");
-   strlcat (s_recd, "## ", LEN_RECD);
-   if (my.lineno == 'y') strlcat (s_recd, "line  ", LEN_RECD);
+   ystrlcat (s_recd, "## ", LEN_RECD);
+   if (my.lineno == 'y') ystrlcat (s_recd, "line  ", LEN_RECD);
    /*---(individual)---------------------*/
    switch (my.output) {
    case OUTPUT_NORMAL   :
-      strlcat (s_recd, "---fully qualified file---------------------------", LEN_RECD);
+      ystrlcat (s_recd, "---fully qualified file---------------------------", LEN_RECD);
       break;
    case OUTPUT_PREFIX   :
-      if (my.columns [0] != (uchar) '·')  strlcat (s_recd, "-  ---ext---  ", LEN_RECD);
-      if (my.columns [1] != (uchar) '·')  strlcat (s_recd, "-day-  -  ", LEN_RECD);
-      if (my.columns [2] != (uchar) '·')  strlcat (s_recd, "sz  appr  ---bytes-------  ", LEN_RECD);
-      if (my.columns [3] != (uchar) '·')  strlcat (s_recd, "lvl  ", LEN_RECD);
-      if (my.columns [4] != (uchar) '·')  strlcat (s_recd, "-  len  ", LEN_RECD);
-      if (my.columns [5] != (uchar) '·')  strlcat (s_recd, "pos len  ", LEN_RECD);
-      if (my.columns [6] != (uchar) '·')  strlcat (s_recd, "t  s  ", LEN_RECD);
-      if (my.columns [7] != (uchar) '·')  strlcat (s_recd, "--own-  --grp-  o  s  ", LEN_RECD);
-      if (my.columns [8] != (uchar) '·')  strlcat (s_recd, "dr  ", LEN_RECD);
-      if (my.columns [9] != (uchar) '·')  strlcat (s_recd, "---name---------------------------------  ", LEN_RECD);
-      strlcat (s_recd, "---fully qualified file---------------------------", LEN_RECD);
+      if (my.columns [0] != (uchar) '·')  ystrlcat (s_recd, "-  ---ext---  ", LEN_RECD);
+      if (my.columns [1] != (uchar) '·')  ystrlcat (s_recd, "-day-  -  ", LEN_RECD);
+      if (my.columns [2] != (uchar) '·')  ystrlcat (s_recd, "sz  appr  ---bytes-------  ", LEN_RECD);
+      if (my.columns [3] != (uchar) '·')  ystrlcat (s_recd, "lvl  ", LEN_RECD);
+      if (my.columns [4] != (uchar) '·')  ystrlcat (s_recd, "-  len  ", LEN_RECD);
+      if (my.columns [5] != (uchar) '·')  ystrlcat (s_recd, "pos len  ", LEN_RECD);
+      if (my.columns [6] != (uchar) '·')  ystrlcat (s_recd, "t  s  ", LEN_RECD);
+      if (my.columns [7] != (uchar) '·')  ystrlcat (s_recd, "--own-  --grp-  o  s  ", LEN_RECD);
+      if (my.columns [8] != (uchar) '·')  ystrlcat (s_recd, "dr  ", LEN_RECD);
+      if (my.columns [9] != (uchar) '·')  ystrlcat (s_recd, "---name---------------------------------  ", LEN_RECD);
+      ystrlcat (s_recd, "---fully qualified file---------------------------", LEN_RECD);
       break;
    case OUTPUT_DETAIL   :
-      strlcat (s_recd, "mi ag sz lv nm ty st ---fully qualified file---------------------------", LEN_RECD);
+      ystrlcat (s_recd, "mi ag sz lv nm ty st ---fully qualified file---------------------------", LEN_RECD);
       break;
    case OUTPUT_ANALYSIS :
-      strlcat (s_recd, "len  ---name---------------------------------  pos nm  ", LEN_RECD);
-      strlcat (s_recd, "lv t s   uid# u gid# g o s   ", LEN_RECD);
-      strlcat (s_recd, "dr --inode- --dhode-   ", LEN_RECD);
-      strlcat (s_recd, "---epoch-- days a   ", LEN_RECD);
-      strlcat (s_recd, "sz ---bytes------- ---bcum--------   ", LEN_RECD);
-      strlcat (s_recd, "-cnt-- -ccum-   ", LEN_RECD);
-      strlcat (s_recd, "c ---ext---   pos len   ", LEN_RECD);
-      strlcat (s_recd, "---fully qualified file-------------------------------", LEN_RECD);
+      ystrlcat (s_recd, "len  ---name---------------------------------  pos nm  ", LEN_RECD);
+      ystrlcat (s_recd, "lv t s   uid# u gid# g o s   ", LEN_RECD);
+      ystrlcat (s_recd, "dr --inode- --dhode-   ", LEN_RECD);
+      ystrlcat (s_recd, "---epoch-- days a   ", LEN_RECD);
+      ystrlcat (s_recd, "sz ---bytes------- ---bcum--------   ", LEN_RECD);
+      ystrlcat (s_recd, "-cnt-- -ccum-   ", LEN_RECD);
+      ystrlcat (s_recd, "c ---ext---   pos len   ", LEN_RECD);
+      ystrlcat (s_recd, "---fully qualified file-------------------------------", LEN_RECD);
       break;
    case OUTPUT_GYGES    :
-      strlcat (s_recd, "len  ---name----------------------------------  pos  nm  ", LEN_RECD);
-      strlcat (s_recd, "lv  t  s  uid#  u  gid#  g  o  s  ", LEN_RECD);
-      strlcat (s_recd, "dr  --inode-  --dhode-  ", LEN_RECD);
-      strlcat (s_recd, "---epoch--  days  a  ", LEN_RECD);
-      strlcat (s_recd, "sz  ---bytes-------  ---bcum--------  ", LEN_RECD);
-      strlcat (s_recd, "-cnt--  -ccum-  ", LEN_RECD);
-      strlcat (s_recd, "c  ---ext---  pos  len  ", LEN_RECD);
-      strlcat (s_recd, "---fully qualified file------------------------------- ", LEN_RECD);
+      ystrlcat (s_recd, "len  ---name----------------------------------  pos  nm  ", LEN_RECD);
+      ystrlcat (s_recd, "lv  t  s  uid#  u  gid#  g  o  s  ", LEN_RECD);
+      ystrlcat (s_recd, "dr  --inode-  --dhode-  ", LEN_RECD);
+      ystrlcat (s_recd, "---epoch--  days  a  ", LEN_RECD);
+      ystrlcat (s_recd, "sz  ---bytes-------  ---bcum--------  ", LEN_RECD);
+      ystrlcat (s_recd, "-cnt--  -ccum-  ", LEN_RECD);
+      ystrlcat (s_recd, "c  ---ext---  pos  len  ", LEN_RECD);
+      ystrlcat (s_recd, "---fully qualified file------------------------------- ", LEN_RECD);
       break;
    }
    /*---(output)-------------------------*/
@@ -971,30 +971,30 @@ RPTG__line        (tENTRY *a_data, char *a_full)
    uchar       x_mag       =  '·';
    long        x_size      =    0;
    /*---(prepare)------------------------*/
-   strlcpy (s_recd, "", LEN_RECD);
+   ystrlcpy (s_recd, "", LEN_RECD);
    /*---(line number)--------------------*/
    if (my.headers == 'y')  {
-      strlcat (s_recd, "   ", LEN_RECD);
+      ystrlcat (s_recd, "   ", LEN_RECD);
    }
    /*---(line number)--------------------*/
    if (my.lineno == 'y')  {
       sprintf (t, "%-4d  ", my.total);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
    }
    /*---(create lines)-------------------*/
    switch (my.output) {
    case OUTPUT_NORMAL   :
       sprintf (t, "%s", a_full);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       break;
    case OUTPUT_PREFIX   :
       if (my.columns [0] != (uchar) '·')  {
          sprintf (t, "%c  %-9.9s  ", a_data->cat, a_data->ext);
-         strlcat (s_recd, t, LEN_RECD);
+         ystrlcat (s_recd, t, LEN_RECD);
       }
       if (my.columns [1] != (uchar) '·') {
          sprintf (t, "%-5d  %c  "  , s_days, s_age);
-         strlcat (s_recd, t, LEN_RECD);
+         ystrlcat (s_recd, t, LEN_RECD);
       }
       if (my.columns [2] != (uchar) '·') {
          FILE_commas (a_data->bytes, s);
@@ -1006,100 +1006,100 @@ RPTG__line        (tENTRY *a_data, char *a_full)
          else if (a_data->size ==  0) { x_mag = '-'; x_size = a_data->bytes; }
          else                         { x_mag = '·'; x_size = a_data->bytes; }
          if (a_data->size == 0) {
-            strlcpy (v, " -"  , LEN_LABEL);
-            strlcpy (u, "   " , LEN_LABEL);
+            ystrlcpy (v, " -"  , LEN_LABEL);
+            ystrlcpy (u, "   " , LEN_LABEL);
          } else  {
             sprintf (v, "%2d", a_data->size);
             sprintf (u, "%3ld", x_size);
          }
          sprintf (t, "%2s  %3s%c  %15.15s  "      , v, u, x_mag, s);
-         strlcat (s_recd, t, LEN_RECD);
+         ystrlcat (s_recd, t, LEN_RECD);
       }
       if (my.columns [3] != (uchar) '·') {
          sprintf (t, "%-3d  "      , a_data->lvl);
-         strlcat (s_recd, t, LEN_RECD);
+         ystrlcat (s_recd, t, LEN_RECD);
       }
       if (my.columns [4] != (uchar) '·') {
          sprintf (t, "%c  %-3d  "  , a_data->ascii, a_data->len);
-         strlcat (s_recd, t, LEN_RECD);
+         ystrlcat (s_recd, t, LEN_RECD);
       }
       if (my.columns [5] != (uchar) '·') {
          sprintf (t, "%3d %3d  "   , s_pos, s_len);
-         strlcat (s_recd, t, LEN_RECD);
+         ystrlcat (s_recd, t, LEN_RECD);
       }
       if (my.columns [6] != (uchar) '·') {
          sprintf (t, "%c  %c  "   , a_data->type, a_data->stype);
-         strlcat (s_recd, t, LEN_RECD);
+         ystrlcat (s_recd, t, LEN_RECD);
       }
       if (my.columns [7] != (uchar) '·') {
          sprintf (t, "%-4d %d  %-4d %d  %d  %c  "   , a_data->uid, a_data->own, a_data->gid, a_data->grp, a_data->oth, a_data->super);
-         strlcat (s_recd, t, LEN_RECD);
+         ystrlcat (s_recd, t, LEN_RECD);
       }
       if (my.columns [8] != (uchar) '·') {
          if (a_data->drive > 0)  sprintf (t, "%-2d  "   , a_data->drive);
          else                    sprintf (t, "-   ");
-         strlcat (s_recd, t, LEN_RECD);
+         ystrlcat (s_recd, t, LEN_RECD);
       }
       if (my.columns [9] != (uchar) '·') {
          sprintf (t, "%-40.40s  "   , a_data->name);
-         strlcat (s_recd, t, LEN_RECD);
+         ystrlcat (s_recd, t, LEN_RECD);
       }
       sprintf (t, "%s", a_full);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       break;
    case OUTPUT_DETAIL   :
       sprintf (t, "%c  %c  %d  %d  %c  %c  %c  ", a_data->cat, s_age, a_data->size, a_data->lvl, a_data->ascii, a_data->type, a_data->stype);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "%s", a_full);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       break;
    case OUTPUT_ANALYSIS :
       sprintf (s, "%-40.40s", a_data->name);
       if (a_data->len > 39)  s [39] = '>';
       sprintf (t, "%3d  %s  %3d %c"        , a_data->len, s, s_pos, a_data->ascii);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "   %2d %c %c"           , a_data->lvl, a_data->type, a_data->stype);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "   %4d %d %4d %d %d %c" , a_data->uid, a_data->own, a_data->gid, a_data->grp, a_data->oth, a_data->super);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "   %2d %-8d %-8d"       , a_data->drive, a_data->inode, a_data->dnode);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "   %-10d %-4d %c"       , a_data->changed, s_days, s_age);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "   %d  %-15ld %-15ld"   , a_data->size, a_data->bytes, a_data->bcum);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "   %-6ld %-6ld"         , a_data->count, a_data->ccum);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "   %c %-9.9s"           , a_data->cat  , a_data->ext);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "   %3d %3d"             , s_pos, s_len);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "   %s", a_full);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       break;
    case OUTPUT_GYGES    :
       sprintf (s, "%-40.40s", a_data->name);
       if (a_data->len > 39)  s [39] = '>';
       sprintf (t, "%3d  %s  %3d  %c  "        , a_data->len, s, s_pos, a_data->ascii);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "%2d  %c  %c  "           , a_data->lvl, a_data->type, a_data->stype);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "%4d  %d  %4d  %d  %d  %c  " , a_data->uid, a_data->own, a_data->gid, a_data->grp, a_data->oth, a_data->super);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "%2d  %-8d  %-8d  "       , a_data->drive, a_data->inode, a_data->dnode);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "%-10d  %-4d  %c  "       , a_data->changed, s_days, s_age);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "%d  %-15ld  %-15ld  "    , a_data->size, a_data->bytes, a_data->bcum);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "%-6d  %-6d  "         , a_data->count, a_data->ccum);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "%c  %-9.9s  "           , a_data->cat  , a_data->ext);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "%3d  %3d  "             , s_pos, s_len);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       sprintf (t, "%s  ", a_full);
-      strlcat (s_recd, t, LEN_RECD);
+      ystrlcat (s_recd, t, LEN_RECD);
       break;
    case OUTPUT_SILENT   : case OUTPUT_COUNT    : default :
       return 0;
@@ -1214,7 +1214,7 @@ RPTG__callback    (char a_serious, tENTRY *a_data, char *a_full)
    DEBUG_DATA  yLOG_char     ("a_serious" , a_serious);
    if (a_serious == 'y') {
       g_found = a_data;
-      strlcpy (g_path, a_full, LEN_RECD);
+      ystrlcpy (g_path, a_full, LEN_RECD);
    }
    /*---(report out)---------------------*/
    if (my.number >= 0) {
@@ -1283,8 +1283,8 @@ RPTG__dir_callback    (char a_serious, tENTRY *a_data, char *a_full)
    /*---(report out)---------------------*/
    /*> if (strcmp (a_data->name, "/"      ) == 0 && my.dir_all != 'y') x_adj = my.empty;   <*/
    /*> if (strcmp (a_data->name, "(empty)") == 0 && my.dir_all != 'y') return 1;      <*/
-   strlcpy (t, a_data->name, LEN_HUND);
-   strldchg (t, '.', 0, LEN_HUND);
+   ystrlcpy (t, a_data->name, LEN_HUND);
+   ystrldchg (t, '.', 0, LEN_HUND);
    yPARSE_vprintf (c, "node", a_data->lvl, t, a_full, a_data->bcum, a_data->ccum, 0, 0, 0, 0);
    ++c;
    /*---(complete)-----------------------*/
@@ -1601,42 +1601,42 @@ RPTG__unit              (char *a_question, int n)
    strcpy  (unit_answer, "RPTG             : question not understood");
    /*---(overall)------------------------*/
    if      (strcmp (a_question, "types"         ) == 0) {
-      strlcpy (t, "", LEN_DESC);
+      ystrlcpy (t, "", LEN_DESC);
       for (i = 0; i < strlen (my.types); ++i) {
          sprintf (s, " %c", my.types [i]);
-         strlcat (t, s, LEN_DESC);
+         ystrlcat (t, s, LEN_DESC);
       }
       snprintf (unit_answer, LEN_FULL, "RPTG types       :%s", t);
    }
    else if (strcmp (a_question, "mimes"         ) == 0) {
-      strlcpy (t, "", LEN_DESC);
+      ystrlcpy (t, "", LEN_DESC);
       for (i = 0; i < strlen (my.mimes); ++i) {
          sprintf (s, " %c", my.mimes [i]);
-         strlcat (t, s, LEN_DESC);
+         ystrlcat (t, s, LEN_DESC);
       }
       snprintf (unit_answer, LEN_FULL, "RPTG mimes       :%s", t);
    }
    else if (strcmp (a_question, "sizes"         ) == 0) {
-      strlcpy (t, "", LEN_DESC);
+      ystrlcpy (t, "", LEN_DESC);
       for (i = 0; i < strlen (my.sizes); ++i) {
          sprintf (s, " %c", my.sizes [i]);
-         strlcat (t, s, LEN_DESC);
+         ystrlcat (t, s, LEN_DESC);
       }
       snprintf (unit_answer, LEN_FULL, "RPTG sizes       :%s", t);
    }
    else if (strcmp (a_question, "ages"          ) == 0) {
-      strlcpy (t, "", LEN_DESC);
+      ystrlcpy (t, "", LEN_DESC);
       for (i = 0; i < strlen (my.ages); ++i) {
          sprintf (s, " %c", my.ages [i]);
-         strlcat (t, s, LEN_DESC);
+         ystrlcat (t, s, LEN_DESC);
       }
       snprintf (unit_answer, LEN_FULL, "RPTG ages        :%s", t);
    }
    else if (strcmp (a_question, "ascii"         ) == 0) {
-      strlcpy (t, "", LEN_DESC);
+      ystrlcpy (t, "", LEN_DESC);
       for (i = 0; i < strlen (my.ascii); ++i) {
          sprintf (s, " %c", my.ascii [i]);
-         strlcat (t, s, LEN_DESC);
+         ystrlcat (t, s, LEN_DESC);
       }
       snprintf (unit_answer, LEN_FULL, "RPTG ascii       :%s", t);
    }
@@ -1644,7 +1644,7 @@ RPTG__unit              (char *a_question, int n)
       sprintf (t, " %c   ", my.output);
       for (i = 0; i < strlen (my.columns); ++i) {
          sprintf (s, " %c", my.columns [i]);
-         strlcat (t, s, LEN_DESC);
+         ystrlcat (t, s, LEN_DESC);
       }
       snprintf (unit_answer, LEN_FULL, "RPTG output      :%s", t);
    }
@@ -1660,7 +1660,7 @@ RPTG__unit              (char *a_question, int n)
             g_path);
    }
    else if (strcmp (a_question, "s_recd"        ) == 0) {
-      strlencode (s_recd, ySTR_NORM, LEN_RECD);
+      ystrlencode (s_recd, ySTR_NORM, LEN_RECD);
       snprintf (unit_answer, LEN_FULL, "RPTG s_recd      : [%.79s]", s_recd);
    }
    /*---(complete)-----------------------*/
