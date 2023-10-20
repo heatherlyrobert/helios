@@ -202,8 +202,10 @@ CONF_read          (void)
    char        rc          =    0;
    /*---(header)-------------------------*/
    DEBUG_CONF   yLOG_enter   (__FUNCTION__);
+   yURG_msg ('>', "reading configuration file...");
    /*---(purge the tables)---------------*/
-   CONF__purge ();
+   rc = CONF__purge ();
+   /*---(read in configuration)----------*/
    rc = yPARSE_autoread (my.file_conf, NULL, CONF__read_one);
    --rce; if (rc < 0) {
       DEBUG_CONF   yLOG_exitr   (__FUNCTION__, rce);

@@ -41,9 +41,9 @@
 #define     P_CREATED   "2014-10"
 /*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "1.--, first major version in production"
-#define     P_VERMINOR  "1.1-, adding extensive unit testing"
-#define     P_VERNUM    "1.1l"
-#define     P_VERTXT    "fixes due to changed str functions to ¶ystr¶ in ySTR"
+#define     P_VERMINOR  "1.2-, stablizing after too many changes"
+#define     P_VERNUM    "1.2a"
+#define     P_VERTXT    "source and unit tests compile again"
 /*········· ··········· ´·····························´········································*/
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -694,8 +694,8 @@ char        PROG__unit_end          (void);
 
 /*===[[ HELIOS_FILE.C ]]======================================================*/
 /*---(file)-----------------*/
-char        FILE_open               (FILE **a_file, char *a_name, char a_mode);
-char        FILE__close             (FILE **a_file);
+char        DB__open                (FILE **a_file, char *a_name, char a_mode);
+char        DB__close               (FILE **a_file);
 /*---(drives)---------------*/
 char        WRITE__drives           (FILE *a_file);
 char        READ__drives            (FILE *a_file);

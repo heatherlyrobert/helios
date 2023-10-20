@@ -1,6 +1,14 @@
 /*===============================[[ beg-code ]]===============================*/
 #include    "helios.h"       /* LOCAL  : main header                          */
 
+
+/*
+ * METIS § dr4·· § -v verbose option to provide feedback just like yJOBS style            § N9J1bC §  · §
+ * METIS § dr2·· § take yURG_msg and yURG_err control functions from yJOBS                § N9J1l7 §  · §
+ *
+ */
+
+
 tGLOBAL     my;
 
 
@@ -137,8 +145,7 @@ PROG__init              (int a_argc, char *a_argv[])
       return rce;
    }
    DEBUG_PROG  yLOG_char    ("run_as"    , my.run_as);
-   rc = yPARSE_init  ('-', NULL, '-');
-   rc = yPARSE_delimiters  ("§");
+   rc = yPARSE_config  (YPARSE_MANUAL, NULL, YPARSE_ONETIME, YPARSE_FIELD);
    /*---(default modes)------------------*/
    my.mode         = MODE_SEARCH;
    my.report       = RPT_MATCHES;
@@ -436,6 +443,7 @@ PROG_driver             (void)
    /*---(header)-------------------------*/
    DEBUG_PROG   yLOG_enter   (__FUNCTION__);
    /*---(update)-------------------------*/
+   DEBUG_PROG   yLOG_char    ("updatedb"  , my.updatedb);
    if (my.updatedb == 'y') {
       rc = DRIVE_inventory ();
    }
@@ -463,8 +471,13 @@ PROG_driver             (void)
    }
    /*---(search)-------------------------*/
    else {
-      CONF_read  ();
-      READ_all   (my.file_data, &c);
+      rc = CONF_read  ();
+      DEBUG_PROG   yLOG_char    ("conf read" , rc);
+      if (rc < 0) {
+         DEBUG_PROG   yLOG_exitr   (__FUNCTION__, rce);
+         return rce;
+      }
+      rc = READ_all   (my.file_data, &c);
       if (rc >= 0)  rc = ENTRY_start ();
       if (rc >= 0)  rc = RPTG_walker (WALK_ALL);
       if (my.total > 0 && my.output != OUTPUT_COUNT)  RPTG_footer ();

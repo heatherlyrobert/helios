@@ -2,6 +2,14 @@
 #include    "helios.h"       /* LOCAL  : main header                          */
 
 
+/*
+ * METIS § wc4·· § change FILE_ functions to DB_ to keep consistent across programs       § N9J1jd §  · §
+ *
+ *
+ *
+ *
+ */
+
 
 
 static char    s_name    [LEN_RECD]  = "";
@@ -84,7 +92,7 @@ FILE__check             (char *a_name, char a_mode)
 }
 
 char
-FILE_open               (FILE **a_file, char *a_name, char a_mode)
+DB__open                (FILE **a_file, char *a_name, char a_mode)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -153,7 +161,7 @@ FILE_open               (FILE **a_file, char *a_name, char a_mode)
 }
 
 char
-FILE__close             (FILE **a_file)
+DB__close               (FILE **a_file)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -530,7 +538,7 @@ WRITE_all          (char *a_name, int *a_count)
       return rce;
    }
    /*---(open)---------------------------*/
-   rc = FILE_open  (&x_file, a_name, 'w');
+   rc = DB__open  (&x_file, a_name, 'w');
    DEBUG_OUTP   yLOG_value   ("open"      , rc);
    DEBUG_OUTP   yLOG_point   ("x_file"    , x_file);
    --rce;  if (rc < 0 || x_file == NULL) {
@@ -559,7 +567,7 @@ WRITE_all          (char *a_name, int *a_count)
       return rce;
    }
    /*---(close)--------------------------*/
-   rc = FILE__close (&x_file);
+   rc = DB__close (&x_file);
    DEBUG_OUTP   yLOG_value   ("close"     , rc);
    DEBUG_OUTP   yLOG_point   ("x_file"    , x_file);
    --rce;  if (rc < 0 || x_file != NULL) {
@@ -594,7 +602,7 @@ READ_all           (char *a_name, int *a_count)
    rc = ENTRY__purge ();
    rc = DRIVE__purge ();
    /*---(open)---------------------------*/
-   rc = FILE_open  (&x_file, a_name, 'r');
+   rc = DB__open  (&x_file, a_name, 'r');
    DEBUG_INPT   yLOG_value   ("open"      , rc);
    DEBUG_INPT   yLOG_point   ("x_file"    , x_file);
    --rce;  if (rc < 0 || x_file == NULL) {
@@ -614,7 +622,7 @@ READ_all           (char *a_name, int *a_count)
       if (rc < 0)  break;
    }
    /*---(close)--------------------------*/
-   rc = FILE__close (&x_file);
+   rc = DB__close (&x_file);
    DEBUG_INPT   yLOG_value   ("close"     , rc);
    DEBUG_INPT   yLOG_point   ("x_file"    , x_file);
    --rce;  if (rc < 0 || x_file != NULL) {

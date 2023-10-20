@@ -4,9 +4,6 @@
 /*
  *
  *
- * metis  § ----- § strerr messages about bad configuration
- *
- *
  *
  *
  */

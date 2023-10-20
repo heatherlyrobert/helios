@@ -25,8 +25,8 @@ main               (int a_argc, char *a_argv [])
    /*---(main)---------------------------*/
    rc = PROG_driver   ();
    /*---(complete)-----------------------*/
-   rc = PROG_shutdown ();
-   return 0;
+   PROG_shutdown ();
+   return rc;
 }
 
 

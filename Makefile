@@ -36,10 +36,10 @@ install_post       :
 	@sha1sum   /usr/bin/locate
 	@ln --force --physical /usr/bin/$(NAME_BASE)  /usr/bin/updatedb
 	@sha1sum   /usr/bin/updatedb
-	@ln --force --physical /usr/share/man/man1/$(NAME_BASE).1.bz2  /usr/share/man/man1/locate.1.bz2
-	@printf "installing manual ----------------------  /usr/share/man/man1/locate.1.bz2\n"
-	@ln --force --physical /usr/share/man/man1/$(NAME_BASE).1.bz2  /usr/share/man/man1/updatedb.1.bz2
-	@printf "installing manual ----------------------  /usr/share/man/man1/updatedb.1.bz2\n"
+	@ln --force --physical /usr/local/man/man1/$(NAME_BASE).1.bz2  /usr/local/man/man1/locate.1.bz2
+	@printf "installing manual ----------------------  /usr/local/man/man1/locate.1.bz2\n"
+	@ln --force --physical /usr/local/man/man1/$(NAME_BASE).1.bz2  /usr/local/man/man1/updatedb.1.bz2
+	@printf "installing manual ----------------------  /usr/local/man/man1/updatedb.1.bz2\n"
 
 remove_post        :
 	rm -f /usr/bin/$(NAME_BASE)_update
