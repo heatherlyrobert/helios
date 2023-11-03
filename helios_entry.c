@@ -1,18 +1,47 @@
 /*===============================[[ beg-code ]]===============================*/
 #include    "helios.h"       /* LOCAL  : main header                          */
 
+/*
+ * ========================== EXPLICITLY GPL LICENSED ==========================
+ *
+ * the only place you could have gotten this code is my github or website.
+ * given that, you already know it is GPL licensed, so act accordingly.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies of the Software, its documentation and marketing & publicity
+ * materials, and acknowledgment shall be given in the documentation, materials
+ * and software packages that this Software was used.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * this code is custom-tailored to the author's requirements.  given that,
+ * AND the fact that i update, upgrade, and refactor constantly, this is a
+ * volitile and quirky environment.  therefore, i do NOT recommend this
+ * program for anyone else's use ;) i share it just to potentially provide
+ * insight into alternate architectures and approaches.
+ */
+
 
 
 tPTRS      *dir_stack   [MAX_DEPTH];
 tPTRS      *root_stack  [MAX_DEPTH];
 
-tMIME       g_mime      [MAX_MIME];
-int         n_mime      = 0;
-
 tPTRS     *h_ptrs;
 tPTRS     *t_ptrs;
-int        n_ptrs;
-int        n_ptrs_ever;
+int        g_nptrs;
+int        g_uptrs;
 
 
 int     g_target  =    0;
@@ -163,8 +192,8 @@ ENTRY__new              (tPTRS **a_new, tPTRS *a_parent, tDRIVE *a_drive)
       x_new->m_prev   = t_ptrs;
    }
    t_ptrs = x_new;
-   ++n_ptrs;
-   ++n_ptrs_ever;
+   ++g_nptrs;
+   ++g_uptrs;
    /*---(hook to drive)------------------*/
    if (a_drive != NULL) {
       a_drive->root  = x_new;
@@ -259,8 +288,8 @@ ENTRY__free             (tPTRS **a_ptrs)
    if (x_curr->m_prev != NULL)   x_curr->m_prev->m_next = x_curr->m_next;
    else                          h_ptrs                 = x_curr->m_next;
    x_curr->m_next = x_curr->m_prev = NULL;
-   --n_ptrs;
-   DEBUG_ENVI   yLOG_complex ("global"   , "%3d, head=%p, tail=%p", n_ptrs, h_ptrs, t_ptrs);
+   --g_nptrs;
+   DEBUG_ENVI   yLOG_complex ("global"   , "%3d, head=%p, tail=%p", g_nptrs, h_ptrs, t_ptrs);
    /*---(ground pointer)-----------------*/
    DEBUG_ENVI   yLOG_note    ("ground");
    free (x_curr);
@@ -355,10 +384,10 @@ ENTRY_init              (void)
    /*---(header)-------------------------*/
    DEBUG_ENVI   yLOG_senter  (__FUNCTION__);
    /*---(pointers)-----------------------*/
-   h_ptrs             = NULL;
-   t_ptrs             = NULL;
-   n_ptrs             = 0;
-   n_ptrs_ever        = 0;
+   h_ptrs     = NULL;
+   t_ptrs     = NULL;
+   g_nptrs    = 0;
+   g_uptrs    = 0;
    /*---(searching)----------------------*/
    g_target   = 0;
    g_looked   = 0;
@@ -417,11 +446,12 @@ ENTRY_wrap              (void)
 /*====================------------------------------------====================*/
 static void      o___CHECKS__________________o (void) {;}
 
-char
+char         /*-> check file name for complexity --------------[ leaf······ ]-*/ /*-åfcg´·3á3···á···á·´E17´8··´21L12á·æ¬å1á1···´···á·······´···´····æ¬å>?eE#´7·7····´····´11X·æ-*/
 ENTRY__name_check       (cchar *a_name, char *a_warn, uchar *a_len)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
+   char        x_name      [LEN_HUND]  = "";
    int         x_len       =    0;
    char        x_warn      =    0;
    int         i           =    0;
@@ -439,12 +469,15 @@ ENTRY__name_check       (cchar *a_name, char *a_warn, uchar *a_len)
    }
    DEBUG_ENVI   yLOG_snote   (a_name);
    /*---(prepare)------------------------*/
+   ystrlcpy (x_name, a_name, LEN_HUND);
    x_len = strlen (a_name);
    DEBUG_ENVI   yLOG_sint    (x_len);
    --rce;  if (x_len <= 0) {
       DEBUG_ENVI   yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
    }
+   if (x_name [x_len - 1] == '~')  x_name [x_len--] = '\0';
+   if (x_len == 1 && x_name [0] == '/')  x_len = 0;
    /*---(check characters)---------------*/
    for (i = 0; i < x_len; ++i) {
       if (strchr (x_basic, a_name [i]) != NULL)       continue;
@@ -905,7 +938,8 @@ ENTRY__populate         (tPTRS *a_ptrs, char *a_full)
    x_data->count = 1;
    x_data->ccum  = 1;
    /*---(mime category)-------------------*/
-   rc = ENTRY__mime_check (a_full, x_data->name, &st, x_data->stype, x_data->type, x_data->ext, &(x_data->cat), x_data->bytes);
+   /*> rc = ENTRY__mime_check (a_full, x_data->name, &st, x_data->stype, x_data->type, x_data->ext, &(x_data->cat), x_data->bytes);   <*/
+   rc = EXT_categorize (a_full, x_data->name, &st, x_data->stype, x_data->type, x_data->bytes, &(x_data->cat), x_data->ext);
    --rce; if (rc < 0) {
       DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
       return rce;
@@ -1136,22 +1170,24 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
       return rce;
    }
    x_parent = a_parent->data;
-   /*---(filter)-------------------------*/
+   /*---(check filter)-------------------*/
    rc = CONF_find (x_path, x_parent->name, &(x_parent->stype), &a_silent);
    DEBUG_ENVI   yLOG_value   ("find"      , rc);
    --rce;  if (rc < 0) {
       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (x_parent->stype == STYPE_PASS) {
-      DEBUG_ENVI   yLOG_note    ("dir_pass, get out and retain");
-      DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
-      return 0;
-   }
-   --rce;  if (strchr (STYPE_BADS, x_parent->stype) != NULL) {
-      DEBUG_ENVI   yLOG_note    ("dir_avoid, dir_ignore, dir_private, get out and remove");
+   /*---(filter and remove)--------------*/
+   --rce;  if (x_parent->stype == STYPE_AVOID_FULL) {
+      DEBUG_ENVI   yLOG_note    ("avoid_full, get out and remove");
       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
+   }
+   /*---(filter but retain)--------------*/
+   --rce;  if (x_parent->stype == STYPE_PRIVATE || x_parent->stype == STYPE_AVOID || x_parent->stype == STYPE_AVOID_EVERY) {
+      DEBUG_ENVI   yLOG_note    ("private, avoid, avoid_every, get out and retain");
+      DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
+      return 0;
    }
    DEBUG_ENVI   yLOG_complex ("head child", "%s, %s, %dn, %dc", x_path, a_parent->data->name, a_parent->nchild, c);
    /*---(add drive if needed)------------*/
@@ -1180,7 +1216,10 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
       /*---(read)------------------------*/
       x_entry = readdir (x_dir);
       DEBUG_ENVI   yLOG_point   ("X_ENTRY"   , x_entry);
-      if (x_entry == NULL)                      break;
+      if (x_entry == NULL)  {
+         DEBUG_ENVI   yLOG_note    ("break at end of list");
+         break;
+      }
       /*---(filter)----------------------*/
       if (x_entry->d_name   == NULL)            continue;
       DEBUG_ENVI   yLOG_info    ("entry"     , x_entry->d_name);
@@ -1216,22 +1255,22 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
       if (x_data->type == ENTRY_DIR) {
          if        (x_begin != 'd' && x_data->stype   == STYPE_LINK) {
             DEBUG_ENVI   yLOG_note    ("stop, do not recurse on symlink directories");
-         } else if (x_data->stype   == STYPE_AVOID) {
-            DEBUG_ENVI   yLOG_note    ("stop, do not recurse as this is dir_avoid");
-         } else if (x_data->stype   == STYPE_NEVER) {
-            DEBUG_ENVI   yLOG_note    ("stop, do not recurse as this is dir_never");
-         } else if (x_parent->stype == STYPE_LAST) {
-            DEBUG_ENVI   yLOG_note    ("stop, do not recurse as this is dir_last");
+         } else if (x_data->stype   == STYPE_AVOID_FULL) {
+            DEBUG_ENVI   yLOG_note    ("stop, do not recurse as this is avoid_full");
+         } else if (x_data->stype   == STYPE_SILENT_EVERY) {
+            DEBUG_ENVI   yLOG_note    ("stop, do not recurse as this is silent_every");
+         } else if (x_parent->stype == STYPE_AVOID_UNDER) {
+            DEBUG_ENVI   yLOG_note    ("stop, do not recurse as this is avoid_under");
          } else {
-            DEBUG_ENVI   yLOG_note    ("found a sub-directory that needs exploring");
-            if (x_parent->stype == STYPE_LASTPLUS) {
+            DEBUG_ENVI   yLOG_note    ("found a silent_under sub-directory that needs exploring");
+            if (x_parent->stype == STYPE_SILENT_UNDER || x_parent->stype == STYPE_SILENT_EVERY) {
                rc2 = ENTRY__level_read (x_curr, x_path, 'y');
             } else {
                rc2 = ENTRY__level_read (x_curr, x_path, a_silent);
             }
             DEBUG_ENVI   yLOG_value   ("recurse"   , rc);
             if (rc2 < 0) {
-               DEBUG_ENVI   yLOG_note    ("dir_never or dir_avoid, no totals, erase entry");
+               DEBUG_ENVI   yLOG_note    ("silent_never or avoid_full, no totals, erase entry");
                DEBUG_ENVI   yLOG_info    ("killing"   , x_data->name);
                MIME_del_seen (x_data->ext, x_data->bytes, x_full);
                ENTRY__free (&x_curr);
@@ -1241,8 +1280,8 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
       }
       /*---(check silent)----------------*/
       DEBUG_ENVI   yLOG_note    ("check for silent treatment");
-      if (x_data->type == ENTRY_DIR && (x_data->stype == STYPE_AVOID || x_data->stype == STYPE_NEVER)) {
-         DEBUG_ENVI   yLOG_note    ("dir_avoid or dir_never entry, deleting after recursing, remove from total");
+      if (x_data->type == ENTRY_DIR && (x_data->stype == STYPE_AVOID_FULL || x_data->stype == STYPE_SILENT_EVERY)) {
+         DEBUG_ENVI   yLOG_note    ("avoid_full or silent_every entry, deleting after recursing, remove from total");
          MIME_del_seen (x_data->ext, x_data->bytes, x_full);
          ENTRY__free (&x_curr);
       }
@@ -1294,6 +1333,7 @@ ENTRY__level_read       (tPTRS *a_parent, char *a_path, char a_silent)
    closedir (x_dir);
    DEBUG_ENVI   yLOG_complex ("tail child", "%s, %s, %dn, %dc", x_path, a_parent->data->name, a_parent->nchild, c);
    /*---(sort)---------------------------*/
+   DEBUG_ENVI   yLOG_complex ("for sort"  , "%p, %p", a_parent->c_head, a_parent->c_tail);
    rc = ySORT_troll (YSORT_NONE, YSORT_ASCEND, &(a_parent->c_head), &(a_parent->c_tail));
    /*---(complete)-----------------------*/
    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
@@ -1368,14 +1408,17 @@ ENTRY_tail         (tDRIVE *a_drive, tPTRS *a_root)
     *> DEBUG_ENVI   yLOG_point   ("->tail"    , x_ptrs->parent->c_tail);               <* 
     *> DEBUG_ENVI   yLOG_point   ("->->data"  , x_ptrs->parent->c_tail->data);         <* 
     *> DEBUG_ENVI   yLOG_info    ("->->->name", x_ptrs->parent->c_tail->data->name);   <*/
-   strcpy (x_ptrs->data->name, "(empty)");
+   strcpy (x_ptrs->data->name, "((empty))");
    x_ptrs->data->drive = a_drive->ref;
    x_ptrs->data->type  = ENTRY_DIR;
    x_ptrs->data->lvl   =   1;
    x_ptrs->data->bytes = a_drive->size - a_root->data->bcum;
    x_ptrs->data->bcum  = a_drive->size - a_root->data->bcum;
    a_root->data->bcum  = a_drive->size;
-   MIME_add_seen (EXT_EMPTY, NULL, x_ptrs->data->bcum, NULL);
+   x_ptrs->data->cat   = MIME_EMPTY;
+   strcpy (x_ptrs->data->ext, "e_empty");
+   MIME_add_seen (x_ptrs->data->ext, NULL, x_ptrs->data->bytes, NULL);
+   /*> MIME_add_seen (EXT_EMPTY, NULL, x_ptrs->data->bcum, NULL);                     <*/
    /*---(complete)-----------------------*/
    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
    return 0;
@@ -1588,6 +1631,7 @@ ENTRY__walker            (char a_trigger, tPTRS *a_dir, char *a_path, void *a_ca
    char        x_path      [LEN_RECD];
    char        x_full      [LEN_RECD];
    int         c           =    0;
+   char        x_priv      =    0;
    /*---(header)-------------------------*/
    DEBUG_DATA   yLOG_enter   (__FUNCTION__);
    DEBUG_DATA   yLOG_complex ("args"      , "%c, %2d, %s, %s", a_trigger, a_dir->data->lvl, a_dir->data->name, a_path);
@@ -1596,11 +1640,16 @@ ENTRY__walker            (char a_trigger, tPTRS *a_dir, char *a_path, void *a_ca
       rc = ENTRY__walk_handler (a_trigger, a_dir, NULL, a_path, x_full, a_callback);
       DEBUG_DATA   yLOG_value   ("handler"   , rc);
    }
-   /*---(spin through entries)-----------*/
-   rc = CONF_private (a_path);
-   --rce;  if (rc < 0) {
+   /*---(check if private)---------------*/
+   x_priv = CONF_private (a_path);
+   --rce;  if (x_priv < 0) {
       DEBUG_DATA   yLOG_exit    (__FUNCTION__);
       return 0;
+   }
+   /*---(return if found)----------------*/
+   if (rc == 1) {
+      DEBUG_DATA   yLOG_exit    (__FUNCTION__);
+      return 1;
    }
    /*---(spin through entries)-----------*/
    DEBUG_DATA   yLOG_complex ("ENTRY"     , "%3d of %3d for %s, %p", c, a_dir->nchild, a_dir->data->name, a_dir->c_head);
@@ -1685,7 +1734,7 @@ ENTRY__unit             (char *a_question, int n)
    if      (strcmp (a_question, "count"         ) == 0) {
       x_curr = h_ptrs; while (x_curr != NULL) { ++x_fore; x_curr = x_curr->m_next; }
       x_curr = t_ptrs; while (x_curr != NULL) { ++x_back; x_curr = x_curr->m_prev; }
-      snprintf (unit_answer, LEN_FULL, "ENTRY count      : num=%4d, fore=%4d, back=%4d", n_ptrs, x_fore, x_back);
+      snprintf (unit_answer, LEN_FULL, "ENTRY count      : num=%4d, fore=%4d, back=%4d", g_nptrs, x_fore, x_back);
    }
    else if (strcmp (a_question, "entry"         ) == 0) {
       x_curr  = h_ptrs;

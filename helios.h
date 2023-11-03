@@ -1,4 +1,6 @@
 /*===============================[[ beg-code ]]===============================*/
+#ifndef helios
+#define helios yes
 
 
 /*===[[ ONE_LINERS ]]=========================================================*/
@@ -10,7 +12,7 @@
 #define     P_SUBJECT   "file-system searching"
 #define     P_PURPOSE   "file system indexing, searching, and analytics"
 /*········· ··········· ´·····························´········································*/
-#define     P_NAMESAKE  "helios-phaeton (radiant)"
+#define     P_NAMESAKE  "helios-phaeton (radiant one)"
 #define     P_PRONOUNCE "hee·lee·ohs fay·tuhn"
 #define     P_HERITAGE  "the all-seeing titan god of the sun and clear sight"
 #define     P_BRIEFLY   "all-seeing sun god"
@@ -42,9 +44,10 @@
 /*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "1.--, first major version in production"
 #define     P_VERMINOR  "1.2-, stablizing after too many changes"
-#define     P_VERNUM    "1.2a"
-#define     P_VERTXT    "source and unit tests compile again"
+#define     P_VERNUM    "1.2b"
+#define     P_VERTXT    "basics are solid again, new verbs, cleaner reporting"
 /*········· ··········· ´·····························´········································*/
+#define     P_WARNING   "this does exactly what i want with ZERO thought to working for you"
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
 #define     P_REMINDER  "there are many better options, but i *own* every byte of this one"
@@ -53,6 +56,45 @@
 /*                      ´·········1·········2·········3·········4·········5·········6·········7*/
 /*===[[ HEADER END ]]=========================================================*/
 
+/*
+ * ========================== EXPLICITLY GPL LICENSED ==========================
+ *
+ * the only place you could have gotten this code is my github or website.
+ * given that, you already know it is GPL licensed, so act accordingly.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies of the Software, its documentation and marketing & publicity
+ * materials, and acknowledgment shall be given in the documentation, materials
+ * and software packages that this Software was used.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * this code is custom-tailored to the author's requirements.  given that,
+ * AND the fact that i update, upgrade, and refactor constantly, this is a
+ * volitile and quirky environment.  therefore, i do NOT recommend this
+ * program for anyone else's use ;) i share it just to potentially provide
+ * insight into alternate architectures and approaches.
+ */
+
+
+/*
+ * METIS § ····· § create a link table to store symlink destinations                      § NA15Pd §  · §
+ *
+ *
+ *
+ */
 
 /*
  *
@@ -249,6 +291,7 @@
 #include    <yREGEX.h>       /* CUSTOM : heatherly regular expressions        */
 #include    <yJOBS.h>             /* heatherly job execution and control      */
 #include    <yEXEC.h>
+#include    <yCOLOR_solo.h>
 
 
 
@@ -273,13 +316,12 @@ typedef     struct     cENTRY    tENTRY;
 
 #define     FILE_CONF   "/etc/helios.conf"
 #define     FILE_DB     "/var/lib/helios/helios.db"
-#define     FILE_MIME   "/var/lib/helios/helios.mime"
+#define     FILE_MIME   "/var/lib/helios/helios_mime.ctrl"
 
 
 #define     MAX_STR     50
 #define     MAX_NAME   100
 #define     MAX_REGEX  200
-#define     MAX_RECD  2000
 #define     MAX_DEPTH   20
 
 
@@ -309,8 +351,8 @@ struct cDRIVE {
 };
 extern      tDRIVE    *h_drive;
 extern      tDRIVE    *t_drive;
-extern      short      n_drive;
-extern      short      u_drive;
+extern      short      g_ndrive;
+extern      short      g_udrive;
 
 
 #define       ENTRY_REG      '-'
@@ -331,17 +373,25 @@ extern      short      u_drive;
 #define       WALK_INDEXED   '#'
 #define       WALK_UPTO      '-'
 
-#define       STYPE_NORMAL   '-'
-#define       STYPE_LINK     '>'
-#define       STYPE_SILENT   '~'
-#define       STYPE_AVOID    '['
-#define       STYPE_PASS     '('
-#define       STYPE_LAST     ')'
-#define       STYPE_LASTPLUS '+'
-#define       STYPE_NEVER    'x'
-#define       STYPE_PRIVATE  '!'
-#define       STYPE_BADS     "[x"
-#define       STYPE_EMPTY    ' '
+/*---(normal stypes)------------------*/
+#define       STYPE_EMPTY        ' '
+#define       STYPE_NORMAL       '-'
+#define       STYPE_LINK         '>'
+/*---(silenced stypes)----------------*/
+#define       STYPE_SILENT       '~'
+#define       STYPE_SILENT_UNDER '+'
+#define       STYPE_SILENT_EVERY 'x'
+#define       STYPE_SILENT_WHEN  '?'
+/*---(avoided stypes)-----------------*/
+#define       STYPE_AVOID        '('
+#define       STYPE_AVOID_FULL   '['
+#define       STYPE_AVOID_UNDER  ')'
+#define       STYPE_AVOID_EVERY  'X'
+/*---(private stype)------------------*/
+#define       STYPE_PRIVATE      '!'
+/*---(combinations)-------------------*/
+#define       STYPE_BADS         "[!"
+/*---(end)----------------------------*/
 
 #define       AGES_JUST      'j'
 #define       AGES_DAYS      'd'
@@ -361,43 +411,56 @@ extern      short      u_drive;
 #define       ASCII_SPACE    '>'
 #define       ASCII_CRAZY    'X'
 #define       ASCII_ALL      "-A+#>X"
-#define       ASCII_OPTIONS  " --upper --punct --extend --space --crazy --badname "
-#define       ASCII_NEGS     " --noupper --nopunct --noextend --nospace --nocrazy --nobadname "
+#define       ASCII_OPTIONS  " --basic --upper --punct --extend --space --crazy "
+#define       ASCII_NEGS     " --nobasic --noupper --nopunct --noextend --nospace --nocrazy "
 
-#define       EXT_DIR        "d_dir"
-#define       EXT_CONF       "t_conf"
-#define       EXT_EXEC       "x_exec"  
-#define       EXT_JEXEC      "j_exec"  
-#define       EXT_JLIB       "j_lib"
-#define       EXT_JUNIT      "j_unit"
-#define       EXT_JC         "j_c"
-#define       EXT_BDEV       "b_dev"
-#define       EXT_CDEV       "c_dev"
-#define       EXT_FIFO       "f_fifo"
-#define       EXT_SOCK       "s_socket"
-#define       EXT_DLINK      "d_link"
-#define       EXT_RLINK      "r_link"
-#define       EXT_ELINK      "x_link"
-#define       EXT_CLINK      "c_link"
-#define       EXT_BLINK      "b_link"
-#define       EXT_FLINK      "f_link"
-#define       EXT_SLINK      "s_link"
-#define       EXT_ULINK      "u_link"
-#define       EXT_BACKUP     "b_tilde"
-#define       EXT_UNKNOWN    "o_ext"
-#define       EXT_MYSTERY    "o_none"
-#define       EXT_MANUAL     "manual"
-#define       EXT_OHIDDEN    "o_hidden"
-#define       EXT_XHIDDEN    "x_hidden"
-#define       EXT_GIT        "o_git"
-#define       EXT_PORTAGE    "o_portage"
-#define       EXT_KERNEL     "o_kernel"
-#define       EXT_CACHE      "o_cache"
-#define       EXT_SCAN       "i_scan"
-#define       EXT_PHOTO      "i_photo"
-#define       EXT_WALL       "i_wall" 
-#define       EXT_PRIVATE    "!_priv"
-#define       EXT_EMPTY      "e_empty"
+extern const char *EXT_DIR;
+extern const char *EXT_DHIDDEN;
+
+extern const char *EXT_CONF;
+
+extern const char *EXT_EXEC;
+extern const char *EXT_DEBUG;
+extern const char *EXT_UNIT;
+extern const char *EXT_MAKEF;
+extern const char *EXT_MMAKE;
+extern const char *EXT_JEXEC;
+extern const char *EXT_JLIB;
+extern const char *EXT_JUNIT;
+extern const char *EXT_JC;
+
+extern const char *EXT_BDEV;
+extern const char *EXT_CDEV;
+extern const char *EXT_FIFO;
+extern const char *EXT_SOCK;
+
+extern const char *EXT_DLINK;
+extern const char *EXT_RLINK;
+extern const char *EXT_ELINK;
+extern const char *EXT_CLINK;
+extern const char *EXT_BLINK;
+extern const char *EXT_FLINK;
+extern const char *EXT_SLINK;
+extern const char *EXT_ULINK;
+
+extern const char *EXT_BACKUP;
+extern const char *EXT_UNKNOWN;
+extern const char *EXT_MYSTERY;
+extern const char *EXT_MANUAL;
+extern const char *EXT_OHIDDEN;
+extern const char *EXT_XHIDDEN;
+
+extern const char *EXT_GIT;
+extern const char *EXT_PORTAGE;
+extern const char *EXT_KERNEL;
+extern const char *EXT_CACHE;
+
+extern const char *EXT_SCAN;
+extern const char *EXT_PHOTO;
+extern const char *EXT_WALL;
+
+extern const char *EXT_PRIVATE;
+extern const char *EXT_EMPTY;
 
 #define       SIZES_ALL      "0123456789abcdefghi"
 #define       SIZES_OPTIONS  " --zb --sb --kb --mb --gb --tb --pb "
@@ -455,8 +518,8 @@ struct cPTRS {
 };
 extern      tPTRS      *h_ptrs;
 extern      tPTRS      *t_ptrs;
-extern      int         n_ptrs;
-extern      int         n_ptrs_ever;
+extern      int         g_nptrs;
+extern      int         g_uptrs;
 
 
 
@@ -475,7 +538,6 @@ struct cCONFS {
 };
 extern      tCONFS      g_confs [MAX_CONFS];
 extern      int         g_nconf;
-
 
 typedef  struct cBUCKET tSLOT;
 struct cBUCKET {
@@ -507,11 +569,26 @@ struct cBUCKET {
 #define     MIME_MEDIA       'M'
 #define     MIME_WORK        'W'
 #define     MIME_TEMP        'T'
-#define     MIME_OPTIONS     " --audio --video --image --source --text --base --crypt --prop --exec --dir --junk --other --huh --allmedia --allwork --alltemp "
+#define     MIME_OPTS        " --audio --video --image --source --text --base --crypt --prop --exec --dir --junk --other --huh --allmedia --allwork --alltemp "
 #define     MIME_NEGS        " --noaudio --novideo --noimage --nosource --notext --nobase --nocrypt --noprop --noexec --nodir --nojunk --noother --nohuh --zeromedia --zerowork --zerotemp "
 
 
 
+/*> typedef     struct      cCAT        tCAT;                                         <* 
+ *> struct cCAT {                                                                     <* 
+ *>    uchar       name        [LEN_TERSE];                                           <* 
+ *>    uchar       cat;                                                               <* 
+ *>    uchar       desc        [LEN_DESC];                                            <* 
+ *>    int         n_seen;                                                            <* 
+ *>    llong       b_seen;                                                            <* 
+ *>    int         n_kept;                                                            <* 
+ *>    llong       b_kept;                                                            <* 
+ *>    int         n_found;                                                           <* 
+ *>    llong       b_found;                                                           <* 
+ *> };                                                                                <*/
+
+
+#define     MAX_CAT        50
 #define     MAX_MIME      500
 typedef     struct      cMIME       tMIME;
 struct cMIME {
@@ -526,8 +603,10 @@ struct cMIME {
    int         n_found;
    llong       b_found;
 };
-extern      tMIME       g_mime [MAX_MIME];
-extern      int         n_mime;
+extern    tMIME       g_cats [MAX_CAT];
+extern    int         g_ncat;
+extern    tMIME       g_mime [MAX_MIME];
+extern    int         g_nmime;
 
 
 struct cGLOBAL {
@@ -535,6 +614,7 @@ struct cGLOBAL {
    char        run_as;                      /* khronos, eos, heracles, ...    */
    char        run_mode;                    /* verify, install, audit, ...    */
    char        run_file    [LEN_PATH];      /* file to act on                 */
+   char        heartbeat   [LEN_HUND];      /* heartbeat                      */
    /*---(run control)--------------------*/
    char        mode;                        /* run mode                       */
    char        report;                      /* report type                    */
@@ -628,15 +708,15 @@ extern      tGLOBAL    my;
 /*---(output columns)-----------------*/
 #define     OUTPUT_SILENT       '-'
 #define     OUTPUT_NORMAL       'n'
+#define     OUTPUT_MIME         'm'
 #define     OUTPUT_PREFIX       'p'
 #define     OUTPUT_DETAIL       'd'
 #define     OUTPUT_ANALYSIS     'a'
 #define     OUTPUT_GYGES        'g'
 #define     OUTPUT_COUNT        'c'
-#define     OUTPUT_OPTIONS      " --silent --normal --detail --analysis --gyges --count --indent "
+#define     OUTPUT_OPTIONS      " --silent --normal --mime --detail --analysis --gyges --count --indent "
 /*---(column options)-----------------*/
 #define     COL_MIME            'm'
-#define     COL_AGES            'a'
 #define     COL_SIZE            's'
 #define     COL_LEVEL           'l'
 #define     COL_NAMING          'n'
@@ -645,7 +725,7 @@ extern      tGLOBAL    my;
 #define     COL_PERMS           'p'
 #define     COL_DRIVE           'd'
 #define     COL_BASE            'b'
-#define     COL_OPTIONS         " --show-mime --show-age --show-size --show-level --show-naming --show-find --show-type --show-perms --show-drive --show-base "
+#define     COL_OPTIONS         " --show-mime --show-age --show-AGE --show-size --show-SIZE --show-level --show-naming --show-find --show-type --show-perms --show-PERMS --show-drive --show-base --show-rsh "
 /*---(destinations)-------------------*/
 #define     DEST_FILE           'f'
 #define     DEST_STDOUT         's'
@@ -693,20 +773,27 @@ char        PROG__unit_end          (void);
 
 
 /*===[[ HELIOS_FILE.C ]]======================================================*/
+/*---(program)--------------*/
+char        DB_init                 (void);
+/*---(header)---------------*/
+char        DB__head_write_one      (FILE *a_file, char a_label [LEN_TERSE], int a_var);
+char        DB__head_write          (FILE *a_file, char a_name [LEN_LABEL], char a_ver [LEN_SHORT], int a_nconf, int a_nmime, int a_ndrive, int a_nentry, char a_heart [LEN_DESC]);
+char        DB__head_read_one       (FILE *a_file, char a_label [LEN_TERSE], int *r_var);
+char        DB__head_read           (FILE *a_file, char r_name [LEN_LABEL], char r_ver [LEN_SHORT], int *r_nconf, int *r_nmime, int *r_ndrive, int *r_nentry, char r_heart [LEN_DESC]);
 /*---(file)-----------------*/
-char        DB__open                (FILE **a_file, char *a_name, char a_mode);
-char        DB__close               (FILE **a_file);
+char        DB__open                (cchar a_name [LEN_PATH], char a_mode, FILE **r_file);
+char        DB__close               (FILE **b_file);
 /*---(drives)---------------*/
-char        WRITE__drives           (FILE *a_file);
-char        READ__drives            (FILE *a_file);
+char        DB__drive_write         (FILE *a_file);
+char        DB__drive_read          (FILE *a_file);
 /*---(entries)--------------*/
-char        WRITE__entry            (FILE *a_file, tENTRY *a_entry, int *a_count);
-char        READ__entry             (FILE *a_file, int *a_count);
+char        DB__entry_write         (FILE *a_file, tENTRY *a_entry, int *a_count);
+char        DB__entry_read          (FILE *a_file, int *a_count);
 /*---(directories)----------*/
-char        WRITE__dir              (FILE *a_file, tPTRS *a_dir, int *a_count);
+char        DB__dir_write           (FILE *a_file, tPTRS *a_dir, int *a_count);
 /*---(drivers)--------------*/
-char        WRITE_all               (char *a_name, int *a_count);
-char        READ_all                (char *a_name, int *a_count);
+char        DB_write                (char *a_name, int *a_count);
+char        DB_read                 (char *a_name, int *a_count);
 /*---(reading)--------------*/
 char        FILE_commas             (llong a_number, char *a_string);
 char        FILE_uncommas           (char *a_string, llong *a_number);
@@ -737,7 +824,8 @@ uchar       MIME_mime_cat           (int m);
 uchar      *MIME_mime_ext           (int m);
 /*---(input)----------------*/
 char        MIME__parse_essential   (char *a_recd, char *a_flag, char **s);
-char        MIME_read               (void);
+char        MIME__handler           (int a_line, uchar *a_verb);
+char        MIME_pull               (cchar a_name [LEN_PATH]);
 /*---(output)---------------*/
 char        MIME__write_clear       (void);
 char        MIME__write_title       (FILE *f, char a_type);
@@ -759,10 +847,17 @@ char*       MIME__unit              (char *a_question, char *a_ext, int n);
 char        CONF__purge             (void);
 char        CONF_init               (void);
 char        CONF__duplicate         (uchar *a_path);
-char        CONF_read               (void);
+char        CONF__handler           (int a_line, cchar a_verb [LEN_LABEL]);
+char        CONF_pull               (cchar a_name [LEN_PATH]);
+
 char        CONF_find               (char *a_full, char *a_name, char *a_stype, char *a_silent);
 char        CONF_private            (uchar *a_path);
+/*---(database)-------------*/
+char        CONF_db_write           (FILE *a_file);
+char        CONF_db_read            (FILE *a_file, short a_count);
+/*---(unittest)-------------*/
 char*       CONF__unit              (char *a_question, int n);
+/*---(done)-----------------*/
 
 
 /*===[[ HELIOS_ENTRY.C ]]=====================================================*/
@@ -896,7 +991,7 @@ char        DRIVE_new               (tDRIVE **a_drive);
 char        DRIVE__remove           (tDRIVE **a_drive);
 char        DRIVE__purge            (void);
 char        DRIVE_manual            (tDRIVE **a_drive, uchar a_ref, char *a_host, char *a_serial, char *a_device, char *a_mpoint, char *a_type, llong a_size, int a_written);
-char        DRIVE__mtab             (cchar *a_mount, char *a_part, char *a_type);
+/*> char        DRIVE__mtab             (cchar *a_mount, char *a_part, char *a_type);   <*/
 char        DRIVE__stats            (cchar *a_part, llong *a_size, char *a_serial);
 char        DRIVE_populate          (tDRIVE **a_drive, char *a_mount, long a_time, char *a_index);
 char        DRIVE_inventory         (void);
@@ -907,5 +1002,30 @@ char*       DRIVE__unit             (char *a_question, int n);
 char       *ySTR_sub           (char *a_source, int a_beg, int a_len, char a_mode);
 
 
+char        helios_yjobs            (cchar a_req, cchar *a_data);
 
+/*===[[ HELIOS_EXT.C ]]=======================================================*/
+/*--------- *---------------------- *-----------------------------------------*/
+/*---(first)----------------*/
+char        EXT__gentoo             (cchar a_full [LEN_PATH], char **r_ext);
+char        EXT__git                (cchar a_full [LEN_PATH], char **r_ext);
+char        EXT__symlink            (char a_stype, char a_type, char **r_ext);
+char        EXT__device             (char a_type, char **r_ext);
+char        EXT__tilde              (cchar a_name [LEN_HUND], char **b_ext);
+char        EXT__suffix             (cchar a_name [LEN_HUND], char **r_ext);
+/*---(second)---------------*/
+char        EXT__hidden             (cchar a_name [LEN_HUND], char **b_ext);
+char        EXT__exec               (cchar a_name [LEN_HUND], tSTAT *a_stat, char **b_ext);
+char        EXT__manual             (cchar a_name [LEN_HUND], char **b_ext);
+char        EXT__unitc              (cchar a_name [LEN_HUND], char **b_ext);
+char        EXT__libs_two           (cchar a_full [LEN_PATH], cchar a_name [LEN_HUND], tSTAT *a_stat, char **r_ext);
+char        EXT__exec_two           (cchar a_full [LEN_PATH], cchar a_name [LEN_HUND], char **b_ext);
+char        EXT__cleanup            (cchar a_full [LEN_PATH], cchar a_name [LEN_HUND], char **b_ext);
+/*---(driver)---------------*/
+char        EXT_categorize          (cchar a_full [LEN_PATH], cchar a_name [LEN_HUND], tSTAT *a_stat, char a_stype, char a_type, long a_bytes, char *r_cat, char *r_ext);
+/*---(done)-----------------*/
+
+
+
+#endif
 /*===============================[[ end-code ]]===============================*/

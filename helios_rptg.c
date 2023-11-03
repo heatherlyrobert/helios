@@ -1,6 +1,44 @@
 /*===============================[[ beg-code ]]===============================*/
 #include    "helios.h"       /* LOCAL  : main header                          */
 
+/*
+ * ========================== EXPLICITLY GPL LICENSED ==========================
+ *
+ * the only place you could have gotten this code is my github or website.
+ * given that, you already know it is GPL licensed, so act accordingly.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies of the Software, its documentation and marketing & publicity
+ * materials, and acknowledgment shall be given in the documentation, materials
+ * and software packages that this Software was used.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * this code is custom-tailored to the author's requirements.  given that,
+ * AND the fact that i update, upgrade, and refactor constantly, this is a
+ * volitile and quirky environment.  therefore, i do NOT recommend this
+ * program for anyone else's use ;) i share it just to potentially provide
+ * insight into alternate architectures and approaches.
+ */
+
+
+/*
+ * METIS § ····· § need to get yREGEX find stats working                                  § NA05on §  · §
+ *
+ *
+ */
 
 
 static char  s_recd    [LEN_RECD]  = "";
@@ -9,6 +47,91 @@ static char  s_age     = '-';
 static int   s_pos     =  -1;
 static int   s_len     =  -1;
 static long  s_bytes   =   0;
+
+#define   IF_MIME   if (my.columns [0] != (uchar) '·') 
+
+#define   IF_AGE    if (my.columns [1] != (uchar) '·') 
+#define   IF_NAGE   if (my.columns [1] == 'a') 
+#define   IF_DAGE   if (my.columns [1] == 'A') 
+
+#define   IF_SIZE   if (my.columns [2] != (uchar) '·') 
+#define   IF_NSIZE  if (my.columns [2] == 's') 
+#define   IF_DSIZE  if (my.columns [2] == 'S') 
+#define   IF_MSIZE  if (my.columns [2] == '$') 
+
+#define   IF_LVL    if (my.columns [3] != (uchar) '·') 
+
+#define   IF_NAME   if (my.columns [4] != (uchar) '·') 
+
+#define   IF_FIND   if (my.columns [5] != (uchar) '·') 
+
+#define   IF_TYPE   if (my.columns [6] != (uchar) '·') 
+#define   IF_NTYPE  if (my.columns [6] == 't') 
+#define   IF_DTYPE  if (my.columns [6] == 'T') 
+
+#define   IF_PERM   if (my.columns [7] != (uchar) '·') 
+#define   IF_NPERM  if (my.columns [7] == 'p') 
+#define   IF_DPERM  if (my.columns [7] == 'P') 
+
+#define   IF_DRIVE  if (my.columns [8] != (uchar) '·') 
+
+#define   IF_BASE   if (my.columns [9] != (uchar) '·') 
+
+
+
+#define     MAX_PERM         50
+typedef     struct cPERM    tPERM;
+struct cPERM {
+   char    name  [LEN_LABEL];
+   char    desc  [LEN_HUND];
+   int     value;
+   char    text  [LEN_TERSE];
+};
+
+
+const tPERM g_perms [MAX_PERM] = {
+   /* 123456789012345    12345678901234567890123456789012345678901234567890123456789012345678901234567890   12345          */
+   /* ---name--------    ---description------------------------------------------------------------------   value    text  */
+   { "g_only"         , "only the group can see, access, or modify"                                       , 00070 , "00070" },
+   { "g_share"        , "only the group can modify, but all others can see and access"                    , 00075 , "00075" },
+   { "f_nodel"        , "everyone can see, access, and modify, but only owner can delete"                 , 01777 , "01777" },
+   /*---(directories)-------------*/
+   { "d_open"         , "everyone can access directory, then list, read, create, and delete files"        , 00777 , "00777" },
+   { "d_group"        , "owner and group can do anything, others can read"                                , 00775 , "00775" },
+   { "d_control"      , "owner and group can do anything, everyone else can do nothing"                   , 00770 , "00770" },
+   { "d_normal"       , "everyone can access directory, group and other can list and read files only"     , 00755 , "00755" },
+   { "d_normals"      , "everyone can access directory, group and other can list and read files only"     , 01755 , "01755" },
+   { "d_sgroup"       , "same as d_normal, but new files get directories group id"                        , 02755 , "02755" },
+   { "d_secure"       , "owner can do anything,  group can list and read files only, all others nothing"  , 00750 , "00750" },
+   { "d_tight"        , "owner can do anything, all others nothing"                                       , 00700 , "00700" },
+   { "d_tights"       , "everyone can see, access, and modify, but only owner can delete"                 , 01700 , "01700" },
+   /*---(root)--------------------*/
+   { "r_share"        , "only root specifically can modify; but all others can see and access"            , 00555 , "00555" },
+   { "r_only"         , "only root specifically can sse, access, or modify; even root group can not"      , 00000 , "00000" },
+   /*---(regular files)-----------*/
+   { "f_open"         , "everyone can read and write"                                                     , 00666 , "00666" },
+   { "f_control"      , "owner and group can read and write, everyone else gets nothing"                  , 00660 , "00660" },
+   { "f_hidev"        , "owner and group can read and write, everyone else read-only"                     , 00664 , "00664" },
+   { "f_usb"          , "owner and group can read and write, everyone else read-only"                     , 00662 , "00662" },
+   { "f_normal"       , "owner can read and write, everyone else can read only"                           , 00644 , "00644" },
+   { "f_secure"       , "owner can read and write, group can read only, everyone else gets nothing"       , 00640 , "00640" },
+   { "f_tty"          , "owner can read and write, group can write only, everyone else gets nothing"      , 00620 , "00620" },
+   { "f_tight"        , "owner can read and write, everyone else gets nothing"                            , 00600 , "00600" },
+   /*---(end)---------------------*/
+   { "end-of-entries" , "---marker---"                                                                    , 00000 , "!"     },
+};
+
+char*
+RPTG_find_perm          (char a_perms [LEN_TERSE])
+{
+   int         i           =    0;
+   for (i = 0; i < MAX_PERM; ++i) {
+      if (g_perms [i].text [0] == '!')  break;
+      if (strcmp (a_perms, g_perms [i].text) != 0)   continue;
+      return g_perms [i].name;
+   }
+   return g_perms [i].text;
+}
 
 
 
@@ -525,12 +648,12 @@ RPTG_config_ascii_add  (uchar *a_option)
    if (strlen (a_option) < 1)  return -2;
    if (strcmp (my.ascii, ASCII_ALL)  == 0)  RPTG_config_ascii_none ();
    switch (a_option [2]) {
+   case 'b'  :  my.ascii [0]  = ASCII_BASIC;  break;
    case 'u'  :  my.ascii [1]  = ASCII_UPPER;  break;
    case 'p'  :  my.ascii [2]  = ASCII_PUNCT;  break;
    case 'e'  :  my.ascii [3]  = ASCII_EXTEND; break;
    case 's'  :  my.ascii [4]  = ASCII_SPACE;  break;
    case 'c'  :  my.ascii [5]  = ASCII_CRAZY;  break;
-   case 'b'  :  RPTG_config_ascii_all (); my.ascii [0] = '·';   break;
    }
    return 0;
 }
@@ -543,12 +666,12 @@ RPTG_config_ascii_sub   (uchar *a_option)
    x_len = strlen (a_option);
    if (strlen (a_option) <= 4)  return -2;
    switch (a_option [4]) {
+   case 'b'  :  my.ascii [0]  = (uchar) '·';  break;
    case 'u'  :  my.ascii [1]  = (uchar) '·';  break;
    case 'p'  :  my.ascii [2]  = (uchar) '·';  break;
    case 'e'  :  my.ascii [3]  = (uchar) '·';  break;
    case 's'  :  my.ascii [4]  = (uchar) '·';  break;
    case 'c'  :  my.ascii [5]  = (uchar) '·';  break;
-   case 'b'  :  RPTG_config_ascii_none (); my.ascii [0] = '-';   break;
    }
    return 0;
 }
@@ -565,6 +688,7 @@ RPTG_config_ascii_set  (uchar *a_ascii)
    RPTG_config_ascii_none ();
    for (i = 0; i < strlen (a_ascii); ++i) {
       switch (a_ascii [i]) {
+      case ASCII_BASIC  :  ystrlcpy (t, "--basic"  , LEN_LABEL);  break;
       case ASCII_UPPER  :  ystrlcpy (t, "--upper"  , LEN_LABEL);  break;
       case ASCII_PUNCT  :  ystrlcpy (t, "--punct"  , LEN_LABEL);  break; 
       case ASCII_EXTEND :  ystrlcpy (t, "--extend" , LEN_LABEL);  break;
@@ -626,8 +750,8 @@ RPTG_regex_prep         (uchar *a_regex)
    /*---(header)-------------------------*/
    DEBUG_RPTG   yLOG_enter   (__FUNCTION__);
    /*---(prepare)------------------------*/
-   my.regex_len = 1;
-   strncpy (my.regex, ".", MAX_REGEX);
+   my.regex_len = 0;
+   strncpy (my.regex, "", MAX_REGEX);
    /*---(defense)------------------------*/
    DEBUG_RPTG   yLOG_point   ("a_regex"   , a_regex);
    --rce;  if (a_regex == NULL) {
@@ -638,9 +762,9 @@ RPTG_regex_prep         (uchar *a_regex)
    /*---(short-cut)----------------------*/
    x_len = strlen (a_regex);
    DEBUG_RPTG   yLOG_value   ("x_len"     , x_len);
-   if (x_len <= 0) {
-      DEBUG_RPTG   yLOG_exit    (__FUNCTION__);
-      return 1;
+   --rce;  if (x_len <= 0) {
+      DEBUG_RPTG   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
    }
    /*---(save)---------------------------*/
    strncpy (my.regex, a_regex, MAX_REGEX);
@@ -680,6 +804,10 @@ RPTG_regex_filter       (uchar *a_string)
       return rce;
    }
    DEBUG_RPTG   yLOG_info    ("my.regex"  , my.regex);
+   if (strcmp (my.regex, "") == 0) {
+      DEBUG_RPTG   yLOG_exit    (__FUNCTION__);
+      return 0;
+   }
    if (strcmp (my.regex, ".") == 0) {
       DEBUG_RPTG   yLOG_exit    (__FUNCTION__);
       return 1;
@@ -773,20 +901,36 @@ char
 RPTG_config_columns      (uchar *a_option)
 {
    int         x_len       =     0;
+   char        x_opt       =   '-';
    if (a_option == NULL)  return -1;
    x_len = strlen (a_option);
    if (strlen (a_option) <= 7)  return -2;
-   switch (a_option [7]) {
-   case COL_MIME   :  my.columns [0] = COL_MIME;      break;
-   case COL_AGES   :  my.columns [1] = COL_AGES;      break;
-   case COL_SIZE   :  my.columns [2] = COL_SIZE;      break;
-   case COL_LEVEL  :  my.columns [3] = COL_LEVEL;     break;
-   case COL_NAMING :  my.columns [4] = COL_NAMING;    break;
-   case COL_FIND   :  my.columns [5] = COL_FIND;      break;
-   case COL_TYPE   :  my.columns [6] = COL_TYPE;      break;
-   case COL_PERMS  :  my.columns [7] = COL_PERMS;     break;
-   case COL_DRIVE  :  my.columns [8] = COL_DRIVE;     break;
-   case COL_BASE   :  my.columns [9] = COL_BASE;      break;
+   x_opt = a_option [7];
+   switch (x_opt) {
+   case 'm' :  my.columns [0] = x_opt;         break;
+   case 'a' :  my.columns [1] = x_opt;         break;
+   case 'A' :  my.columns [1] = x_opt;         break;
+   case 's' :  my.columns [2] = x_opt;         break;
+   case 'S' :  my.columns [2] = x_opt;         break;
+   case 'l' :  my.columns [3] = x_opt;         break;
+   case 'n' :  my.columns [4] = x_opt;         break;
+   case 'f' :  my.columns [5] = x_opt;         break;
+   case 't' :  my.columns [6] = x_opt;         break;
+   case 'p' :  my.columns [7] = x_opt;         break;
+   case 'P' :  my.columns [7] = x_opt;         break;
+   case 'd' :  my.columns [8] = x_opt;         break;
+   case 'b' :  my.columns [9] = x_opt;         break;
+
+   case 'r' :  my.columns [0] = 'm';
+               my.columns [1] = 'a';
+               my.columns [2] = 'S';
+               my.columns [3] = 'l';
+               my.columns [6] = 't';
+               my.columns [7] = 'p';
+               my.columns [8] = 'd';
+               my.lineno  = 'y';
+               my.headers = 'y';
+               break;
    }
    my.output = OUTPUT_PREFIX;
    return 0;
@@ -807,6 +951,7 @@ RPTG_config_output       (uchar *a_option)
    case 'g'  :  my.output = OUTPUT_GYGES;       break;
    case 'c'  :  my.output = OUTPUT_COUNT;       break;
    case 's'  :  my.output = OUTPUT_SILENT;      break;
+   case 'm'  :  my.output = OUTPUT_MIME;        break;
    }
    return 0;
 }
@@ -827,7 +972,7 @@ RPTG__title             (void)
    /*---(prepare)------------------------*/
    ystrlcpy (s_recd, "", LEN_RECD);
    /*---(quick out)----------------------*/
-   if (my.headers != 'y')            return 0;
+   if (my.headers != 'Y')            return 0;
    if (my.output  == OUTPUT_SILENT)  return 0;
    if (my.output  == OUTPUT_COUNT)   return 0;
    if (my.total   != 0)              return 0;
@@ -847,16 +992,21 @@ RPTG__title             (void)
       break;
    case OUTPUT_PREFIX   :
       ystrlcat (s_recd, "##    report option (prefixed)", LEN_RECD);
-      if (my.columns [0] != (uchar) '·')  ystrlcat (s_recd, " --show-mime"  , LEN_RECD);
-      if (my.columns [1] != (uchar) '·')  ystrlcat (s_recd, " --show-age"   , LEN_RECD);
-      if (my.columns [2] != (uchar) '·')  ystrlcat (s_recd, " --show-size"  , LEN_RECD);
-      if (my.columns [3] != (uchar) '·')  ystrlcat (s_recd, " --show-level" , LEN_RECD);
-      if (my.columns [4] != (uchar) '·')  ystrlcat (s_recd, " --show-naming", LEN_RECD);
-      if (my.columns [5] != (uchar) '·')  ystrlcat (s_recd, " --show-find"  , LEN_RECD);
-      if (my.columns [6] != (uchar) '·')  ystrlcat (s_recd, " --show-type"  , LEN_RECD);
-      if (my.columns [7] != (uchar) '·')  ystrlcat (s_recd, " --show-perms" , LEN_RECD);
-      if (my.columns [8] != (uchar) '·')  ystrlcat (s_recd, " --show-drive" , LEN_RECD);
-      if (my.columns [9] != (uchar) '·')  ystrlcat (s_recd, " --show-base"  , LEN_RECD);
+      IF_MIME    ystrlcat (s_recd, " --show-mime"  , LEN_RECD);
+      IF_NAGE    ystrlcat (s_recd, " --show-age"   , LEN_RECD);
+      IF_DAGE    ystrlcat (s_recd, " --show-AGE"   , LEN_RECD);
+      IF_NSIZE   ystrlcat (s_recd, " --show-size"  , LEN_RECD);
+      IF_DSIZE   ystrlcat (s_recd, " --show-SIZE"  , LEN_RECD);
+      IF_MSIZE   ystrlcat (s_recd, " --show-SIZES" , LEN_RECD);
+      IF_LVL     ystrlcat (s_recd, " --show-level" , LEN_RECD);
+      IF_NAME    ystrlcat (s_recd, " --show-naming", LEN_RECD);
+      IF_FIND    ystrlcat (s_recd, " --show-find"  , LEN_RECD);
+      IF_NTYPE   ystrlcat (s_recd, " --show-type"  , LEN_RECD);
+      IF_DTYPE   ystrlcat (s_recd, " --show-TYPE"  , LEN_RECD);
+      IF_NPERM   ystrlcat (s_recd, " --show-perms" , LEN_RECD);
+      IF_DPERM   ystrlcat (s_recd, " --show-PERMS" , LEN_RECD);
+      IF_DRIVE   ystrlcat (s_recd, " --show-drive" , LEN_RECD);
+      IF_BASE    ystrlcat (s_recd, " --show-base"  , LEN_RECD);
       break;
    case OUTPUT_DETAIL   :
       ystrlcat (s_recd, "##    report option (key statistics) --detail", LEN_RECD);
@@ -885,7 +1035,7 @@ char
 RPTG__break             (char a_force)
 {
    /*---(quick out)----------------------*/
-   if (my.headers != 'y')            return 0;
+   if (strchr ("Yy", my.headers) == NULL)  return 0;
    if (my.output  == OUTPUT_SILENT)  return 0;
    if (my.output  == OUTPUT_COUNT)   return 0;
    if (my.total %  5 != 0 && a_force != 'y')  return 0;
@@ -901,30 +1051,35 @@ RPTG__columns           (char a_force)
    /*---(prepare)------------------------*/
    ystrlcpy (s_recd, "", LEN_RECD);
    /*---(quick out)----------------------*/
-   if (my.headers != 'y')            return 0;
+   if (strchr ("Yy", my.headers) == NULL)  return 0;
    if (my.output  == OUTPUT_SILENT)  return 0;
    if (my.output  == OUTPUT_COUNT)   return 0;
    if (my.total % 25 != 0 && a_force != 'y')  return 0;
    /*---(shared)-------------------------*/
    printf ("\n");
    ystrlcat (s_recd, "## ", LEN_RECD);
-   if (my.lineno == 'y') ystrlcat (s_recd, "line  ", LEN_RECD);
+   if (my.lineno == 'y') ystrlcat (s_recd, "line---  ", LEN_RECD);
    /*---(individual)---------------------*/
    switch (my.output) {
    case OUTPUT_NORMAL   :
       ystrlcat (s_recd, "---fully qualified file---------------------------", LEN_RECD);
       break;
    case OUTPUT_PREFIX   :
-      if (my.columns [0] != (uchar) '·')  ystrlcat (s_recd, "-  ---ext---  ", LEN_RECD);
-      if (my.columns [1] != (uchar) '·')  ystrlcat (s_recd, "-day-  -  ", LEN_RECD);
-      if (my.columns [2] != (uchar) '·')  ystrlcat (s_recd, "sz  appr  ---bytes-------  ", LEN_RECD);
-      if (my.columns [3] != (uchar) '·')  ystrlcat (s_recd, "lvl  ", LEN_RECD);
-      if (my.columns [4] != (uchar) '·')  ystrlcat (s_recd, "-  len  ", LEN_RECD);
-      if (my.columns [5] != (uchar) '·')  ystrlcat (s_recd, "pos len  ", LEN_RECD);
-      if (my.columns [6] != (uchar) '·')  ystrlcat (s_recd, "t  s  ", LEN_RECD);
-      if (my.columns [7] != (uchar) '·')  ystrlcat (s_recd, "--own-  --grp-  o  s  ", LEN_RECD);
-      if (my.columns [8] != (uchar) '·')  ystrlcat (s_recd, "dr  ", LEN_RECD);
-      if (my.columns [9] != (uchar) '·')  ystrlcat (s_recd, "---name---------------------------------  ", LEN_RECD);
+      IF_MIME      ystrlcat (s_recd, "m  ---ext---  ", LEN_RECD);
+      IF_NAGE      ystrlcat (s_recd, "age  ", LEN_RECD);
+      IF_DAGE      ystrlcat (s_recd, "age dys c  ", LEN_RECD);
+      IF_NSIZE     ystrlcat (s_recd, "size  ", LEN_RECD);
+      IF_DSIZE     ystrlcat (s_recd, "size  mg  cnts  csiz  ", LEN_RECD);
+      IF_MSIZE     ystrlcat (s_recd, "size  sz  appr  ---bytes-------  ", LEN_RECD);
+      IF_LVL       ystrlcat (s_recd, "lv  ", LEN_RECD);
+      IF_NAME      ystrlcat (s_recd, "N  len  ", LEN_RECD);
+      IF_FIND      ystrlcat (s_recd, "pos len  ", LEN_RECD);
+      IF_NTYPE     ystrlcat (s_recd, "s  ", LEN_RECD);
+      IF_DTYPE     ystrlcat (s_recd, "s  t  ", LEN_RECD);
+      IF_NPERM     ystrlcat (s_recd, "-access-- o g  ", LEN_RECD);
+      IF_DPERM     ystrlcat (s_recd, "-access--  perms  own-  grp-  s  ", LEN_RECD);
+      IF_DRIVE     ystrlcat (s_recd, "dr  ", LEN_RECD);
+      IF_BASE      ystrlcat (s_recd, "---name---------------------------------  ", LEN_RECD);
       ystrlcat (s_recd, "---fully qualified file---------------------------", LEN_RECD);
       break;
    case OUTPUT_DETAIL   :
@@ -968,17 +1123,23 @@ RPTG__line        (tENTRY *a_data, char *a_full)
    char        t           [LEN_RECD]  = "";
    char        u           [LEN_RECD]  = "";
    char        v           [LEN_SHORT] = "";
+   char        w           [LEN_SHORT] = "";
    uchar       x_mag       =  '·';
    long        x_size      =    0;
+   int         i           =    0;
+   char        x_own, x_grp;
+   char        x_perm      [LEN_TERSE] = "";
    /*---(prepare)------------------------*/
    ystrlcpy (s_recd, "", LEN_RECD);
    /*---(line number)--------------------*/
-   if (my.headers == 'y')  {
+   if (strchr ("Yy", my.headers) != NULL) {
       ystrlcat (s_recd, "   ", LEN_RECD);
    }
    /*---(line number)--------------------*/
    if (my.lineno == 'y')  {
-      sprintf (t, "%-4d  ", my.total);
+      ystrl4comma         (my.total, s, 0, ',', '-', 8);
+      /*> sprintf (t, "%-6d  ", my.total);                                            <*/
+      sprintf (t, "%-7.7s  ", s);
       ystrlcat (s_recd, t, LEN_RECD);
    }
    /*---(create lines)-------------------*/
@@ -987,60 +1148,94 @@ RPTG__line        (tENTRY *a_data, char *a_full)
       sprintf (t, "%s", a_full);
       ystrlcat (s_recd, t, LEN_RECD);
       break;
+   case OUTPUT_MIME     :
+      sprintf (t, "%c  %-9.9s  %s", a_data->cat, a_data->ext, a_full);
+      ystrlcat (s_recd, t, LEN_RECD);
+      break;
    case OUTPUT_PREFIX   :
-      if (my.columns [0] != (uchar) '·')  {
+      IF_MIME {
          sprintf (t, "%c  %-9.9s  ", a_data->cat, a_data->ext);
          ystrlcat (s_recd, t, LEN_RECD);
       }
-      if (my.columns [1] != (uchar) '·') {
-         sprintf (t, "%-5d  %c  "  , s_days, s_age);
+      IF_AGE {
+         ystrlage (a_data->changed, 'u', s);
+         if      (s_days ==   0)  strcpy  (u, "  ·");
+         else if (s_days >= 999)  strcpy  (u, "+++");
+         else                     sprintf (u, "%3d", s_days);
+         /*> for (i = 0; i < 3; ++i)   if (u [i] == ' ')  u [i] = '·';                <*/
+         IF_NAGE    sprintf (t, "%-3.3s  "  , s);
+         else       sprintf (t, "%-3.3s %3.3s %c  "  , s, u, s_age);
          ystrlcat (s_recd, t, LEN_RECD);
       }
-      if (my.columns [2] != (uchar) '·') {
-         FILE_commas (a_data->bytes, s);
-         if      (a_data->size >  15) { x_mag = 'P'; x_size = round (a_data->bytes / 1000.0 / 1000.0 / 1000.0 / 1000.0 / 1000.0); }
-         else if (a_data->size >  12) { x_mag = 'T'; x_size = round (a_data->bytes / 1000.0 / 1000.0 / 1000.0 / 1000.0);          }
-         else if (a_data->size >   9) { x_mag = 'G'; x_size = round (a_data->bytes / 1000.0 / 1000.0 / 1000.0);                   }
-         else if (a_data->size >   6) { x_mag = 'M'; x_size = round (a_data->bytes / 1000.0 / 1000.0);                            }
-         else if (a_data->size >   3) { x_mag = 'K'; x_size = round (a_data->bytes / 1000.0);                                     }
-         else if (a_data->size ==  0) { x_mag = '-'; x_size = a_data->bytes; }
-         else                         { x_mag = '·'; x_size = a_data->bytes; }
+      IF_SIZE {
+         ystrlsize  (a_data->bytes, 'u', s);
+         ystrlcount (a_data->bcum , 'u', u);
+         if      (a_data->ccum ==    1)  {
+            strcpy  (w, "   ·");
+            strcpy  (u, "   ·");
+         } else if (a_data->ccum >  9999) {
+            strcpy  (w, "++++");
+         } else {
+            sprintf (w, "%4d", a_data->ccum);
+         }
          if (a_data->size == 0) {
             ystrlcpy (v, " -"  , LEN_LABEL);
-            ystrlcpy (u, "   " , LEN_LABEL);
          } else  {
             sprintf (v, "%2d", a_data->size);
-            sprintf (u, "%3ld", x_size);
          }
-         sprintf (t, "%2s  %3s%c  %15.15s  "      , v, u, x_mag, s);
+         IF_NSIZE   sprintf (t, "%-4.4s  "  , s);
+         IF_DSIZE   sprintf (t, "%-4.4s  %-2.2s  %-4.4s  %-4.4s  "      , s, v, w, u);
          ystrlcat (s_recd, t, LEN_RECD);
       }
-      if (my.columns [3] != (uchar) '·') {
-         sprintf (t, "%-3d  "      , a_data->lvl);
+      IF_LVL {
+         sprintf (t, "%2d  "      , a_data->lvl);
          ystrlcat (s_recd, t, LEN_RECD);
       }
-      if (my.columns [4] != (uchar) '·') {
+      IF_NAME {
          sprintf (t, "%c  %-3d  "  , a_data->ascii, a_data->len);
          ystrlcat (s_recd, t, LEN_RECD);
       }
-      if (my.columns [5] != (uchar) '·') {
+      IF_FIND {
          sprintf (t, "%3d %3d  "   , s_pos, s_len);
          ystrlcat (s_recd, t, LEN_RECD);
       }
-      if (my.columns [6] != (uchar) '·') {
-         sprintf (t, "%c  %c  "   , a_data->type, a_data->stype);
+      IF_TYPE {
+         IF_NTYPE {
+            if (a_data->stype == '-')  sprintf (t, "%c  "   , '·');
+            else                       sprintf (t, "%c  "   , a_data->stype);
+         }
+         else        sprintf (t, "%c  %c  "   , a_data->stype, a_data->type);
          ystrlcat (s_recd, t, LEN_RECD);
       }
-      if (my.columns [7] != (uchar) '·') {
-         sprintf (t, "%-4d %d  %-4d %d  %d  %c  "   , a_data->uid, a_data->own, a_data->gid, a_data->grp, a_data->oth, a_data->super);
+      IF_PERM {
+         sprintf (u, "00%d%d%d", a_data->own, a_data->grp, a_data->oth);
+         ystrlcpy (s, RPTG_find_perm (u), LEN_TERSE);
+         switch (a_data->uid) {
+         case 0    : x_own = 'r';  break;
+         case 1000 : x_own = 'm';  break;
+         default   : x_own = '-';  break;
+         }
+         switch (a_data->gid) {
+         case 0    : x_grp = 'r';  break;
+         case 100  : x_grp = 'u';  break;
+         case 1000 : x_grp = 'm';  break;
+         default   : x_grp = '-';  break;
+         }
+         if (a_data->stype == '>') {
+            x_own = x_grp = '·';
+            strcpy (s, "·");
+
+         }
+         IF_NPERM   sprintf (t, "%-9.9s %c %c  ", s, x_own, x_grp);
+         else       sprintf (t, "%-9.9s  %-5.5s  %-4d  %-4d  %c  "   , s, u, a_data->uid, a_data->gid, a_data->super);
          ystrlcat (s_recd, t, LEN_RECD);
       }
-      if (my.columns [8] != (uchar) '·') {
+      IF_DRIVE {
          if (a_data->drive > 0)  sprintf (t, "%-2d  "   , a_data->drive);
-         else                    sprintf (t, "-   ");
+         else                    sprintf (t, "·   ");
          ystrlcat (s_recd, t, LEN_RECD);
       }
-      if (my.columns [9] != (uchar) '·') {
+      IF_BASE {
          sprintf (t, "%-40.40s  "   , a_data->name);
          ystrlcat (s_recd, t, LEN_RECD);
       }
@@ -1141,17 +1336,20 @@ RPTG_footer             (void)
    char        s           [LEN_LABEL];
    char        t           [LEN_LABEL];
    /*---(quick out)----------------------*/
-   if (my.headers != 'y')            return 0;
+   if (strchr ("Yy", my.headers) == NULL)  return 0;
    if (my.output  == OUTPUT_SILENT)  return 0;
    if (my.output  == OUTPUT_COUNT)   return 0;
    /*---(columns)------------------------*/
    if (my.total % 25 >= 5)  RPTG__columns ('y');
    /*---(shared)-------------------------*/
-   DRIVE_list ();
+   if (my.headers == 'Y') {
+      DRIVE_list ();
+   }
    printf ("\n");
    FILE_commas (my.total, s);
-   FILE_commas (s_bytes, t);
-   printf ("## total entries matched %s with %s bytes\n", s, t);
+   /*> FILE_commas (s_bytes, t);                                                      <*/
+   ystrlsize (s_bytes, 'u', t);
+   printf ("##  %s total entries matched, taking up %s\n", s, t);
    /*---(complete)-----------------------*/
    return 0;
 }
@@ -1433,7 +1631,7 @@ RPTG_summ          (void)
    char        x_time      [100] = "";
    tDRIVE     *x_drive     = NULL;
    /*---(process all)--------------------*/
-   for (i = 1; i < n_mime; ++i) {
+   for (i = 1; i < g_nmime; ++i) {
       if (g_mime [i].cat == MIME_DIR && strcmp (g_mime [i].ext, "dir") == 0) {
          x_dseen  += g_mime [i].n_seen;
          x_dkept  += g_mime [i].n_kept;
@@ -1490,7 +1688,7 @@ RPTG_summ          (void)
    printf (" %12.12s\n");
    printf ("                                                    ------------\n");
    printf ("                 with device entries (approximate) ");
-   FILE_commas (sizeof (short) + (n_drive * sizeof (tDRIVE)) + ((x_dkept + x_fkept) * sizeof (tENTRY)), x_comma);
+   FILE_commas (sizeof (short) + (g_ndrive * sizeof (tDRIVE)) + ((x_dkept + x_fkept) * sizeof (tENTRY)), x_comma);
    printf (" %12.12s\n");
    /*---(complete)-----------------------*/
    return 0;

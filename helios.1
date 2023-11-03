@@ -1,16 +1,37 @@
-.TH helios 1 2014-oct "linux" "heatherly custom tools manual"
+.TH helios 1 2010-jan "linux" "command-line initiation, use, and options"
 
 .SH NAME
-helios \- file system indexing, searching, and analytics
+helios - file system indexing, searching, and analytics
 
-.SH NAMESAKE (see HERITAGE)
-helios-phaeton (radiant) all-seeing greek titan of the sun and clear-sight who
-drives the sun across the sky in a fiery chariot.
+.SH PATRON
+helios-phaeton (radiant one) all-seeing titan of the sun
+
+.SH IMAGERY
+golden giant driving a fiery chariot pulled by four winged horses
 
 .SH SUMMARY
-helios is a fast, clean, expanded, and traceable version of the classic,
-well-worn, and posix-defined locate, file indexing and searching command,
-with enhanced reporting, debugging, and integration points.
+helios is an experimental, reasonably fast, more informative, and traceable
+version of the well-worn and posix-defined locate, file indexing and searching
+command, specifically tailored to my own long-term vision and needs.
+
+.SH DISCLAIMER
+i am a crazy, naive, dog-fooding c programmer.  i am not trying to be best.
+i optimize for my own learning, run-time transparency, and ease-of-maintenance.
+if i wanted awesome, fast, and cutting-edge, i'd use yours ;)
+
+.SH DOCUMENTATION FILES (see also)
+.nf  
+.B helios (1) ´´´´´´> command-line initiation, use, and options
+helios (5)         user files, data streams, and configuration
+helios (7)         decision rationale, scope, and objectives
+
+.SH TABLE OF CONTENTS
+.nf  
+a) synopsis        main configuration file
+b) start verb      rule (1) to specify default starting point
+c) avoid verbs     rules (4) to ignore certain directories
+d) silent verbs    rules (4) to record data, but not specific content
+e) private verb    rule (1) to eliminate content from public versions
 
 .SH SYNOPSIS
 
@@ -32,8 +53,8 @@ user systems.  this is a tool built for me and my systems, and therefore
 provides no real concessions for anyone else.
  
 .SH REGEX PATTERN
-helios uses a single extended regular expression, full stop.  there are no
-options to use literals or gobbing.  none.
+helios uses a single extended regular expressions, full stop.  there are no
+options to explicitly use literals or gobbing.  none.
 
 .B --all,
 this option is the same as leaving the regex blank
@@ -67,7 +88,7 @@ but, there are other output formats depending on the need.
 .B --normal,
 default, locate format
    --show-mime        prepend mime category and extention
-   --show-ages        prepend age category and days since update
+   --show-age         prepend age category and days since update
    --show-size        prepend size category and bytes
    --show-level       prepend depth in directory tree
    --show-naming      prepend name quality category and length

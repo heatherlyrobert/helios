@@ -1,6 +1,38 @@
 /*===============================[[ beg-code ]]===============================*/
 #include    "helios.h"       /* LOCAL  : main header                          */
 
+/*
+ * ========================== EXPLICITLY GPL LICENSED ==========================
+ *
+ * the only place you could have gotten this code is my github or website.
+ * given that, you already know it is GPL licensed, so act accordingly.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies of the Software, its documentation and marketing & publicity
+ * materials, and acknowledgment shall be given in the documentation, materials
+ * and software packages that this Software was used.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * this code is custom-tailored to the author's requirements.  given that,
+ * AND the fact that i update, upgrade, and refactor constantly, this is a
+ * volitile and quirky environment.  therefore, i do NOT recommend this
+ * program for anyone else's use ;) i share it just to potentially provide
+ * insight into alternate architectures and approaches.
+ */
+
 
 
 /*====================------------------------------------====================*/
@@ -48,20 +80,22 @@ api_ysort__cursor       (uchar a_type, void *a_head, void *a_tail, void *a_beg, 
    tPTRS      *x_beg       = NULL;
    tPTRS      *x_new       = NULL;
    /*---(header)-------------------------*/
-   DEBUG_SORT   yLOG_senter  (__FUNCTION__);
+   DEBUG_SORT   yLOG_enter   (__FUNCTION__);
    /*---(check pointers)-----------------*/
-   DEBUG_SORT   yLOG_spoint  (a_beg);
-   DEBUG_SORT   yLOG_spoint  (a_new);
+   DEBUG_SORT   yLOG_point   ("a_beg"     , a_beg);
+   DEBUG_SORT   yLOG_point   ("a_new"     , a_new);
    --rce;  if (a_new == NULL) {
-      DEBUG_SORT   yLOG_sexitr  (__FUNCTION__, rce);
+      DEBUG_SORT   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(prepare)------------------------*/
-   DEBUG_SORT   yLOG_snote   ("cast");
-   x_beg    = (tPTRS *) a_beg;
-   if (x_beg != NULL)  DEBUG_SORT   yLOG_snote   (x_beg->data->name);
+   DEBUG_SORT   yLOG_note    ("cast");
+   if (a_beg != NULL)  x_beg    = (tPTRS *) a_beg;
+   if (x_beg != NULL && x_beg->data != NULL) {
+      DEBUG_SORT   yLOG_info    ("beg->name", x_beg->data->name);
+   }
    /*---(update)-------------------------*/
-   DEBUG_SORT   yLOG_schar   (a_action);
+   DEBUG_SORT   yLOG_char    ("a_action"  , a_action);
    switch (a_action) {
    case '>' : if (x_beg != NULL) { x_new = x_beg->s_next;   break; }
    case ']' : x_new = (tPTRS *) a_tail;                       break;
@@ -69,10 +103,12 @@ api_ysort__cursor       (uchar a_type, void *a_head, void *a_tail, void *a_beg, 
    case '[' : x_new = (tPTRS *) a_head;                       break;
    }
    /*---(save back)----------------------*/
-   if (x_new != NULL)  DEBUG_SORT   yLOG_snote   (x_new->data->name);
+   if (x_new != NULL && x_new->data != NULL) {
+      DEBUG_SORT   yLOG_info    ("new->name", x_new->data->name);
+   }
    *a_new = x_new;
    /*---(complete)-----------------------*/
-   DEBUG_SORT   yLOG_sexit   (__FUNCTION__);
+   DEBUG_SORT   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
@@ -219,14 +255,14 @@ api_ysort__slotter      (uchar a_lvl, void *a_two, uchar a_order)
    char        t           [LEN_LABEL] = "";
    uchar       x_slot      =    0;
    /*---(begin)--------------------------*/
-   DEBUG_SORT   yLOG_senter  (__FUNCTION__);
+   DEBUG_SORT   yLOG_enter   (__FUNCTION__);
    /*---(defense)------------------------*/
-   DEBUG_SORT   yLOG_sint    (a_lvl);
+   DEBUG_SORT   yLOG_value   ("a_lvl"     , a_lvl);
    --rce;  if (a_lvl < 0) {
       DEBUG_SORT   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_SORT   yLOG_spoint  (a_two);
+   DEBUG_SORT   yLOG_point   ("a_two"     , a_two);
    --rce;  if (a_two == NULL) {
       DEBUG_SORT   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
@@ -234,15 +270,15 @@ api_ysort__slotter      (uchar a_lvl, void *a_two, uchar a_order)
    /*---(cast)---------------------------*/
    x_two = (tPTRS *) a_two;
    /*---(normal)-------------------------*/
-   DEBUG_SORT   yLOG_snote   (x_two->data->name);
+   DEBUG_SORT   yLOG_info    ("data->name", x_two->data->name);
    x_len = strlen (x_two->data->name);
-   DEBUG_SORT   yLOG_sint    (x_len);
+   DEBUG_SORT   yLOG_value   ("x_len"     , x_len);
    if (a_lvl < x_len)    x_slot = x_two->data->name [a_lvl];
    else                  x_slot = 0;
    /*---(slot)---------------------------*/
-   DEBUG_SORT   yLOG_schar   (ychrvisible (x_slot));
+   DEBUG_SORT   yLOG_char    ("x_slot"    , ychrvisible (x_slot));
    /*---(complete)-----------------------*/
-   DEBUG_SORT   yLOG_sexit   (__FUNCTION__);
+   DEBUG_SORT   yLOG_exit    (__FUNCTION__);
    return x_slot;
 }
 

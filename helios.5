@@ -1,11 +1,158 @@
-.TH helios 5 2010-Jan "linux" "heatherly custom tools manual"
+.TH helios 5 2010-jan "linux" "user files, data streams, and configuration"
 
 .SH NAME
-helios'phaeton (locate) file system indexing, searching, and analytics
+helios - file system indexing, searching, and analytics
+
+.SH PATRON
+helios-phaeton (radiant one) all-seeing titan of the sun
+
+.SH IMAGERY
+golden giant driving a fiery chariot pulled by four winged horses
 
 .SH SUMMARY
-helios is a fast, clean, expanded, and traceable version of the classic,
-well-worn, and posix-defined locate, file indexing and searching command,
-with enhanced reporting, debugging, and integration points.
+helios is an experimental, reasonably fast, more informative, and traceable
+version of the well-worn and posix-defined locate, file indexing and searching
+command, specifically tailored to my own long-term vision and needs.
+
+.SH DISCLAIMER
+i am a crazy, naive, dog-fooding c programmer.  i am NOT trying to be best.
+i optimize for my own learning, run-time transparency, and ease-of-maintenance.
+it may not be perfect (or even good), but i OWN every byte.
+
+.SH DOCUMENTATION FILES (see also)
+.nf  
+helios (1)         command-line initiation, use, and options
+.B helios (5)´´´´´´´> user files, data streams, and configuration
+helios (7)         decision rationale, scope, and objectives
+
+.SH TABLE OF CONTENTS
+.nf  
+a) config file     main configuration file
+b) start verb      rule (1) to specify default starting point
+c) avoid verbs     rules (4) to ignore certain directories
+d) silent verbs    rules (4) to record data, but not specific content
+e) private verb    rule (1) to eliminate content from public versions
+
+.SH A) CONFIG FILE
+helios data gathering is guided by a series of rules provided in a single
+configuration file, typically named "/etc/helios.conf".  this file may be
+optionally ignored or temporarily over-ridden.
+
+the conf file is just a set of single line rules.  each rule consists of a
+verb and a directory path.  these rules allow tailoring what helios collects
+and where to avoid collecting junk and/or unuseful details.
+
+example structure...
+   verb   § /specific/path/     § <optional comment ignored by system>
+
+while some rules are common sense and seem universal, i chose to build none
+into the base system for flexibility.  maybe good or bad, we will see ;)
+
+.SH B) START VERB
+.SS start (0)
+provides helios with the default root for data gathering.  this can be overridden
+on the command line with "--start <path>" (SEE helios (1)).
+
+example rules from my /etc/helios.conf...
+.nf
+   start        § /                  § and all partitions mounted below
+
+.SH C) AVOID VERBS
+instructs helios to ignore a specific directory's contents.  very useful for
+temporary and artificial file systems like /sys and /proc.  there is no point
+recording these as they change constantly and quickly.
+
+.SS avoid (1)
+records only the directory, but does not record its contents or collect any
+statistics about its contents.  this is useful when using helios output to
+map directory structures.
+
+example rules from my /etc/helios.conf...
+.nf
+   avoid        § /proc              § pseudo-file system
+   avoid        § /sys               § pseudo-file system
+   avoid        § /dev/pts           § transient
+   avoid        § /tmp               § transient
+
+.SS avoid_full (2)
+records nothing about the directory including its name, which can be confusing
+in the output.  while available, i do not presently use this, but it might be
+useful in the future.
+
+.SS avoid_under (3)
+collect data about directory contents, but switch to avoid for all directories
+below.  this can make certain directories easier to specify.
+
+example rules from my /etc/helios.conf...
+.nf
+   avoid_under § /mnt               § don't recurse another layer
+
+.SS avoid_every (4)
+does a match on the directory name only, not the absolute path -- helpful
+for common sub-directory names.  best used for very small, common areas.
+while avaiable, i don't presently use, but it might be useful in the future.
+
+.SH D) SILENT VERBS
+instructs helios to gather statistics within a directory, but not specific
+contents, meaning you can not search these later.  very useful for areas that
+are not usually searched, but contain large amounts of data.
+
+.SS silent (5)
+records the directory itself, and then gathers statistics about every file
+and directory underneath but not specific entries.  this is favored for areas
+with lots of, or sizable, content but will not be searched.
+
+example rules from my /etc/helios.conf...
+.nf
+   silent       § /lib64             § don't want specifics, just stats
+   silent       § /usr/include       § don't want specifics, just stats
+   silent       § /var/log           § don't want specifics, just stats
+   silent       § /boot              § want size, but not all details
+
+example gentoo-specific rules from my /etc/helios.conf...
+.nf
+   silent       § /usr/share/portage § don't want specifics, just stats
+   silent       § /var/db/pkg        § don't want specifics, just stats
+
+.SS silent_under (6)
+collect data about directory contents, but switches to silent for all
+directories below.  this can make certain directories easier to specify.  very
+useful for things like the gentoo kernel source directories.
+
+example gentoo-specific rules from my /etc/helios.conf...
+.nf
+   silent_under § /usr/src           § don't want specifics, just stats
+
+.SS silent_every (7)
+same as "silent", but reacts to directory name rather than full path, meaning
+it gathers statistics, but not actual contents.
+
+example rules from my /etc/helios.conf...
+.nf
+   silent_every § .git               § want locations, size, but not details
+
+.SS silent_when (8)
+same as "silent_every", but reacts to the directory name starting with a string,
+rather than full path, meaning it gathers statistics, but not actual contents.
+this can be troublesome unless really targeted.
+
+example rules from my /etc/helios.conf...
+.nf
+   silent_when  § rust-              § want locations, size, but not details
+
+.SH E) PRIVATE VERB
+.SS private (9)
+conditionally acts like an "avoid".  not normally necessary, but marks specific
+areas to be left out of public versions of the database.
+
+while the database respects privacy by only allowing users with clearance to
+see certain details, this is a failsafe.
+
+example rules from my /etc/helios.conf...
+.nf
+   private     § /root              § leave out of --public db versions
+   private     § /home              § leave out of --public db versions
+
+
 
 

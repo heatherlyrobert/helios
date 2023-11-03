@@ -1,12 +1,45 @@
 /*===============================[[ beg-code ]]===============================*/
-#include    "helios.h"       /* LOCAL  : main header                          */
+#include    "helios.h"
 
+/*
+ * ========================== EXPLICITLY GPL LICENSED ==========================
+ *
+ * the only place you could have gotten this code is my github or website.
+ * given that, you already know it is GPL licensed, so act accordingly.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies of the Software, its documentation and marketing & publicity
+ * materials, and acknowledgment shall be given in the documentation, materials
+ * and software packages that this Software was used.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * this code is custom-tailored to the author's requirements.  given that,
+ * AND the fact that i update, upgrade, and refactor constantly, this is a
+ * volitile and quirky environment.  therefore, i do NOT recommend this
+ * program for anyone else's use ;) i share it just to potentially provide
+ * insight into alternate architectures and approaches.
+ *
+ * ========================== EXPLICITLY GPL LICENSED ==========================
+ */
 
 /*
  * METIS § wc4·· § change FILE_ functions to DB_ to keep consistent across programs       § N9J1jd §  · §
- *
- *
- *
+ * METIS § wr2·· § make sure yJOBS confirms database itself during audit                  § N9J6Dg §  · §
+ * METIS § wv2·· § allow db name override for testing purposes                            § N9JLcO §  · §
+ * METIS § wg4·· § option to sync existing data to new mime table                         § N9T6e0 §  · §
  *
  */
 
@@ -14,85 +47,205 @@
 
 static char    s_name    [LEN_RECD]  = "";
 static int     s_level   = 0;
-static tPTRS  *s_stack   [99];
+static tPTRS  *s_stack   [LEN_HUND];
 
+
+char
+DB_init                 (void)
+{
+   int         i           =    0;
+   for (i = 0; i < LEN_HUND; ++i)   s_stack [i] = NULL;
+   return 0;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                     header handling                          ----===*/
+/*====================------------------------------------====================*/
+static void  o___HEADER__________o () { return; }
+
+char
+DB__head_write_one      (FILE *a_file, char a_label [LEN_TERSE], int a_var)
+{
+   char        rc          =    0;
+   rc = fwrite (&a_var, sizeof (int), 1, a_file);
+   DEBUG_OUTP   yLOG_complex (a_label     , "%4drc, val=%d", rc, a_var);
+   return rc;
+}
+
+char
+DB__head_write          (FILE *a_file, char a_name [LEN_LABEL], char a_ver [LEN_SHORT], int a_nconf, int a_nmime, int a_ndrive, int a_nentry, char a_heart [LEN_DESC])
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   int         i           =    0;
+   char        t           [LEN_HUND]  = "";
+   /*---(header)-------------------------*/
+   DEBUG_OUTP   yLOG_enter   (__FUNCTION__);
+   /*---(defense)------------------------*/
+   DEBUG_OUTP  yLOG_point   ("a_file"    , a_file);
+   --rce;  if (a_file == NULL) {
+      DEBUG_OUTP  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(name)------------------------*/
+   for (i = 0; i < LEN_LABEL; i++)  t [i] = ' ';
+   strlcpy (t, a_name, LEN_LABEL);
+   rc = fwrite (t, LEN_LABEL, 1, a_file);
+   DEBUG_OUTP   yLOG_complex ("name"      , "%4d %s", rc, t);
+   /*---(version)---------------------*/
+   for (i = 0; i < LEN_SHORT; i++)  t [i] = ' ';
+   strlcpy (t, a_ver  , LEN_SHORT);
+   rc = fwrite (t, LEN_SHORT, 1, a_file);
+   DEBUG_OUTP   yLOG_complex ("vernum"    , "%4d %s", rc, t);
+   /*---(stats)-----------------------*/
+   rc = DB__head_write_one (a_file, "confs"   , a_nconf);
+   rc = DB__head_write_one (a_file, "mimes"   , a_nmime);
+   rc = DB__head_write_one (a_file, "drives"  , a_ndrive);
+   rc = DB__head_write_one (a_file, "entries" , a_nentry);
+   /*---(heartbeat)-------------------*/
+   for (i = 0; i < LEN_DESC;  i++)  t [i] = '·';
+   strlcpy (t, a_heart    , LEN_DESC);
+   rc = fwrite (t, LEN_DESC , 1, a_file);
+   DEBUG_OUTP   yLOG_complex ("heart"     , "%4d %s", rc, t);
+   /*---(force flush)-----------------*/
+   fflush (a_file);
+   /*---(complete)-----------------------*/
+   DEBUG_OUTP   yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+char
+DB__head_read_one       (FILE *a_file, char a_label [LEN_TERSE], int *r_var)
+{
+   char        rc          =    0;
+   int         a           =    0;
+   rc = fread  (&a, sizeof (int), 1, a_file);
+   DEBUG_INPT   yLOG_complex (a_label     , "%4d %d", rc, a);
+   if (r_var != NULL)  *r_var = a;
+   return 0;
+}
+
+char
+DB__head_read           (FILE *a_file, char r_name [LEN_LABEL], char r_ver [LEN_SHORT], int *r_nconf, int *r_nmime, int *r_ndrive, int *r_nentry, char r_heart [LEN_DESC])
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   char        t           [LEN_HUND]  = "";
+   int         a           =    0;
+   /*---(header)-------------------------*/
+   DEBUG_INPT   yLOG_enter   (__FUNCTION__);
+   /*---(defense)------------------------*/
+   DEBUG_INPT  yLOG_point   ("a_file"    , a_file);
+   --rce;  if (a_file == NULL) {
+      DEBUG_INPT  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(name)------------------------*/
+   rc = fread  (&t, LEN_LABEL, 1, a_file);
+   DEBUG_INPT   yLOG_complex ("name"      , "%4d %s", rc, t);
+   if (r_name    != NULL)  strlcpy (r_name   , t, LEN_LABEL);
+   /*---(version)---------------------*/
+   rc = fread  (&t, LEN_SHORT, 1, a_file);
+   DEBUG_INPT   yLOG_complex ("version"   , "%4d %s", rc, t);
+   if (r_ver  != NULL)  strlcpy (r_ver , t, LEN_SHORT);
+   /*---(stats)-----------------------*/
+   rc = DB__head_read_one  (a_file, "confs"   , &a);
+   if (r_nconf  != NULL)  *r_nconf  = a;
+   rc = DB__head_read_one  (a_file, "mimes"   , &a);
+   if (r_nmime  != NULL)  *r_nmime  = a;
+   rc = DB__head_read_one  (a_file, "drives"  , &a);
+   if (r_ndrive != NULL)  *r_ndrive = a;
+   rc = DB__head_read_one  (a_file, "entries" , &a);
+   if (r_nentry != NULL)  *r_nentry = a;
+   /*---(heartbeat)-------------------*/
+   rc = fread  (t, LEN_DESC , 1, a_file);
+   DEBUG_INPT   yLOG_complex ("heart"     , "%4d %s", rc, t);
+   if (r_heart   != NULL)  strlcpy (r_heart  , t, LEN_DESC);
+   /*---(complete)-----------------------*/
+   DEBUG_INPT   yLOG_exit    (__FUNCTION__);
+   return 0;
+}
 
 
 /*====================------------------------------------====================*/
 /*===----                       file open/close                        ----===*/
 /*====================------------------------------------====================*/
-static void      o___FILE____________________o (void) {;}
+static void      o___FILE_______________o (void) {;}
+
+/*> char                                                                              <* 
+ *> FILE__check             (char *a_name, char a_mode)                               <* 
+ *> {  /+---(locals)-----------+-----------+-+/                                       <* 
+ *>    char        rce         =  -10;                                                <* 
+ *>    int         rci         =    0;                                                <* 
+ *>    tSTAT       st;                                                                <* 
+ *>    /+---(header)-------------------------+/                                       <* 
+ *>    DEBUG_FILE   yLOG_enter   (__FUNCTION__);                                      <* 
+ *>    /+---(prepare)------------------------+/                                       <* 
+ *>    ystrlcpy (s_name, "", LEN_RECD);                                               <* 
+ *>    /+---(defense)------------------------+/                                       <* 
+ *>    DEBUG_FILE   yLOG_point   ("a_name"    , a_name);                              <* 
+ *>    --rce;  if (a_name == NULL) {                                                  <* 
+ *>       DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);                              <* 
+ *>       return rce;                                                                 <* 
+ *>    }                                                                              <* 
+ *>    DEBUG_FILE   yLOG_info    ("a_name"    , a_name);                              <* 
+ *>    /+---(get the file information)-------+/                                       <* 
+ *>    rci = lstat (a_name, &st);                                                     <* 
+ *>    DEBUG_FILE   yLOG_value   ("lstat"     , rci);                                 <* 
+ *>    --rce; if (rci < 0) {                                                          <* 
+ *>       if (a_mode == 'r') {                                                        <* 
+ *>          DEBUG_FILE   yLOG_note    ("file does not exist, can not read");         <* 
+ *>          DEBUG_FILE   yLOG_exit    (__FUNCTION__);                                <* 
+ *>          return rce;                                                              <* 
+ *>       }                                                                           <* 
+ *>       DEBUG_FILE   yLOG_note    ("writing data to a brand new file");             <* 
+ *>       DEBUG_FILE   yLOG_exit    (__FUNCTION__);                                   <* 
+ *>       return 0;                                                                   <* 
+ *>    } else {                                                                       <* 
+ *>       if (a_mode == 'w') {                                                        <* 
+ *>          DEBUG_FILE   yLOG_note    ("file exists, writing over existing file");   <* 
+ *>       }                                                                           <* 
+ *>    }                                                                              <* 
+ *>    /+---(check regular file)-------------+/                                       <* 
+ *>    if (S_ISREG (st.st_mode)) {                                                    <* 
+ *>       DEBUG_FILE   yLOG_note    ("refers to a regular file, perfect");            <* 
+ *>    }                                                                              <* 
+ *>    /+---(check symlink)------------------+/                                       <* 
+ *>    else if (S_ISLNK (st.st_mode)) {                                               <* 
+ *>       DEBUG_FILE   yLOG_note    ("file can not be a symlink to another file");    <* 
+ *>       DEBUG_FILE   yLOG_exit    (__FUNCTION__);                                   <* 
+ *>       return rce;                                                                 <* 
+ *>    }                                                                              <* 
+ *>    else  {                                                                        <* 
+ *>       if      (S_ISDIR (st.st_mode)) {                                            <* 
+ *>          DEBUG_FILE   yLOG_note    ("file is a directory, not allowwed");         <* 
+ *>       } else if (S_ISCHR (st.st_mode)) {                                          <* 
+ *>          DEBUG_FILE   yLOG_note    ("file is a char dev, not allowwed");          <* 
+ *>       } else if (S_ISBLK (st.st_mode)) {                                          <* 
+ *>          DEBUG_FILE   yLOG_note    ("file is a block dev, not allowwed");         <* 
+ *>       } else if (S_ISFIFO(st.st_mode)) {                                          <* 
+ *>          DEBUG_FILE   yLOG_note    ("file is a fifo/pipe, not allowwed");         <* 
+ *>       } else if (S_ISSOCK(st.st_mode)) {                                          <* 
+ *>          DEBUG_FILE   yLOG_note    ("file is a socket, not allowwed");            <* 
+ *>       } else  {                                                                   <* 
+ *>          DEBUG_FILE   yLOG_note    ("file is not recognized, not allowwed");      <* 
+ *>       }                                                                           <* 
+ *>       DEBUG_FILE   yLOG_exit    (__FUNCTION__);                                   <* 
+ *>       return rce;                                                                 <* 
+ *>    }                                                                              <* 
+ *>    /+---(save name)----------------------+/                                       <* 
+ *>    ystrlcpy (s_name, a_name, LEN_RECD);                                           <* 
+ *>    /+---(complete)-----------------------+/                                       <* 
+ *>    DEBUG_FILE   yLOG_exit    (__FUNCTION__);                                      <* 
+ *>    return 0;                                                                      <* 
+ *> }                                                                                 <*/
 
 char
-FILE__check             (char *a_name, char a_mode)
-{  /*---(locals)-----------+-----------+-*/
-   char        rce         =  -10;
-   int         rci         =    0;
-   tSTAT       st;
-   /*---(header)-------------------------*/
-   DEBUG_FILE   yLOG_enter   (__FUNCTION__);
-   /*---(prepare)------------------------*/
-   ystrlcpy (s_name, "", LEN_RECD);
-   /*---(defense)------------------------*/
-   DEBUG_FILE   yLOG_point   ("a_name"    , a_name);
-   --rce;  if (a_name == NULL) {
-      DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_FILE   yLOG_info    ("a_name"    , a_name);
-   /*---(get the file information)-------*/
-   rci = lstat (a_name, &st);
-   DEBUG_FILE   yLOG_value   ("lstat"     , rci);
-   --rce; if (rci < 0) {
-      if (a_mode == 'r') {
-         DEBUG_FILE   yLOG_note    ("file does not exist, can not read");
-         DEBUG_FILE   yLOG_exit    (__FUNCTION__);
-         return rce;
-      }
-      DEBUG_FILE   yLOG_note    ("writing data to a brand new file");
-      DEBUG_FILE   yLOG_exit    (__FUNCTION__);
-      return 0;
-   } else {
-      if (a_mode == 'w') {
-         DEBUG_FILE   yLOG_note    ("file exists, writing over existing file");
-      }
-   }
-   /*---(check regular file)-------------*/
-   if (S_ISREG (st.st_mode)) {
-      DEBUG_FILE   yLOG_note    ("refers to a regular file, perfect");
-   }
-   /*---(check symlink)------------------*/
-   else if (S_ISLNK (st.st_mode)) {
-      DEBUG_FILE   yLOG_note    ("file can not be a symlink to another file");
-      DEBUG_FILE   yLOG_exit    (__FUNCTION__);
-      return rce;
-   }
-   else  {
-      if      (S_ISDIR (st.st_mode)) {
-         DEBUG_FILE   yLOG_note    ("file is a directory, not allowwed");
-      } else if (S_ISCHR (st.st_mode)) {
-         DEBUG_FILE   yLOG_note    ("file is a char dev, not allowwed");
-      } else if (S_ISBLK (st.st_mode)) {
-         DEBUG_FILE   yLOG_note    ("file is a block dev, not allowwed");
-      } else if (S_ISFIFO(st.st_mode)) {
-         DEBUG_FILE   yLOG_note    ("file is a fifo/pipe, not allowwed");
-      } else if (S_ISSOCK(st.st_mode)) {
-         DEBUG_FILE   yLOG_note    ("file is a socket, not allowwed");
-      } else  {
-         DEBUG_FILE   yLOG_note    ("file is not recognized, not allowwed");
-      }
-      DEBUG_FILE   yLOG_exit    (__FUNCTION__);
-      return rce;
-   }
-   /*---(save name)----------------------*/
-   ystrlcpy (s_name, a_name, LEN_RECD);
-   /*---(complete)-----------------------*/
-   DEBUG_FILE   yLOG_exit    (__FUNCTION__);
-   return 0;
-}
-
-char
-DB__open                (FILE **a_file, char *a_name, char a_mode)
+DB__open                (cchar a_name [LEN_PATH], char a_mode, FILE **r_file)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -101,13 +254,13 @@ DB__open                (FILE **a_file, char *a_name, char a_mode)
    /*---(header)-------------------------*/
    DEBUG_FILE   yLOG_enter   (__FUNCTION__);
    /*---(defense)------------------------*/
-   DEBUG_FILE   yLOG_point   ("a_file"    , a_file);
-   --rce;  if (a_file == NULL) {
+   DEBUG_FILE   yLOG_point   ("r_file"    , r_file);
+   --rce;  if (r_file == NULL) {
       DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_FILE   yLOG_point   ("*a_file"   , *a_file);
-   --rce;  if (*a_file != NULL) {
+   DEBUG_FILE   yLOG_point   ("*r_file"   , *r_file);
+   --rce;  if (*r_file != NULL) {
       DEBUG_FILE   yLOG_note    ("file pointer in use, must leave alone");
       DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
@@ -136,21 +289,21 @@ DB__open                (FILE **a_file, char *a_name, char a_mode)
    }
    /*---(turn back stdout)---------------*/
    if (strcmp (a_name, "stdout") == 0) {
-      *a_file = stdout;
+      *r_file = stdout;
       DEBUG_FILE   yLOG_exit    (__FUNCTION__);
       return 0;
    }
    /*---(check)--------------------------*/
-   rc = FILE__check (a_name, a_mode);
-   DEBUG_FILE   yLOG_value   ("check"     , rc);
-   --rce;  if (rc < 0) {
-      DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
+   /*> rc = FILE__check (a_name, a_mode);                                             <* 
+    *> DEBUG_FILE   yLOG_value   ("check"     , rc);                                  <* 
+    *> --rce;  if (rc < 0) {                                                          <* 
+    *>    DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);                              <* 
+    *>    return rce;                                                                 <* 
+    *> }                                                                              <*/
    /*---(open)---------------------------*/
-   *a_file = fopen (a_name, x_mode);
-   DEBUG_FILE   yLOG_point   ("*a_file"   , *a_file);
-   --rce;  if (*a_file == NULL) {
+   *r_file = fopen (a_name, x_mode);
+   DEBUG_FILE   yLOG_point   ("*r_file"   , *r_file);
+   --rce;  if (*r_file == NULL) {
       DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -161,7 +314,7 @@ DB__open                (FILE **a_file, char *a_name, char a_mode)
 }
 
 char
-DB__close               (FILE **a_file)
+DB__close               (FILE **b_file)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -169,26 +322,26 @@ DB__close               (FILE **a_file)
    /*---(header)-------------------------*/
    DEBUG_FILE   yLOG_enter   (__FUNCTION__);
    /*---(defense)------------------------*/
-   DEBUG_FILE   yLOG_point   ("a_file"    , a_file);
-   --rce;  if (a_file == NULL) {
+   DEBUG_FILE   yLOG_point   ("b_file"    , b_file);
+   --rce;  if (b_file == NULL) {
       DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   yLOG_point   ("*a_file"   , *a_file);
-   --rce;  if (*a_file == NULL) {
+   yLOG_point   ("*b_file"   , *b_file);
+   --rce;  if (*b_file == NULL) {
       DEBUG_FILE   yLOG_note    ("file pointer grounded, nothing to do");
       DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(flush)--------------------------*/
-   fflush (*a_file);
+   fflush (*b_file);
    /*---(turn back stdout)---------------*/
-   if (*a_file == stdout) {
+   if (*b_file == stdout) {
       DEBUG_FILE   yLOG_exit    (__FUNCTION__);
       return 0;
    }
    /*---(close)--------------------------*/
-   rc = fclose (*a_file);
+   rc = fclose (*b_file);
    DEBUG_FILE   yLOG_value   ("close"     , rc);
    --rce;  if (rc < 0) {
       DEBUG_FILE   yLOG_exitr   (__FUNCTION__, rce);
@@ -198,7 +351,7 @@ DB__close               (FILE **a_file)
    chmod (s_name, 0755);
    /*---(ground)-------------------------*/
    ystrlcpy (s_name, "", LEN_RECD);
-   *a_file = NULL;
+   *b_file = NULL;
    /*---(complete)-----------------------*/
    DEBUG_FILE   yLOG_exit    (__FUNCTION__);
    return 0;
@@ -206,14 +359,13 @@ DB__close               (FILE **a_file)
 
 
 
-
 /*====================------------------------------------====================*/
 /*===----                     read/write of drives                     ----===*/
 /*====================------------------------------------====================*/
-static void      o___DRIVES__________________o (void) {;}
+static void      o___DRIVES_____________o (void) {;}
 
 char
-WRITE__drives      (FILE *a_file)
+DB__drive_write    (FILE *a_file)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -230,8 +382,8 @@ WRITE__drives      (FILE *a_file)
       return rce;
    }
    /*---(write count)--------------------*/
-   DEBUG_OUTP   yLOG_value   ("n_drive"   , n_drive);
-   x_bytes = fwrite (&n_drive, sizeof (uchar), 1, a_file);
+   DEBUG_OUTP   yLOG_value   ("g_ndrive"   , g_ndrive);
+   x_bytes = fwrite (&g_ndrive, sizeof (uchar), 1, a_file);
    DEBUG_OUTP   yLOG_value   ("write"     , x_bytes);
    /*---(write drive list)---------------*/
    x_drive = h_drive;
@@ -248,7 +400,7 @@ WRITE__drives      (FILE *a_file)
 }
 
 char
-READ__drives       (FILE *a_file)
+DB__drive_read     (FILE *a_file)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -295,10 +447,10 @@ READ__drives       (FILE *a_file)
 /*====================------------------------------------====================*/
 /*===----                    read/write entries                        ----===*/
 /*====================------------------------------------====================*/
-static void      o___ENTRIES_________________o (void) {;}
+static void      o___ENTRIES____________o (void) {;}
 
 char         /*===[[ write dir to binary file ]]==========[ ------ [ ------ ]=*/
-WRITE__entry       (FILE *a_file, tENTRY *a_entry, int *a_count)
+DB__entry_write    (FILE *a_file, tENTRY *a_entry, int *a_count)
 {  /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    int         x_bytes     =    0;
@@ -331,7 +483,7 @@ WRITE__entry       (FILE *a_file, tENTRY *a_entry, int *a_count)
 }
 
 char
-READ__entry             (FILE *a_file, int *a_count)
+DB__entry_read          (FILE *a_file, int *a_count)
 {  /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    char        rc          =    0;
@@ -377,13 +529,13 @@ READ__entry             (FILE *a_file, int *a_count)
    DEBUG_INPT   yLOG_info    ("name"      , x_data->name);
    /*---(set level)----------------------*/
    DEBUG_INPT   yLOG_complex ("levels"    , "%ds, %d", s_level, x_data->lvl);
-   for (i = 0; i < 99; ++i) {
-      if (s_stack [i] != NULL)   DEBUG_INPT   yLOG_complex ("s_stack"   , "%2d, %p, %s", i, s_stack [i], s_stack [i]->data->name);
-   }
-   for (i = x_data->lvl; i < 99; ++i)   s_stack [i] = NULL;
-   for (i = 0; i < 99; ++i) {
-      if (s_stack [i] != NULL)   DEBUG_INPT   yLOG_complex ("s_stack"   , "%2d, %p, %s", i, s_stack [i], s_stack [i]->data->name);
-   }
+   /*> for (i = 0; i < LEN_HUND; ++i) {                                                                                                  <* 
+    *>    if (s_stack [i] != NULL)   DEBUG_INPT   yLOG_complex ("s_stack"   , "%2d, %p, %s", i, s_stack [i], s_stack [i]->data->name);   <* 
+    *> }                                                                                                                                 <*/
+   for (i = x_data->lvl; i < LEN_HUND; ++i)   s_stack [i] = NULL;
+   /*> for (i = 0; i < LEN_HUND; ++i) {                                                                                                  <* 
+    *>    if (s_stack [i] != NULL)   DEBUG_INPT   yLOG_complex ("s_stack"   , "%2d, %p, %s", i, s_stack [i], s_stack [i]->data->name);   <* 
+    *> }                                                                                                                                 <*/
    s_level = x_data->lvl;
    DEBUG_INPT   yLOG_value   ("s_level"   , s_level);
    /*---(set parent)---------------------*/
@@ -424,10 +576,10 @@ READ__entry             (FILE *a_file, int *a_count)
 /*====================------------------------------------====================*/
 /*===----                    read/write directories                    ----===*/
 /*====================------------------------------------====================*/
-static void      o___DIRECTORIES_____________o (void) {;}
+static void      o___DIRECTORIES________o (void) {;}
 
 char         /*===[[ write dir to binary file ]]==========[ ------ [ ------ ]=*/
-WRITE__dir         (FILE *a_file, tPTRS *a_parent, int *a_count)
+DB__dir_write      (FILE *a_file, tPTRS *a_parent, int *a_count)
 {  /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    tPTRS      *x_entry     = NULL;
@@ -453,9 +605,9 @@ WRITE__dir         (FILE *a_file, tPTRS *a_parent, int *a_count)
       x_data = x_entry->data;
       if (x_data != NULL) {
          DEBUG_OUTP   yLOG_complex ("entry"     , "%p, %s, %c, %c", x_data, x_data->name, x_data->type, x_data->stype);
-         WRITE__entry (a_file, x_data, a_count);
+         DB__entry_write (a_file, x_data, a_count);
          if   (x_data->type == ENTRY_DIR) {
-            WRITE__dir (a_file, x_entry, a_count);
+            DB__dir_write (a_file, x_entry, a_count);
          }
       }
       x_entry = x_entry->s_next;
@@ -471,7 +623,7 @@ WRITE__dir         (FILE *a_file, tPTRS *a_parent, int *a_count)
 /*====================------------------------------------====================*/
 /*===----                           database                           ----===*/
 /*====================------------------------------------====================*/
-static void      o___DATABASE________________o (void) {;}
+static void      o___DATABASE___________o (void) {;}
 
 /*> char         /+===[[ write dir to binary file ]]==========[ ------ [ ------ ]=+/   <* 
  *> FWRITE_dir         (                                                               <* 
@@ -519,12 +671,12 @@ static void      o___DATABASE________________o (void) {;}
  *> }                                                                                  <*/
 
 char         /*===[[ write binary file ]]=================[ ------ [ ------ ]=*/
-WRITE_all          (char *a_name, int *a_count)
+DB_write           (char *a_name, int *a_count)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    char        rc          =    0;
-   FILE       *x_file      = NULL;
+   FILE       *x_db        = NULL;
    int         x_count     = 0;
    tDRIVE     *x_drive     = NULL;
    long        x_end       =    0;
@@ -538,39 +690,46 @@ WRITE_all          (char *a_name, int *a_count)
       return rce;
    }
    /*---(open)---------------------------*/
-   rc = DB__open  (&x_file, a_name, 'w');
+   rc = DB__open  (a_name, 'w', &x_db);
    DEBUG_OUTP   yLOG_value   ("open"      , rc);
-   DEBUG_OUTP   yLOG_point   ("x_file"    , x_file);
-   --rce;  if (rc < 0 || x_file == NULL) {
+   DEBUG_OUTP   yLOG_point   ("x_db"      , x_db);
+   --rce;  if (rc < 0 || x_db == NULL) {
+      DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(write header)-------------------*/
+   rc = DB__head_write  (x_db, P_BASENAME, P_VERNUM, 0, 0, g_ndrive, g_nptrs, my.heartbeat);
+   DEBUG_OUTP   yLOG_value   ("header"    , rc);
+   --rce;  if (rc < 0) {
       DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(write drives)-------------------*/
-   rc = WRITE__drives (x_file);
+   rc = DB__drive_write (x_db);
    DEBUG_OUTP   yLOG_value   ("drives"    , rc);
    --rce;  if (rc < 0) {
       DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(write root)---------------------*/
-   rc = WRITE__entry (x_file, h_ptrs->data, &x_count);
+   rc = DB__entry_write (x_db, h_ptrs->data, &x_count);
    DEBUG_OUTP   yLOG_value   ("root"      , rc);
    --rce;  if (rc < 0) {
       DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(write entries)------------------*/
-   rc = WRITE__dir (x_file, h_ptrs, &x_count);
+   rc = DB__dir_write (x_db, h_ptrs, &x_count);
    DEBUG_OUTP   yLOG_value   ("dirs"      , rc);
    --rce;  if (rc < 0) {
       DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(close)--------------------------*/
-   rc = DB__close (&x_file);
+   rc = DB__close (&x_db);
    DEBUG_OUTP   yLOG_value   ("close"     , rc);
-   DEBUG_OUTP   yLOG_point   ("x_file"    , x_file);
-   --rce;  if (rc < 0 || x_file != NULL) {
+   DEBUG_OUTP   yLOG_point   ("x_db"      , x_db);
+   --rce;  if (rc < 0 || x_db != NULL) {
       DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -589,12 +748,12 @@ WRITE_all          (char *a_name, int *a_count)
 
 
 char         /*===[[ read entries from database ]]========[ ------ [ ------ ]=*/
-READ_all           (char *a_name, int *a_count)
+DB_read            (char *a_name, int *a_count)
 {
    /*---(locals)-----------+-----------+-*/
    char        rce         =  -10;
    char        rc          =    0;
-   FILE       *x_file      = NULL;          /* file pointer                   */
+   FILE       *x_db        = NULL;          /* file pointer                   */
    tPTRS      *x_dir       = NULL;
    /*---(header)-------------------------*/
    DEBUG_INPT   yLOG_enter   (__FUNCTION__);
@@ -602,30 +761,37 @@ READ_all           (char *a_name, int *a_count)
    rc = ENTRY__purge ();
    rc = DRIVE__purge ();
    /*---(open)---------------------------*/
-   rc = DB__open  (&x_file, a_name, 'r');
+   rc = DB__open  (a_name, 'r', &x_db);
    DEBUG_INPT   yLOG_value   ("open"      , rc);
-   DEBUG_INPT   yLOG_point   ("x_file"    , x_file);
-   --rce;  if (rc < 0 || x_file == NULL) {
+   DEBUG_INPT   yLOG_point   ("x_db"      , x_db);
+   --rce;  if (rc < 0 || x_db == NULL) {
       DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   /*---(read header)--------------------*/
+   rc = DB__head_read   (x_db, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+   DEBUG_OUTP   yLOG_value   ("header"    , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
    /*---(get drives)---------------------*/
-   rc = READ__drives (x_file);
-   DEBUG_INPT   yLOG_complex ("drives"    , "%4drc, %dn", rc, n_drive);
+   rc = DB__drive_read (x_db);
+   DEBUG_INPT   yLOG_complex ("drives"    , "%4drc, %dn", rc, g_ndrive);
    --rce;  if (rc < 0) {
       DEBUG_INPT   yLOG_exit    (__FUNCTION__);
       return rce;
    }
    /*---(process entries)----------------*/
    --rce;  while (1) {
-      rc = READ__entry (x_file, a_count);
+      rc = DB__entry_read (x_db, a_count);
       if (rc < 0)  break;
    }
    /*---(close)--------------------------*/
-   rc = DB__close (&x_file);
+   rc = DB__close (&x_db);
    DEBUG_INPT   yLOG_value   ("close"     , rc);
-   DEBUG_INPT   yLOG_point   ("x_file"    , x_file);
-   --rce;  if (rc < 0 || x_file != NULL) {
+   DEBUG_INPT   yLOG_point   ("x_db"      , x_db);
+   --rce;  if (rc < 0 || x_db != NULL) {
       DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
