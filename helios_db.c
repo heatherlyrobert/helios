@@ -36,7 +36,7 @@
  */
 
 /*
- * METIS § wc4·· § change FILE_ functions to DB_ to keep consistent across programs       § N9J1jd §  · §
+ * METIS § wc4#· § change FILE_ functions to DB_ to keep consistent across programs       § N9J1jd §  · §
  * METIS § wr2·· § make sure yJOBS confirms database itself during audit                  § N9J6Dg §  · §
  * METIS § wv2·· § allow db name override for testing purposes                            § N9JLcO §  · §
  * METIS § wg4·· § option to sync existing data to new mime table                         § N9T6e0 §  · §
@@ -736,7 +736,7 @@ DB_write           (char *a_name, int *a_count)
    /*---(close)--------------------------*/
    x_end  = time (NULL);
    printf ("# ran for %ld secs\n", x_end - my.runtime);
-   FILE_commas (x_count, t);
+   DB_commas (x_count, t);
    printf ("# wrote %s recs\n", t);
    /*---(save back)----------------------*/
    if (a_count != NULL)  *a_count = x_count;
@@ -800,52 +800,11 @@ DB_read            (char *a_name, int *a_count)
    return 0;
 }
 
-char 
-FILE_percents      (long a_number, long a_total, char *a_string)
-{
-   /*---(locals)-----------+-----------+-*/
-   double      x_percent   = 0;
-   /*---(format)-------------------------*/
-   if (a_number == 0) {
-      strcpy (a_string, "-");
-      return 0;
-   }
-   if (a_total  == 0) {
-      strcpy (a_string, "-");
-      return 0;
-   }
-   x_percent = ((double) a_number) / ((double) a_total);
-   if (x_percent <= 0.009) {
-      strcpy (a_string, "-");
-      return 0;
-   }
-   if (x_percent > 1.0) {
-      strcpy (a_string, "-");
-      return 0;
-   }
-   sprintf (a_string, "%3.0lf", x_percent * 100.0);
-   /*---(complete)-----------------------*/
-   return 0;
-}
-
 char
-FILE_commas        (llong a_number, char *a_string)
+DB_commas        (llong a_number, char *a_string)
 {
    if (a_number == 0)  ystrlcpy (a_string, "-", LEN_LABEL);
    else  ystrl4comma (a_number, a_string, 0, 'c', '-', LEN_LABEL);
-   return 0;
-}
-
-char
-FILE_uncommas      (char *a_string, llong *a_number)
-{
-   double     x_val;
-   /*> if (strcmp (ystrltrim (a_string, ySTR_BOTH, LEN_LABEL), "-") == 0)  x_val = 0;   <* 
-    *> else                              ystrl2comma (a_string, &x_val, LEN_LABEL);     <*/
-   ystrl2comma (a_string, &x_val, LEN_LABEL);
-   DEBUG_INPT   yLOG_double ("x_val"     , x_val);
-   *a_number = x_val;
-   DEBUG_INPT   yLOG_llong   ("a_number"  , *a_number);
    return 0;
 }
 

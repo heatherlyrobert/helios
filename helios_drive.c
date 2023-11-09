@@ -938,7 +938,7 @@ DRIVE_inventory         (void)
    }
    /*---(write mime file)----------------*/
    /*> yLOG_stage ('8');                                                              <*/
-   rc = MIME_write ('f');
+   rc = MIME_report (my.file_mime);
    DEBUG_ENVI   yLOG_value   ("mime"      , rc);
    --rce;  if (rc < 0) {
       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
@@ -969,7 +969,7 @@ DRIVE_list              (void)
    x_curr = h_drive;
    printf ("## rf ---host-------- ---device----------- ---mpoint--------------------- --type-- --serial------- --size--\n");
    while (x_curr != NULL) {
-      /*> FILE_commas (x_curr->size, t);                                              <*/
+      /*> DB_commas (x_curr->size, t);                                              <*/
       ystrlsize (x_curr->size  , 'u', t);
       /*> ystrlsize (x_curr->n_seen, 'u', u);                                         <*/
       /*> ystrlsize (x_curr->b_seen, 'u', v);                                         <*/

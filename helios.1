@@ -15,42 +15,129 @@ version of the well-worn and posix-defined locate, file indexing and searching
 command, specifically tailored to my own long-term vision and needs.
 
 .SH DISCLAIMER
-i am a crazy, naive, dog-fooding c programmer.  i am not trying to be best.
+i am a crazy, naive, dog-fooding c programmer.  i am NOT trying to be best.
 i optimize for my own learning, run-time transparency, and ease-of-maintenance.
-if i wanted awesome, fast, and cutting-edge, i'd use yours ;)
+it may not be perfect (or even good), but i OWN every byte.
 
 .SH DOCUMENTATION FILES (see also)
 .nf  
 .B helios (1) ´´´´´´> command-line initiation, use, and options
 helios (5)         user files, data streams, and configuration
+helios_conf (5)    specifics about configuration
+helios_mime (5)    specifics about mime text database
 helios (7)         decision rationale, scope, and objectives
+helios (8)         system administration and maintenance commands
 
 .SH TABLE OF CONTENTS
 .nf  
-a) synopsis        main configuration file
-b) start verb      rule (1) to specify default starting point
+a) synopsis        calling convension
+b) gathering       creating the database
+c) reporting       general reporting overview
+
+c) security        security overview and options
 c) avoid verbs     rules (4) to ignore certain directories
 d) silent verbs    rules (4) to record data, but not specific content
 e) private verb    rule (1) to eliminate content from public versions
 
-.SH SYNOPSIS
+.SH A) SYNOPSIS
 
-.B helios [ARGUMENTS] [REGEX]
-.nf
+.SS helios [ARGUMENTS] [REGEX]
 which is the primary production version
 
-.B helios_debug [URGENTS] [ARGUMENTS] [REGEX]
-.nf
+.SS helios_debug [URGENTS] [ARGUMENTS] [REGEX]
 which can perform all helios actions, but with debugging and tracing
 
-.B updatedb and locate
-are hardlinked to helios
+.SH B) GATHERING
+helios stores all directory and file data in an off-line binary database for
+later searching, thereby reducing system strain during primary work hours.
+this database is typically updated nightly using a batch scheduler.
 
-.SH USER/AUDIENCE
-helios is not intended for general audiences.  while it can replace any
-other file indexing and searching, it is not intended to do so on typical
-user systems.  this is a tool built for me and my systems, and therefore
-provides no real concessions for anyone else.
+.B --gather
+rebuilds the database with latest configuration
+
+.B --start·<dir>
+sets the maximum recursion to review/save files
+
+.B --depth·<#>
+sets absolute maximum recursion to review/save files
+
+also, please review helios (5) to understand how configuration helps prune
+unneeded detail from data, such as linux distribution files, temp dirs, etc.
+
+example for calling helios to create the database...
+.nf
+   helios --gather
+
+.SH C) REPORTING
+helios can be called by any user.  BUT since it collects permissions, user
+id, and group id when making the database; it will not present any files or
+directories to which the user does not have permission/access.
+
+by default, helios will report everything contained in the database (permissions
+respected).  typical content filters include...
+.nf
+   subset        --start /bin    (see ???)
+   mime ext      --ext·mp3       (see MIME below)
+   security      --uid·1000      (see SECURITY below)
+   file type     --reg           (see TYPES below)
+   sizes         --mb            (see SIZES below)
+   ages          --days          (see AGES below)
+   naming        --crazy         (see NAME QUALITY below)
+
+by default, helios lists just the fully qualified, absolute path.  reporting
+embellishments include...
+.nf
+   headers       --headers       (see BEAUTIFYING below)
+   line numbers  --lineno        (see BEAUTIFYING below)
+   columns       --show-mime     (see FORMATS below)
+   formats       --analysis      (see FORMATS below)
+
+
+
+.SH C) SECURITY
+helios collects permissions, user id, group id, and suid/guid when making
+the database.  as such, helios will not present any files or directories to
+which the user does not have permission/access.
+
+within what the caller can see, they can filter several security options...
+
+.B --super
+filters for files with suid and guid bits set set
+
+.B --uid·<#>
+filters for a specific uid
+
+.B --gid·<#>
+filters for a specific gid
+
+since security information is retained from when the file was reviewed.
+it is possible that permissions could be updated since last update.  this is
+a recognized trade-off to allow fast, off-line reviews.
+
+.SH MIME FILTERS (optional)
+the mime categories are custom defined by me.  the work the same as file types
+only they limit by type of content.  they are all turned on by default.
+
+.B turning on and off.
+   --audio , --noaudio     audio and music         (a)
+   --video , --novideo     video and movies        (v)
+   --image , --noimage     image and pictures      (i)
+   --source, --nosource    source code             (s)
+   --text  , --notext      ascii text              (t)
+   --base  , --nobase      database                (b)
+   --crypt , --nocrypt     compressed/encrypted    (c)
+   --prop  , --noprop      propietary              (p)
+   --exec  , --noexec      executable              (x)
+   --junk  , --nojunk      backup, swap, and temp  (j)
+   --other , --noother     unmatched/unknown       (o)
+   --huh   , --nohuh       beyond handling         (?)
+
+.B forcing the whole set.
+  --mimes <chars>  where chars are the one-char abbrev shown above
+
+
+
+
  
 .SH REGEX PATTERN
 helios uses a single extended regular expressions, full stop.  there are no
@@ -62,24 +149,6 @@ this option is the same as leaving the regex blank
 since helios uses my custom regex library, anything beyond the basic
 posix-defined standard may be implemented slightly differently.  please review
 yREGEX for help in that regard.
-
-.SH SECURITY and PERMISSIONS
-helios will not present any files or directories to which the user does not
-have access.  additionally, with the proper credentials, helios can filter
-on security information.
-
-.B --super,
-will filter for suid and guid programs
-
-.B --uid <#>,
-will filter for specific uid
-
-.B --gid <#>,
-will filter for specific gid
-
-security information is retained from when the file was reviewed.  it is
-possible that permissions could be updated since last update.  this is a
-recognized trade-off to allow fast, off-line reviews.
 
 .SH OUTPUT FORMATS (optional)
 by default, helios returns a list of fully qualified files (like locate).
@@ -158,27 +227,6 @@ first turn all options off.
 
 .B forcing the whole set.
   --types <chars>  where chars are the one-char abbrev shown above
-
-.SH MIME FILTERS (optional)
-the mime categories are custom defined by me.  the work the same as file types
-only they limit by type of content.  they are all turned on by default.
-
-.B turning on and off.
-   --audio , --noaudio     audio and music         (a)
-   --video , --novideo     video and movies        (v)
-   --image , --noimage     image and pictures      (i)
-   --source, --nosource    source code             (s)
-   --text  , --notext      ascii text              (t)
-   --base  , --nobase      database                (b)
-   --crypt , --nocrypt     compressed/encrypted    (c)
-   --prop  , --noprop      propietary              (p)
-   --exec  , --noexec      executable              (x)
-   --junk  , --nojunk      backup, swap, and temp  (j)
-   --other , --noother     unmatched/unknown       (o)
-   --huh   , --nohuh       beyond handling         (?)
-
-.B forcing the whole set.
-  --mimes <chars>  where chars are the one-char abbrev shown above
 
 .SH SIZE FILTERS (optional)
 the size categories are custom defined by me.  the work the same as file types

@@ -157,7 +157,7 @@ RPTG_init           (void)
    s_bytes   =   0;
    my.r_uid  =  -1;
    my.r_gid  =  -1;
-   ystrlcpy (my.ext, "", LEN_TERSE);
+   strcpy (my.ext, "");
    return 0;
 }
 
@@ -381,13 +381,16 @@ char
 RPTG_filter_mime        (uchar a_cat, uchar *a_ext)
 {
    char          rc        =    0;
+   char          x_ext     [LEN_LABEL] = "";
+   char         *p         = NULL;
    rc = strcmp (my.ext, "");
    DEBUG_DATA  yLOG_complex  ("mime check", "%s, %s, %c, %s, %d", my.mimes, my.ext, a_cat, a_ext, rc);
    if (rc != 0) {
       DEBUG_DATA  yLOG_note     ("must test extension");
-      rc = strcmp (a_ext, my.ext);
-      DEBUG_DATA  yLOG_complex  ("check"     , "%s, %s, %d", my.ext, a_ext, rc);
-      if (rc == 0)  {
+      sprintf (x_ext, " %s ", a_ext);
+      p = strstr (my.ext, x_ext);
+      DEBUG_DATA  yLOG_complex  ("check"     , "%s, %s, %p", my.ext, a_ext, p);
+      if (p != NULL) {
          DEBUG_DATA  yLOG_note     ("MATCH");
          return 1;
       }
@@ -980,10 +983,10 @@ RPTG__title             (void)
    DEBUG_RPTG   yLOG_enter   (__FUNCTION__);
    /*---(shared)-------------------------*/
    printf ("## HELIOS-PHAETON (locate) -- filesystem searching and indexing services\n");
-   if (my.path [0] != '£')  ystrlcpy (t, my.path  , LEN_PATH);
-   else                      ystrlcpy (t, "<none>" , LEN_PATH);
-   if (my.maxlevel >= 99)    ystrlcpy (s, "<unset>", LEN_LABEL);
-   else                      sprintf (t, "%d"     , my.maxlevel);
+   if (my.path [0] != '\0')         ystrlcpy (t, my.path  , LEN_PATH);
+   else                             ystrlcpy (t, "<none>" , LEN_PATH);
+   if (my.maxlevel >= MAX_LEVEL)    ystrlcpy (s, "<unset>", LEN_LABEL);
+   else                             sprintf (t, "%d"     , my.maxlevel);
    /*---(individual)---------------------*/
    DEBUG_RPTG   yLOG_char    ("my.output" , my.output);
    switch (my.output) {
@@ -1346,8 +1349,8 @@ RPTG_footer             (void)
       DRIVE_list ();
    }
    printf ("\n");
-   FILE_commas (my.total, s);
-   /*> FILE_commas (s_bytes, t);                                                      <*/
+   DB_commas (my.total, s);
+   /*> DB_commas (s_bytes, t);                                                      <*/
    ystrlsize (s_bytes, 'u', t);
    printf ("##  %s total entries matched, taking up %s\n", s, t);
    /*---(complete)-----------------------*/
@@ -1585,7 +1588,7 @@ RPTG_dirtree      (void)
  *>    /+> OPT_VERBOSE  printf ("%s\n", x_path);                                          <+/    <* 
  *>    /+> printf ("%s%s\n", x_prefix, x_path);                                           <+/    <* 
  *>    sprintf (x_temp, "%s%s", x_prefix, x_dir->name);                                          <* 
- *>    /+> FILE_commas (x_dir->bcum, x_cum);                                               <+/   <* 
+ *>    /+> DB_commas (x_dir->bcum, x_cum);                                               <+/   <* 
 *>    /+> printf  ("%-100.100s %14s\n", x_temp, x_cum);                                  <+/    <* 
 *>    printf  ("%-100.100s | %14ld\n", x_temp, x_dir->bcum);                                    <* 
 *>    /+---(check start path)---------------+/                                                  <* 
@@ -1650,7 +1653,7 @@ RPTG_summ          (void)
       curr = localtime (&x_written);
       if (curr == NULL) printf ("local time failed\n");
       else              strftime (x_time, 100, "%y.%m.%d %H:%M:%S %U", curr);
-      FILE_commas (x_drive->size , x_comma);
+      DB_commas (x_drive->size , x_comma);
       printf ("[%02d]   %-10.10s %-10.10s %-15.15s %-20.20s %-8.8s %20.20s   %s\n",
             x_drive->ref   , x_drive->host  ,
             x_drive->serial, x_drive->device, x_drive->mpoint,
@@ -1660,35 +1663,35 @@ RPTG_summ          (void)
    printf ("\n");
    printf ("---type----- ---seen----- ---kept----- ---each----- ---bytes----\n");
    printf ("directories ");
-   FILE_commas (x_dseen, x_comma);
+   DB_commas (x_dseen, x_comma);
    printf (" %12.12s");
-   FILE_commas (x_dkept, x_comma);
+   DB_commas (x_dkept, x_comma);
    printf (" %12.12s");
-   FILE_commas (sizeof (tENTRY), x_comma);
+   DB_commas (sizeof (tENTRY), x_comma);
    printf (" %12.12s");
-   FILE_commas (x_dkept * sizeof (tENTRY), x_comma);
+   DB_commas (x_dkept * sizeof (tENTRY), x_comma);
    printf (" %12.12s\n");
    printf ("files       ");
-   FILE_commas (x_fseen, x_comma);
+   DB_commas (x_fseen, x_comma);
    printf (" %12.12s");
-   FILE_commas (x_fkept, x_comma);
+   DB_commas (x_fkept, x_comma);
    printf (" %12.12s");
-   FILE_commas (sizeof (tENTRY), x_comma);
+   DB_commas (sizeof (tENTRY), x_comma);
    printf (" %12.12s");
-   FILE_commas (x_fkept * sizeof (tENTRY), x_comma);
+   DB_commas (x_fkept * sizeof (tENTRY), x_comma);
    printf (" %12.12s\n");
    printf ("             ------------ ------------              ------------\n");
    printf ("   total    ");
-   FILE_commas (x_dseen + x_fseen, x_comma);
+   DB_commas (x_dseen + x_fseen, x_comma);
    printf (" %12.12s");
-   FILE_commas (x_dkept + x_fkept, x_comma);
+   DB_commas (x_dkept + x_fkept, x_comma);
    printf (" %12.12s");
    printf ("             ");
-   FILE_commas ((x_dkept + x_fkept) * sizeof (tENTRY), x_comma);
+   DB_commas ((x_dkept + x_fkept) * sizeof (tENTRY), x_comma);
    printf (" %12.12s\n");
    printf ("                                                    ------------\n");
    printf ("                 with device entries (approximate) ");
-   FILE_commas (sizeof (short) + (g_ndrive * sizeof (tDRIVE)) + ((x_dkept + x_fkept) * sizeof (tENTRY)), x_comma);
+   DB_commas (sizeof (short) + (g_ndrive * sizeof (tDRIVE)) + ((x_dkept + x_fkept) * sizeof (tENTRY)), x_comma);
    printf (" %12.12s\n");
    /*---(complete)-----------------------*/
    return 0;

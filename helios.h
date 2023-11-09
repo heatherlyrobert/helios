@@ -44,8 +44,8 @@
 /*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "1.--, first major version in production"
 #define     P_VERMINOR  "1.2-, stablizing after too many changes"
-#define     P_VERNUM    "1.2b"
-#define     P_VERTXT    "basics are solid again, new verbs, cleaner reporting"
+#define     P_VERNUM    "1.2c"
+#define     P_VERTXT    "mime rebuilt into single table, writes into database, unit tested"
 /*········· ··········· ´·····························´········································*/
 #define     P_WARNING   "this does exactly what i want with ZERO thought to working for you"
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
@@ -377,6 +377,9 @@ extern      short      g_udrive;
 #define       STYPE_EMPTY        ' '
 #define       STYPE_NORMAL       '-'
 #define       STYPE_LINK         '>'
+/*---(overall stypes)-----------------*/
+#define       STYPE_START        '/'
+#define       STYPE_LEVEL        '#'
 /*---(silenced stypes)----------------*/
 #define       STYPE_SILENT       '~'
 #define       STYPE_SILENT_UNDER '+'
@@ -387,6 +390,9 @@ extern      short      g_udrive;
 #define       STYPE_AVOID_FULL   '['
 #define       STYPE_AVOID_UNDER  ')'
 #define       STYPE_AVOID_EVERY  'X'
+/*---(system stypes)------------------*/
+#define       STYPE_SYSTEM       '$'
+#define       STYPE_SYSTEM_UNDER '%'
 /*---(private stype)------------------*/
 #define       STYPE_PRIVATE      '!'
 /*---(combinations)-------------------*/
@@ -493,7 +499,7 @@ struct cENTRY {
    int         ccum;                   /* number of below full branch         */
    /*---(categorization)-----------------*/
    char        cat;                    /* mime-like category                  */
-   char        ext         [LEN_TERSE];/* mime-like extension                 */
+   char        ext         [LEN_HUND]; /* mime-like extension                 */
    /*---(name)---------------------------*/
    uchar       ascii;                  /* quality of name                     */
    uchar       len;                    /* length of name                      */
@@ -592,22 +598,33 @@ struct cBUCKET {
 #define     MAX_MIME      500
 typedef     struct      cMIME       tMIME;
 struct cMIME {
-   uchar       ext         [LEN_TERSE];
-   uchar       cat;
-   uchar       desc        [LEN_DESC];
-   uchar       like;
+   /*---(master)------------*/
+   char        level;
+   char        ext         [LEN_TERSE];
+   char        cat;
+   short       tie;
+   char        desc        [LEN_DESC];
+   char        like;
+   /*---(seen)--------------*/
+   short       u_seen;
    int         n_seen;
    llong       b_seen;
+   /*---(kept)--------------*/
+   short       u_kept;
    int         n_kept;
    llong       b_kept;
+   /*---(found)-------------*/
+   short       u_found;
    int         n_found;
    llong       b_found;
+   /*---(done)--------------*/
 };
 extern    tMIME       g_cats [MAX_CAT];
 extern    int         g_ncat;
 extern    tMIME       g_mime [MAX_MIME];
 extern    int         g_nmime;
 
+#define    MAX_LEVEL    99
 
 struct cGLOBAL {
    /*---(yJOBS)--------------------------*/
@@ -751,6 +768,7 @@ int         main               (int argc, char *argv[]);
 /*---(support)--------------*/
 char*       PROG_version            (void);
 char        PROG_vershow            (void);
+char        PROG_reset              (void);
 /*---(preinit)--------------*/
 char        PROG__header            (void);
 char        PROG_urgents            (int a_argc, char *a_argv []);
@@ -795,8 +813,7 @@ char        DB__dir_write           (FILE *a_file, tPTRS *a_dir, int *a_count);
 char        DB_write                (char *a_name, int *a_count);
 char        DB_read                 (char *a_name, int *a_count);
 /*---(reading)--------------*/
-char        FILE_commas             (llong a_number, char *a_string);
-char        FILE_uncommas           (char *a_string, llong *a_number);
+char        DB_commas             (llong a_number, char *a_string);
 
 
 
@@ -808,22 +825,17 @@ char        MIME__purge             (void);
 /*---(program)--------------*/
 char        MIME_init               (void);
 /*---(action)---------------*/
-char        MIME__action            (uchar *a_ext, int *a_cindex, int *a_mindex, uchar *a_cat, char a_action, llong a_bytes, char *a_path);
-char        MIME_get_index          (uchar *a_ext, int *a_cindex, int *a_mindex);
-char        MIME_add_seen           (uchar *a_ext, uchar *a_cat, llong a_bytes, char *o_path);
-char        MIME_add_kept           (uchar *a_ext, llong a_bytes, char *o_path);
-char        MIME_add_found          (uchar *a_ext, llong a_bytes);
-char        MIME_add_man            (uchar *a_ext, uchar *a_cat, long a_bytes);
-char        MIME_del_seen           (uchar *a_ext, llong a_bytes, char *a_path);
-char        MIME_del_kept           (uchar *a_ext, llong a_bytes);
-char        MIME_del_found          (uchar *a_ext, llong a_bytes);
-/*---(helpers)--------------*/
-uchar       MIME_cat_abbr           (int c);
-uchar      *MIME_cat_name           (int c);
-uchar       MIME_mime_cat           (int m);
-uchar      *MIME_mime_ext           (int m);
+char        MIME_find               (char a_ext [LEN_TERSE], int *r_itotal, char r_total [LEN_TERSE], int *r_icat, char r_cat [LEN_TERSE], char *r_ccat, int *r_iext);
+
+char        MIME__action            (char a_ext [LEN_TERSE], char a_action, llong a_bytes, char *r_ccat);
+char        MIME_add_seen           (char a_ext [LEN_TERSE], llong a_bytes, char *r_ccat);
+char        MIME_add_kept           (char a_ext [LEN_TERSE], llong a_bytes);
+char        MIME_add_found          (char a_ext [LEN_TERSE], llong a_bytes);
+char        MIME_del_seen           (char a_ext [LEN_TERSE], llong a_bytes);
 /*---(input)----------------*/
 char        MIME__parse_essential   (char *a_recd, char *a_flag, char **s);
+char        MIME__single            (short n, char a_level, char a_ext [LEN_TERSE], char a_cat, char a_desc [LEN_DESC], char a_like);
+char        MIME_standard           (void);
 char        MIME__handler           (int a_line, uchar *a_verb);
 char        MIME_pull               (cchar a_name [LEN_PATH]);
 /*---(output)---------------*/
@@ -832,14 +844,18 @@ char        MIME__write_title       (FILE *f, char a_type);
 char        MIME__write_line        (FILE *f, char a_type, uchar *a_name, uchar a_cat, uchar *a_desc, uchar a_like, int a_nseen, llong a_bseen, int a_nkept, llong a_bkept);
 char        MIME__write_columns     (FILE *f, char a_type);
 char        MIME__write_category    (FILE *f, char a_type, char a_cat);
-char        MIME_write              (char a_type);
+char        MIME_report             (char a_name [LEN_PATH]);
 /*---(tree)-----------------*/
 char        MIME__tree_line         (char a_type, uchar *a_ext, llong a_size, llong a_count, char *a_desc);
 char        MIME_tree               (void);
 char        MIME_all                (void);
 char        MIME_found              (void);
-/*---(unit_test)------------*/
+/*---(database)-------------*/
+char        MIME_db_write           (FILE *a_file);
+char        MIME_db_read            (FILE *a_file, short a_count);
+/*---(unittest)-------------*/
 char*       MIME__unit              (char *a_question, char *a_ext, int n);
+/*---(done)-----------------*/
 
 
 
@@ -881,7 +897,6 @@ char        ENTRY_wrap              (void);
 char        ENTRY__name_check       (cchar *a_name, char *a_warn, uchar *a_len);
 char        ENTRY__type_check       (cchar *a_name, tSTAT *a_stat, uchar *a_stype, uchar *a_type);
 char        ENTRY__perms_check      (tSTAT *a_stat, ushort *a_uid, char *a_own, ushort *a_gid, char *a_grp, char *a_oth, char *a_super);
-char        ENTRY__mime_check       (cchar *a_full, cchar *a_name, tSTAT *a_stat, char a_stype, char a_type, char *a_ext, char *a_cat, long a_bytes);
 /*---(populate)-------------*/
 int         ENTRY__populate         (tPTRS *a_ptrs, char *a_full);
 char        ENTRY_manual            (tENTRY *a_entry, char *a_name, char a_type, char a_stype, char a_cat, char *a_ext);

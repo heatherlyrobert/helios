@@ -36,8 +36,8 @@
 /*
  * METIS § wr2·· § make sure yJOBS confirms config file safe before reading               § N9J6B1 §  · §
  * METIS § dr2·· § make sure yJOBS checks config file before audit read                   § N9J6Fi §  · §
- * METIS § wv2·· § allow conf file name override for testing                              § N9JLai §  · §
- * METIS § mv2·· § dir_note (like dir_never) records, but ignores children                § N9U1Uh §  · §
+ * METIS § wv2#· § allow conf file name override for testing                              § N9JLai §  · §
+ * METIS § mv2#· § dir_note (like dir_never) records, but ignores children                § N9U1Uh §  · §
  */
 
 /*
@@ -192,13 +192,34 @@ CONF__handler           (int a_line, cchar a_verb [LEN_LABEL])
       DEBUG_CONF   yLOG_note    ("start default found in conf");
       sprintf (t, "%3d confirmed  å%sæ", a_line, a_verb);
       yURG_msg ('-', "%-32.32s  on path  å%sæ", t, x_path);
-      if (my.mpoint [0] != '\0') {
+      if (my.path [0] != '\0') {
          DEBUG_CONF   yLOG_note    ("but, start already set by arg");
       } else {
          DEBUG_CONF   yLOG_note    ("mpoint currently null");
-         strcpy (my.mpoint, x_path);
+         strcpy (my.path, x_path);
+         g_confs [g_nconf].type = STYPE_START;
       }
-      DEBUG_CONF   yLOG_info    ("mpoint"    , my.mpoint);
+      DEBUG_CONF   yLOG_info    ("my.path"   , my.path);
+   }
+   /*---(depth)--------------------------*/
+   else if (strcmp (a_verb, "depth") == 0) {
+      DEBUG_CONF   yLOG_note    ("max depth default found in conf");
+      sprintf (t, "%3d confirmed  å%sæ", a_line, a_verb);
+      if (my.maxlevel != MAX_LEVEL) {
+         DEBUG_CONF   yLOG_note    ("but, max depth already set by arg");
+         yURG_msg ('-', "%-32.32s  BUT over-ridden on command line to %d", t, my.maxlevel);
+      } else if (atoi (x_path) > 0)  {
+         DEBUG_CONF   yLOG_note    ("setting max depth");
+         my.maxlevel = atoi (x_path);
+         g_confs [g_nconf].type = STYPE_LEVEL;
+         yURG_msg ('-', "%-32.32s  set to %d", t, my.maxlevel);
+      } else {
+         yURG_err ('f', "%-32.32s  argument was not a number å%sæ", t, x_path);
+         ++s_fail;
+         DEBUG_CONF   yLOG_exit    (__FUNCTION__);
+         return 0;
+      }
+      DEBUG_CONF   yLOG_info    ("maxlevel"  , my.maxlevel);
    }
    /*---(handle avoids)------------------*/
    else if (strncmp (a_verb, "avoid", 5) == 0) {
@@ -251,55 +272,6 @@ CONF__handler           (int a_line, cchar a_verb [LEN_LABEL])
       DEBUG_CONF   yLOG_note    ("adding a private type");
       g_confs [g_nconf].type = STYPE_PRIVATE;
    }
-   /*---(legacy)-------------------------*/
-   /*> if (strncmp (a_verb, "dir_", 4) == 0) {                                        <* 
-    *>    g_confs [g_nconf].type = STYPE_EMPTY;                                       <* 
-    *>    switch (a_verb[4]) {                                                        <* 
-    *>    case 's' :                                                                  <* 
-    *>       if (strcmp (a_verb, "dir_silent"  ) == 0) {                              <* 
-    *>          DEBUG_CONF   yLOG_note    ("adding a silent type");                   <* 
-    *>          g_confs [g_nconf].type = STYPE_SILENT;                                <* 
-    *>       }                                                                        <* 
-    *>       break;                                                                   <* 
-    *>    case 'a' :                                                                  <* 
-    *>       if (strcmp (a_verb, "dir_avoid"   ) == 0) {                              <* 
-    *>          DEBUG_CONF   yLOG_note    ("adding an avoid type");                   <* 
-    *>          g_confs [g_nconf].type = STYPE_AVOID_FULL;                                 <* 
-    *>       }                                                                        <* 
-    *>       break;                                                                   <* 
-    *>    case 'p' :                                                                  <* 
-    *>       if (strcmp (a_verb, "dir_pass"    ) == 0) {                              <* 
-    *>          DEBUG_CONF   yLOG_note    ("adding a pass type");                     <* 
-    *>          g_confs [g_nconf].type = STYPE_AVOID;                                  <* 
-    *>       }                                                                        <* 
-    *>       else if (strcmp (a_verb, "dir_private" ) == 0) {                         <* 
-    *>          DEBUG_CONF   yLOG_note    ("adding a private type");                  <* 
-    *>          g_confs [g_nconf].type = STYPE_PRIVATE;                               <* 
-    *>       }                                                                        <* 
-    *>       break;                                                                   <* 
-    *>    case 'l' :                                                                  <* 
-    *>       if (strcmp (a_verb, "dir_last"    ) == 0) {                              <* 
-    *>          DEBUG_CONF   yLOG_note    ("adding a last type");                     <* 
-    *>          g_confs [g_nconf].type = STYPE_AVOID_UNDER;                                  <* 
-    *>       }                                                                        <* 
-    *>       else if (strcmp (a_verb, "dir_lastplus") == 0) {                         <* 
-    *>          DEBUG_CONF   yLOG_note    ("adding a dir lastplus type");             <* 
-    *>          g_confs [g_nconf].type = STYPE_SILENT_UNDER;                              <* 
-    *>       }                                                                        <* 
-    *>       break;                                                                   <* 
-    *>    case 'n' :                                                                  <* 
-    *>       if (strcmp (a_verb, "dir_never"   ) == 0) {                              <* 
-    *>          DEBUG_CONF   yLOG_note    ("adding a never type");                    <* 
-    *>          g_confs [g_nconf].type = STYPE_SILENT_EVERY;                                 <* 
-    *>       } else if (strcmp (a_verb, "dir_neverx"  ) == 0) {                       <* 
-    *>          DEBUG_CONF   yLOG_note    ("adding a neverx type");                   <* 
-    *>          g_confs [g_nconf].type = STYPE_AVOID_EVERY;                                <* 
-    *>       } else if (strcmp (a_verb, "dir_neverp"  ) == 0) {                       <* 
-    *>          DEBUG_CONF   yLOG_note    ("adding a neverp type");                   <* 
-    *>          g_confs [g_nconf].type = STYPE_SILENT_WHEN;                                <* 
-    *>       }                                                                        <* 
-    *>       break;                                                                   <* 
-    *>    }                                                                           <*/
    /*---(save rest)----------------------*/
    if (strcmp (a_verb, "start") != 0 && g_confs [g_nconf].type == STYPE_EMPTY) {
       sprintf (t, "%3d could not interpret  å%sæ", a_line, a_verb);
@@ -324,15 +296,6 @@ CONF__handler           (int a_line, cchar a_verb [LEN_LABEL])
    strncpy (g_confs [g_nconf].reason, x_reason, LEN_DESC);
    ++g_nconf;
    DEBUG_CONF   yLOG_value   ("g_nconf"   , g_nconf);
-   /*---(bad verb)-----------------------*/
-   /*> else {                                                                         <* 
-    *>    sprintf (t, "%3d could not interpret  å%sæ", a_line, a_verb);               <* 
-    *>    yURG_err ('f', "%-42.42s  on path  å%sæ", t, x_path);                       <* 
-    *>    DEBUG_CONF   yLOG_note    ("not a valid dir_´´´´´ type verb");              <* 
-    *>    ++s_fail;                                                                   <* 
-    *>    DEBUG_CONF   yLOG_exit    (__FUNCTION__);                                   <* 
-    *>    return 0;                                                                   <* 
-    *> }                                                                              <*/
    /*---(final count)--------------------*/
    ++s_pass;
    /*---(complete)-----------------------*/
@@ -498,10 +461,8 @@ CONF_find               (char *a_full, char *a_name, char *a_stype, char *a_sile
          /*---(last)---------------------*/
          else if (g_confs [i].type == STYPE_PRIVATE) {
             DEBUG_CONF    yLOG_note    ("found a dir_private rule");
-            if (my.pub == 'y') {
-               rc = 1;
-               *a_silent = 'p';
-            }
+            rc = 1;
+            if (my.pub == 'y') *a_silent = 'p';
             break;
          }
          /*---(done)---------------------*/
@@ -689,7 +650,7 @@ CONF__unit              (char *a_question, int n)
    strcpy  (unit_answer, "ENTRY            : question not understood");
    /*---(overall)------------------------*/
    if      (strcmp (a_question, "file"          ) == 0) {
-      snprintf (unit_answer, LEN_FULL, "CONF file name   : %2d[%s]", strlen (my.file_conf), my.file_conf);
+      snprintf (unit_answer, LEN_FULL, "CONF file name   : %2då%sæ", strlen (my.file_conf), my.file_conf);
    }
    else if (strcmp (a_question, "count"         ) == 0) {
       snprintf (unit_answer, LEN_FULL, "CONF count       : %d", g_nconf);
@@ -698,9 +659,9 @@ CONF__unit              (char *a_question, int n)
       if (n >= g_nconf) {
          snprintf (unit_answer, LEN_FULL, "CONF entry  (%2d) : no entry", n);
       } else {
-         sprintf  (t, "[%.30s]", g_confs [n].path);
-         snprintf (unit_answer, LEN_FULL, "CONF entry  (%2d) : %c %2d%-32s %2d [%.30s]", n,
-               g_confs [n].type, g_confs [n].len, t, g_confs [n].uses, g_confs [n].reason);
+         sprintf  (t, "%2då%.30sæ", g_confs [n].len, g_confs [n].path);
+         snprintf (unit_answer, LEN_FULL, "CONF entry  (%2d) : %c  %-34.34s  %2d  å%.30sæ", n,
+               g_confs [n].type, t, g_confs [n].uses, g_confs [n].reason);
       }
    }
    /*---(complete)-----------------------*/

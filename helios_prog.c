@@ -41,7 +41,7 @@
  * METIS § dn2·· § empty regex means fail (do not return all)                             § N9U16l §  · §
  * METIS § mg8·· § option for helios to gather and report, never use database             § N9U1Wf §  · §
  * METIS § ····· § --ext should accept comma lists also                                   § NA059M §  · §
- *
+ * METIS § ····· § merge mountpoint and start variables                                   § NA26Js §  · §
  */
 
 
@@ -79,7 +79,6 @@ PROG_vershow            (void)
    printf ("%s\n", PROG_version ());
    exit (0);
 }
-
 
 
 /*====================------------------------------------====================*/
@@ -153,6 +152,14 @@ PROG_urgents            (int a_argc, char *a_argv [])
 /*====================------------------------------------====================*/
 void  o___STARTUP_________o () { return; }
 
+char
+PROG_reset              (void)
+{
+   my.path  [0] = '\0';
+   my.maxlevel  = MAX_LEVEL;
+   return 0;
+}
+
 char             /* [------] minimal pre-argument program initialization -----*/
 PROG__init              (int a_argc, char *a_argv[])
 {
@@ -195,7 +202,7 @@ PROG__init              (int a_argc, char *a_argv[])
    /*---(default run-time options)-------*/
    strcpy (my.host     , "-"      );
    my.runtime      = time (NULL);
-   my.maxlevel     =   99;   /* maxiumum */
+   my.maxlevel     = MAX_LEVEL;
    my.conf         =  'y';
    g_nconf         =    0;
    my.dump         =  '-';
@@ -319,7 +326,7 @@ PROG__args              (int a_argc, char *a_argv[])
       else if (strcmp (a, "--mimes"        ) == 0 && i + 1 < a_argc)   RPTG_config_mimes_set (a_argv [++i]);
       else if (strstr (MIME_OPTS        , a) != NULL)                  RPTG_config_mimes_add (a);
       else if (strstr (MIME_NEGS        , a) != NULL)                  RPTG_config_mimes_sub (a);
-      else if (strcmp (a, "--ext"          ) == 0 && i + 1 < a_argc)   ystrlcpy (my.ext, a_argv [++i], LEN_TERSE);
+      else if (strcmp (a, "--ext"          ) == 0 && i + 1 < a_argc) { snprintf (my.ext, LEN_HUND, " %s ", a_argv [++i]);  ystrldchg (my.ext, ',', ' ', LEN_HUND);  }
       else if (strcmp (a, "--sizes"        ) == 0 && i + 1 < a_argc)   RPTG_config_sizes_set (a_argv [++i]);
       else if (strstr (SIZES_OPTIONS    , a) != NULL)                  RPTG_config_sizes_add (a);
       else if (strstr (SIZES_NEGS       , a) != NULL)                  RPTG_config_sizes_sub (a);
@@ -376,10 +383,10 @@ PROG__args              (int a_argc, char *a_argv[])
       ystrlcpy (a_argv [0], P_ONELINE, x_max);
    }
    /*---(fix limits)---------------------*/
-   if (my.maxlevel <=  0)       my.maxlevel = 99;
-   if (my.maxlevel >  99)       my.maxlevel = 99;
-   if (my.limit    <= 0)        my.limit  = 999999;
-   if (my.limit    >  999999)   my.limit  = 999999;
+   if (my.maxlevel <=  0)       my.maxlevel = MAX_LEVEL;
+   if (my.maxlevel >  99)       my.maxlevel = MAX_LEVEL;
+   if (my.limit    <= 0)        my.limit    = 999999;
+   if (my.limit    >  999999)   my.limit    = 999999;
    /*---(display urgents)----------------*/
    DEBUG_ARGS  yLOG_note    ("summarization of argument processing");
    DEBUG_ARGS  yLOG_value   ("entries"   , x_total);
@@ -509,7 +516,7 @@ PROG_driver             (void)
    }
    else if (my.mime_table == 'y' && strcpy (my.regex, "") == 0) {
       DB_read    (my.file_data, &c);
-      MIME_write   ('s');
+      MIME_report   ("stdout");
    }
    else if (my.dump == 'y') {
       DB_read    (my.file_data, &c);
@@ -526,8 +533,7 @@ PROG_driver             (void)
       if (rc >= 0)  rc = ENTRY_start ();
       if (rc >= 0)  rc = RPTG_walker (WALK_ALL);
       if (my.total > 0 && my.output != OUTPUT_COUNT)  RPTG_footer ();
-      /*> if (my.mime_table == 'y') MIME_write   ('s', ' ');                          <*/
-      MIME_write ('f');
+      MIME_report (my.file_mime);
       if      (my.mimetree == 'f')  MIME_tree    ();
       else if (my.mime_all == 'y')  MIME_tree    ();
    }

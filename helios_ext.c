@@ -308,7 +308,7 @@ EXT__suffix             (cchar a_name [LEN_HUND], char **b_ext)
       DEBUG_RPTG   yLOG_complex ("testing"   , "%d[%s]", l, p);
       /*---(handle)----------------------*/
       if (l > 0) {
-         rc = MIME_get_index (p, NULL, &x_mime);
+         rc = MIME_find (p, NULL, NULL, NULL, NULL, NULL, &x_mime);
          DEBUG_RPTG   yLOG_complex ("mime"      , "%4d rc, %d x_mime", rc, x_mime);
          if (rc >= 0 && x_mime >= 0) {
             ystrlcpy (s_ext, p, LEN_TERSE);
@@ -652,7 +652,7 @@ EXT_categorize          (cchar a_full [LEN_PATH], cchar a_name [LEN_HUND], tSTAT
    /*---(catch all)----------------------*/
    if (x_ext == NULL)  x_ext = EXT_MYSTERY;
    /*---(save)---------------------------*/
-   MIME_add_seen (x_ext, &x_cat, a_bytes, a_full);
+   MIME_add_seen (x_ext, a_bytes, &x_cat);
    if (r_cat != NULL)  *r_cat = x_cat;
    if (r_ext != NULL)  ystrlcpy (r_ext, x_ext, LEN_TERSE);
    /*---(complete)-----------------------*/
