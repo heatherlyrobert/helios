@@ -44,8 +44,8 @@
 /*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "1.--, first major version in production"
 #define     P_VERMINOR  "1.2-, stablizing after too many changes"
-#define     P_VERNUM    "1.2c"
-#define     P_VERTXT    "mime rebuilt into single table, writes into database, unit tested"
+#define     P_VERNUM    "1.2d"
+#define     P_VERTXT    "huge improvements to transparency in filtering and reporting"
 /*········· ··········· ´·····························´········································*/
 #define     P_WARNING   "this does exactly what i want with ZERO thought to working for you"
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
@@ -316,7 +316,7 @@ typedef     struct     cENTRY    tENTRY;
 
 #define     FILE_CONF   "/etc/helios.conf"
 #define     FILE_DB     "/var/lib/helios/helios.db"
-#define     FILE_MIME   "/var/lib/helios/helios_mime.ctrl"
+#define     FILE_MIME   "/var/lib/helios/helios_mime.rptg"
 
 
 #define     MAX_STR     50
@@ -417,7 +417,7 @@ extern      short      g_udrive;
 #define       ASCII_SPACE    '>'
 #define       ASCII_CRAZY    'X'
 #define       ASCII_ALL      "-A+#>X"
-#define       ASCII_OPTIONS  " --basic --upper --punct --extend --space --crazy "
+#define       ASCII_OPTIONS  " --basic --upper --punct --extend --space --crazy --badname "
 #define       ASCII_NEGS     " --nobasic --noupper --nopunct --noextend --nospace --nocrazy "
 
 extern const char *EXT_DIR;
@@ -469,8 +469,8 @@ extern const char *EXT_PRIVATE;
 extern const char *EXT_EMPTY;
 
 #define       SIZES_ALL      "0123456789abcdefghi"
-#define       SIZES_OPTIONS  " --zb --sb --kb --mb --gb --tb --pb "
-#define       SIZES_NEGS     " --nozb --nosb --nokb --nomb --nogb --notb --nopb "
+#define       SIZES_OPTIONS  " --zero --byte --kilo --mega --giga --tera --peta "
+#define       SIZES_NEGS     " --nozero --nobyte --nokilo --nomega --nogiga --notera --nopeta "
 
 
 struct cENTRY {
@@ -575,8 +575,8 @@ struct cBUCKET {
 #define     MIME_MEDIA       'M'
 #define     MIME_WORK        'W'
 #define     MIME_TEMP        'T'
-#define     MIME_OPTS        " --audio --video --image --source --text --base --crypt --prop --exec --dir --junk --other --huh --allmedia --allwork --alltemp "
-#define     MIME_NEGS        " --noaudio --novideo --noimage --nosource --notext --nobase --nocrypt --noprop --noexec --nodir --nojunk --noother --nohuh --zeromedia --zerowork --zerotemp "
+#define     MIME_OPTS        " --audio --video --image --source --text --base --crypt --prop --exec --dir --junk --other --huh --media --work --temp "
+#define     MIME_NEGS        " --noaudio --novideo --noimage --nosource --notext --nobase --nocrypt --noprop --noexec --nodir --nojunk --noother --nohuh --nomedia --nowork --notemp "
 
 
 
@@ -635,9 +635,10 @@ struct cGLOBAL {
    /*---(run control)--------------------*/
    char        mode;                        /* run mode                       */
    char        report;                      /* report type                    */
-   char        output;                      /* match report types             */
-   uchar       columns     [LEN_LABEL];     /* specific columns               */
-   uchar       pub;                         /* allow only public findings     */
+   char        layout;                      /* match report types             */
+   char        delimit     [LEN_SHORT];     /* match report types             */
+   char        columns     [LEN_LABEL];     /* specific columns               */
+   char        pub;                         /* allow only public findings     */
    char        headers;                     /* format output as report        */
    char        lineno;                      /* format with line numbers       */
    llong       empty;
@@ -711,27 +712,29 @@ struct cGLOBAL {
 typedef     struct     cGLOBAL      tGLOBAL;
 extern      tGLOBAL    my;
 
+extern char  g_print    [LEN_RECD];
 
 /*---(running modes)------------------*/
 #define     MODE_UPDATE         'u'
 #define     MODE_SEARCH         's'
 #define     MODE_REPORT         'r'
 /*---(reporting options)--------------*/
-#define     RPT_MATCHES         '-'
-#define     RPT_DIRTREE         'D'
-#define     RPT_MIMESUM         'm'
-#define     RPT_MIMETREE        'M'
-#define     RPT_DATABASE        's'
+#define     REPORT_MATCHES      '-'
+#define     REPORT_DIRTREE      'D'
+#define     REPORT_MIMESUM      'm'
+#define     REPORT_MIMETREE     'M'
+#define     REPORT_DATABASE     's'
 /*---(output columns)-----------------*/
-#define     OUTPUT_SILENT       '-'
-#define     OUTPUT_NORMAL       'n'
-#define     OUTPUT_MIME         'm'
-#define     OUTPUT_PREFIX       'p'
-#define     OUTPUT_DETAIL       'd'
-#define     OUTPUT_ANALYSIS     'a'
-#define     OUTPUT_GYGES        'g'
-#define     OUTPUT_COUNT        'c'
-#define     OUTPUT_OPTIONS      " --silent --normal --mime --detail --analysis --gyges --count --indent "
+#define     LAYOUT_SILENT       '-'
+#define     LAYOUT_DEFAULT      'n'
+#define     LAYOUT_MIME         'm'
+#define     LAYOUT_PREFIX       'p'
+#define     LAYOUT_DETAIL       'd'
+#define     LAYOUT_ANALYSIS     'a'
+#define     LAYOUT_GYGES        'g'
+#define     LAYOUT_COUNT        'c'
+#define     LAYOUT_OPTIONS      " --silent --default --mime --detail --analysis --gyges --count --indent "
+#define     LAYOUT_QUIETS       "-c"
 /*---(column options)-----------------*/
 #define     COL_MIME            'm'
 #define     COL_SIZE            's'
@@ -742,7 +745,7 @@ extern      tGLOBAL    my;
 #define     COL_PERMS           'p'
 #define     COL_DRIVE           'd'
 #define     COL_BASE            'b'
-#define     COL_OPTIONS         " --show-mime --show-age --show-AGE --show-size --show-SIZE --show-level --show-naming --show-find --show-type --show-perms --show-PERMS --show-drive --show-base --show-rsh "
+#define     COL_OPTIONS         " --show-mime --show-age --show-AGE --show-size --show-SIZE --show-SIZES --show-level --show-ascii --show-find --show-type --show-TYPE --show-perms --show-PERMS --show-drive --show-DRIVE --show-base --show-rsh "
 /*---(destinations)-------------------*/
 #define     DEST_FILE           'f'
 #define     DEST_STDOUT         's'
@@ -757,7 +760,12 @@ extern tENTRY *g_found;
 extern char    g_path    [LEN_RECD];
 
 
-extern      char          unit_answer [LEN_FULL];
+extern int   s_days;
+extern char  s_age;
+extern int   s_pos;
+extern int   s_len;
+
+extern      char          unit_answer [LEN_RECD];
 
 
 /*===[[ HELIOS_MAIN.C ]]======================================================*/
@@ -803,7 +811,7 @@ char        DB__open                (cchar a_name [LEN_PATH], char a_mode, FILE 
 char        DB__close               (FILE **b_file);
 /*---(drives)---------------*/
 char        DB__drive_write         (FILE *a_file);
-char        DB__drive_read          (FILE *a_file);
+char        DB__drive_read          (FILE *a_file, int n);
 /*---(entries)--------------*/
 char        DB__entry_write         (FILE *a_file, tENTRY *a_entry, int *a_count);
 char        DB__entry_read          (FILE *a_file, int *a_count);
@@ -926,55 +934,104 @@ char        GNOME_gather       (int a_level, tPTRS **a_head, tPTRS **a_tail, tSL
 char        api_ysort_init          (void);
 
 
+
+
+/*===[[ HELIOS_FILTER.C ]]====================================================*/
+/*---(types)----------------*/
+char        FILTER_type_all         (void);
+char        FILTER_type_none        (void);
+char        FILTER_type_pos         (char *a_option);
+char        FILTER_type_neg         (char *a_option);
+char        FILTER_type_direct      (char *a_types);
+char        FILTER_by_type          (char a_type, char a_stype);
+/*---(mimes)----------------*/
+char        FILTER_mime_all         (void);
+char        FILTER_mime_none        (void);
+char        FILTER_mime_pos         (char *a_option);
+char        FILTER_mime_neg         (char *a_option);
+char        FILTER_mime_direct      (char *a_mimes);
+char        FILTER_by_mime          (char a_cat, char *a_ext);
+/*---(sizes)----------------*/
+char        FILTER_size_all         (void);
+char        FILTER_size_none        (void);
+char        FILTER_size_add         (char *a_option);
+char        FILTER_size_sub         (char *a_option);
+char        FILTER_size_direct      (char *a_sizes);
+char        FILTER_by_size          (char a_size);
+/*---(ages)-----------------*/
+char        FILTER_age_all          (void);
+char        FILTER_age_none         (void);
+char        FILTER_age_pos          (char *a_option);
+char        FILTER_age_neg          (char *a_option);
+char        FILTER_age_direct       (char *a_ages);
+char        FILTER_by_age           (long a_days);
+/*---(ascii)----------------*/
+char        FILTER_ascii_all        (void);
+char        FILTER_ascii_none       (void);
+char        FILTER_ascii_pos        (char *a_option);
+char        FILTER_ascii_neg        (char *a_option);
+char        FILTER_ascii_direct     (char *a_ascii);
+char        FILTER_by_ascii         (char a_ascii);
+/*---(perms)----------------*/
+char        FILTER__perms           (char *a_func, char a_type, int a_uid, int a_gid, char a_own, char a_grp, char a_oth, char *a_reason);
+char        FILTER_by_perms         (int a_uid, int a_gid, char a_own, char a_grp, char a_oth, char *r_reason);
+char        FILTER_by_dir           (int a_uid, int a_gid, char a_own, char a_grp, char a_oth, char *r_reason);
+/*---(regex)----------------*/
+char        FILTER__regex           (uchar *a_regex);
+char        FILTER_by_regex         (uchar *a_string);
+/*---(done)-----------------*/
+
+
+
 /*===[[ HELIOS_RPTG.C ]]======================================================*/
 char        RPTG_init               (void);
 /*---(types)----------------*/
-char        RPTG_config_types_all   (void);
-char        RPTG_config_types_none  (void);
-char        RPTG_config_types_set   (uchar *a_types);
-char        RPTG_config_types_add   (uchar *a_option);
-char        RPTG_filter_type        (uchar a_type, uchar a_stype);
+/*> char        RPTG_config_types_all   (void);                                       <*/
+/*> char        RPTG_config_types_none  (void);                                       <*/
+/*> char        RPTG_config_types_set   (uchar *a_types);                             <*/
+/*> char        RPTG_config_types_add   (uchar *a_option);                            <*/
+/*> char        RPTG_filter_type        (uchar a_type, uchar a_stype);                <*/
 /*---(mimes)----------------*/
-char        RPTG_config_mimes_all   (void);
-char        RPTG_config_mimes_none  (void);
-char        RPTG_config_mimes_add   (uchar *a_option);
-char        RPTG_config_mimes_sub   (uchar *a_option);
-char        RPTG_config_mimes_set   (uchar *a_mimes);
-char        RPTG_filter_mime        (uchar a_cat, uchar *a_ext);
+/*> char        RPTG_config_mimes_all   (void);                                       <*/
+/*> char        RPTG_config_mimes_none  (void);                                       <*/
+/*> char        RPTG_config_mimes_add   (uchar *a_option);                            <*/
+/*> char        RPTG_config_mimes_sub   (uchar *a_option);                            <*/
+/*> char        RPTG_config_mimes_set   (uchar *a_mimes);                             <*/
+/*> char        RPTG_filter_mime        (uchar a_cat, uchar *a_ext);                  <*/
 /*---(sizes)----------------*/
-char        RPTG_config_sizes_all   (void);
-char        RPTG_config_sizes_none  (void);
-char        RPTG_config_sizes_add   (uchar *a_option);
-char        RPTG_config_sizes_sub   (uchar *a_option);
-char        RPTG_filter_size        (uchar a_size);
+/*> char        RPTG_config_sizes_all   (void);                                       <*/
+/*> char        RPTG_config_sizes_none  (void);                                       <*/
+/*> char        RPTG_config_sizes_add   (uchar *a_option);                            <*/
+/*> char        RPTG_config_sizes_sub   (uchar *a_option);                            <*/
+/*> char        RPTG_filter_size        (uchar a_size);                               <*/
 /*---(ages)-----------------*/
-char        RPTG_config_ages_all    (void);
-char        RPTG_config_ages_none   (void);
-char        RPTG_config_ages_add    (uchar *a_option);
-char        RPTG_config_ages_sub    (uchar *a_option);
-char        RPTG_config_ages_set    (uchar *a_ages);
-char        RPTG_filter_age         (long a_days);
+/*> char        RPTG_config_ages_all    (void);                                       <*/
+/*> char        RPTG_config_ages_none   (void);                                       <*/
+/*> char        RPTG_config_ages_add    (uchar *a_option);                            <*/
+/*> char        RPTG_config_ages_sub    (uchar *a_option);                            <*/
+/*> char        RPTG_config_ages_set    (uchar *a_ages);                              <*/
+/*> char        RPTG_filter_age         (long a_days);                                <*/
 /*---(ascii)----------------*/
-char        RPTG_config_ascii_all   (void);
-char        RPTG_config_ascii_none  (void);
-char        RPTG_config_ascii_add   (uchar *a_option);
-char        RPTG_config_ascii_sub   (uchar *a_option);
-char        RPTG_config_ascii_set   (uchar *a_ascii);
-char        RPTG_filter_ascii       (uchar a_ascii);
+/*> char        RPTG_config_ascii_all   (void);                                       <*/
+/*> char        RPTG_config_ascii_none  (void);                                       <*/
+/*> char        RPTG_config_ascii_add   (uchar *a_option);                            <*/
+/*> char        RPTG_config_ascii_sub   (uchar *a_option);                            <*/
+/*> char        RPTG_config_ascii_set   (uchar *a_ascii);                             <*/
+/*> char        RPTG_filter_ascii       (uchar a_ascii);                              <*/
 /*---(perms)----------------*/
-char        RPTG_perms_filter       (int a_uid, char a_own, int a_gid, char a_grp, char a_oth);
-char        RPTG_perms_dir          (int a_uid, char a_own, int a_gid, char a_grp, char a_oth);
+/*> char        RPTG_perms_filter       (int a_uid, char a_own, int a_gid, char a_grp, char a_oth);   <*/
+/*> char        RPTG_perms_dir          (int a_uid, char a_own, int a_gid, char a_grp, char a_oth);   <*/
 /*---(super)----------------*/
 char        RPTG_config_super_off   (void);
 char        RPTG_config_super_on    (void);
 char        RPTG_filter_super       (uchar a_super);
 /*---(regex)----------------*/
-char        RPTG_regex_prep         (uchar *a_regex);
-char        RPTG_regex_filter       (uchar *a_string);
+/*> char        RPTG_regex_prep         (uchar *a_regex);                             <*/
+/*> char        RPTG_regex_filter       (uchar *a_string);                            <*/
 /*---(output)---------------*/
-char        RPTG_config_col_none    (void);
-char        RPTG_config_columns     (uchar *a_option);
-char        RPTG_config_output      (uchar *a_option);
+char        RPTG_col_none           (void);
+char        RPTG_col_singles        (uchar *a_option);
+char        RPTG_col_layouts        (uchar *a_option);
 /*---(reporting-------------*/
 char        RPTG__title             (void);
 char        RPTG__break             (char a_force);

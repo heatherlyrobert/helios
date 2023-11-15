@@ -1,0 +1,110 @@
+.TH helios 8 2010-jan "linux" "system administration and maintenance"
+
+.SH NAME
+helios - file system indexing, searching, and analytics
+
+.SH PATRON
+helios-phaeton (radiant one) all-seeing titan of the sun
+
+.SH IMAGERY
+golden giant driving a fiery chariot pulled by four winged horses
+
+.SH SUMMARY
+helios is an experimental, reasonably fast, more informative, and traceable
+version of the well-worn and posix-defined locate, file indexing and searching
+command, specifically tailored to my own long-term vision and needs.
+
+.SH DISCLAIMER
+i am a crazy, naive, dog-fooding c programmer.  i am NOT trying to be best.
+i optimize for my own learning, run-time transparency, and ease-of-maintenance.
+it may not be perfect (or even good), but i OWN every byte.
+
+.SH DOCUMENTATION FILES (see also)
+.nf  
+helios (1)         command-line initiation, use, and options
+helios (5)         user files, data streams, and configuration
+helios_conf (5)    specifics about configuration
+helios_mime (5)    specifics about mime text database
+helios (7)         decision rationale, scope, and objectives
+.B helios (8) ´´´´´´> system administration and maintenance
+
+.SH SPECIFIC FOCUS
+system files and data gathering are the specific focus of this man page.
+
+.SH TABLE OF CONTENTS
+.nf  
+a) synopsis        calling convension
+b) files           creating the database
+c) gathering       kicking off the gather process
+d) options         command line options for gathering
+e) configure       why configure rules ?!
+f) config file     main configuration file
+g) overall verbs   rules (2) to specify starting point and depth
+h) avoid verbs     rules (4) to ignore certain directories
+i) silent verbs    rules (4) to record stats, but not specific content
+j) extended verbs  rules (2) to mark as optionally searched (TBD)
+k) private verb    rule (1) to eliminate content from public versions
+
+.SH A) SYNOPSIS
+
+.SS helios [ARGUMENTS] [REGEX]
+which is the primary production version
+
+.SS helios_debug [URGENTS] [ARGUMENTS] [REGEX]
+which can perform all helios actions, but with debugging and tracing
+
+.SH B) FILES
+helios requires a couple of files to operate -- they are all restricted
+to system administrator access only.  end-users need no access.
+
+/etc/                   (set as system wishes)
+   helios.conf          0600 root root   gathering configuration file
+
+/var/lib/helios/        0700 root root
+   helios.db            0600 root root   binary content database
+   helios_mime.ctrl     0600 root root   text mime database
+
+helios will verify these settings and refuse to operate if they are not proper
+-- assuming that hacking or general lack-of-care is in play.
+
+.SH C) GATHERING
+helios stores all directory and file data in an off-line binary database for
+later searching (see FILES), thereby reducing system strain during primary
+work hours.  this database is typically updated nightly using a batch scheduler.
+
+.B --gather
+rebuilds the database with latest configuration
+
+example for calling helios nightly from my scheduler...
+.nf
+   helios --gather
+
+.SH D) OPTIONS
+except for testing and special runs, the defaults and configuration file
+provide everything helios needs to gather.  BUT, a few options that help
+to test and pull unique runs.
+
+.B --start·<dir>
+changes the root directory for data gathering
+
+.B --depth·<#>
+sets the maximum depth for data gathering
+
+.B --noconf
+zero config, record every file in the filesystem under start
+
+.B --conf·<name>
+use an alternate configuration file (especially testing)
+
+.B --database·<name>
+use an alternate database location (especially testing)
+
+.B --mimefile·<name>
+use an alternate mime file (especially testing)
+
+
+
+also, please review helios (5) to understand how configuration helps prune
+unneeded detail from data, such as linux distribution files, temp dirs, etc.
+
+

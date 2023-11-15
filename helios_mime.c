@@ -534,8 +534,10 @@ MIME__reset_found       (tMIME *a_curr)
 char
 MIME__clear             (tMIME *a_curr)
 {
+   a_curr->level     = '-';
    ystrlcpy (a_curr->ext , "", LEN_TERSE);
    a_curr->cat       = '-';
+   a_curr->tie       = -1;
    ystrlcpy (a_curr->desc, "", LEN_DESC);
    a_curr->like      = '-';
    MIME__reset_all (a_curr);
@@ -1451,7 +1453,7 @@ char
 MIME__unit_line         (int n, char r_out [LEN_FULL])
 {
    char        t           [LEN_DESC]  = "";
-   if (n < 0 || n >= MAX_MIME) {
+   if (g_nmime == 0 || n < 0 || n >= MAX_MIME) {
       snprintf (r_out, LEN_FULL, "MIME entry (???) : · · ···  ·········  åæ                      ·  s[··,···,·······]  k[··,···,·······]  f[··,···,·······]");
       return 0;
    }

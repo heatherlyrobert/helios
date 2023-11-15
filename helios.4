@@ -1,0 +1,292 @@
+.TH helios 4 2010-jan "linux" "shared devices, files, and configuration"
+
+.SH NAME
+helios - file system indexing, searching, and analytics
+
+.SH PATRON
+helios-phaeton (radiant one) all-seeing titan of the sun
+
+.SH IMAGERY
+golden giant driving a fiery chariot pulled by four winged horses
+
+.SH SUMMARY
+helios is an experimental, reasonably fast, more informative, and traceable
+version of the well-worn and posix-defined locate, file indexing and searching
+command, specifically tailored to my own long-term vision and needs.
+
+.SH DISCLAIMER
+i am a crazy, naive, dog-fooding c programmer.  i am NOT trying to be best.
+i optimize for my own learning, run-time transparency, and ease-of-maintenance.
+it may not be perfect (or even good), but i OWN every byte.
+
+.SH DOCUMENTATION FILES (see also)
+.nf  
+helios (1)              end-user command-line use and options
+helios (4) ´´´´´´´´´´´> shared devices, files, and configuration
+helios (7)              decision rationale, scope, and objectives
+helios (8)              sys-admin command-line use and options
+
+.SH TABLE OF CONTENTS
+.nf  
+a) shared files         critical locations and files
+b) why configure?       main configuration file
+c) config structure     general structure of configuration
+d) overall verbs        rules (2) specify starting point and depth
+e) avoid verbs          rules (4) ignore certain directories
+f) silent verbs         rules (4) record stats, but not specific content
+g) extended verbs       rules (2) mark as optionally searched (TBD)
+h) private verb         rule (1) eliminate content from public versions
+i) mime file            how helios tracks file type statistics
+j) mime categories      broad classifications of similar content
+k) mime extensions      specific files types tracked
+
+.SH A) SHARED FILES
+helios requires a couple of files to operate -- they are all restricted
+to system administrator access only.  end-users need no access.
+
+/etc/                   (set as system wishes)
+   helios.conf          0600 root root   gathering configuration file
+
+/var/lib/helios/        0700 root root
+   helios.db            0600 root root   binary content database
+   helios_mime.txt      0600 root root   ascii mime summary
+
+helios will verify these settings and refuse to operate if they are not proper
+-- assuming that hacking or general lack-of-care is in play.
+
+.SH B) WHY CONFIGURE?
+helios could capture every file on the system without breaking a sweat, e.g.,
+devices, images, transient files, etc.  because it uses a binary database,
+it would probably be still be fast enough for normal use.
+
+BUT, some data is extraneous and it just seems wasteful.  so, rules can tune
+which directories to ignore or treat specially.
+
+don't care?  then leave the configuration file empty ;)  helios will simply
+collect all directories and files from the starts/root down.  enough said.
+
+.SH C) CONFIG STRUCTURE
+helios data gathering is guided by a series of simple rules provided in a
+single configuration file, typically named "/etc/helios.conf".  this file
+may be optionally ignored or temporarily over-ridden.
+
+the conf file is just a set of single-line rules.  each rule consists of a
+verb and a directory path.  these rules allow tailoring what helios collects
+and where to avoid collecting junk and/or unuseful details.
+
+example structure...
+   verb   § /specific/path/     § <optional comment ignored by system>
+
+while some rules are common sense and seem universal, i chose to not build
+any into the base system for flexibility.  maybe good or bad, we will see ;)
+
+.SH D) OVERALL VERBS
+.SS start (0)
+provides helios with the default root for data gathering.  this can be
+overridden on the command line with "--start <path>" (SEE helios (8)).
+
+keep in mind, helios will retain each directory in the path from the mount-point
+to the start point for traceability.
+
+example rules from my /etc/helios.conf...
+.nf
+   start        § /                  § and all partitions mounted below
+
+.SS depth (1)
+provides helios with the maximum depth for data gathering.  this can be overridden
+on the command line with "--depth <#>" (SEE helios (8)).
+
+depth is measured from the start, not the mount-point, i.e., depth of 0 means
+just the start, 1 means the start and one level down.
+
+example rules from my /etc/helios.conf...
+.nf
+   depth        § 99                 § get everything
+
+.SH E) AVOID VERBS
+instructs helios to ignore a specific directory's contents.  very useful for
+temporary and artificial file systems like /sys and /proc.  there is no point
+recording these as they change constantly and quickly.
+
+.SS avoid (2)
+records only the directory, but does not record its contents or collect any
+statistics about its contents.  this is useful when using helios output to
+map directory structures.
+
+example rules from my /etc/helios.conf...
+.nf
+   avoid        § /proc              § pseudo-file system
+   avoid        § /sys               § pseudo-file system
+   avoid        § /dev/pts           § transient
+   avoid        § /tmp               § transient
+
+.SS avoid_full (3)
+records nothing about the directory including its name, which can be confusing
+in the output.  while available, i do not presently use this, but it might be
+useful in the future.
+
+.SS avoid_under (4)
+collect data about directory contents, but switch to avoid for all directories
+below.  this can make certain directories easier to specify.
+
+example rules from my /etc/helios.conf...
+.nf
+   avoid_under § /mnt               § don't recurse another layer
+
+.SS avoid_every (5)
+does a match on the directory name only, not the absolute path -- helpful
+for common sub-directory names.  best used for very small, common areas.
+while avaiable, i don't presently use, but it might be useful in the future.
+
+.SH F) SILENT VERBS
+instructs helios to gather statistics within a directory, but not specific
+contents, meaning you can not search these later.  very useful for areas that
+are not usually searched, but contain large amounts of data.
+
+.SS silent (6)
+records the directory itself, and then gathers statistics about every file
+and directory underneath but not specific entries.  this is favored for areas
+with lots of, or sizable, content but will not be searched.
+
+example rules from my /etc/helios.conf...
+.nf
+   silent       § /var/log           § don't want specifics, just stats
+   silent       § /boot              § want size, but not all details
+
+example gentoo-specific rules from my /etc/helios.conf...
+.nf
+   silent       § /usr/share/portage § don't want specifics, just stats
+   silent       § /var/db/pkg        § don't want specifics, just stats
+
+.SS silent_under (7)
+collect data about directory contents, but switches to silent for all
+directories below.  this can make certain directories easier to specify.  very
+useful for things like the gentoo kernel source directories.
+
+example gentoo-specific rules from my /etc/helios.conf...
+.nf
+   silent_under § /usr/src           § don't want specifics, just stats
+
+.SS silent_every (8)
+same as "silent", but reacts to directory name rather than full path, meaning
+it gathers statistics, but not actual contents.
+
+example rules from my /etc/helios.conf...
+.nf
+   silent_every § .git               § want locations, size, but not details
+
+.SS silent_when (9)
+same as "silent_every", but reacts to the directory name starting with a string,
+rather than full path, meaning it gathers statistics, but not actual contents.
+this can be troublesome unless really targeted.
+
+example rules from my /etc/helios.conf...
+.nf
+   silent_when  § rust-              § want locations, size, but not details
+
+.SH G) EXTENDED VERBS (to be detirmened)
+instructs helios to gather normally and include in all statistics, but
+specially mark to only be included in searches if specifically requested.
+
+.SS system (10)
+this is very useful for c-headers, libraries, etc.  sometimes you wish to find,
+but most often they just cloud the data.
+
+example rules from my /etc/helios.conf...
+   system       § /lib64             § only search if requested
+   system       § /usr/include       § only search if requested
+
+.SS static (11)
+this is very useful for image libraries and the like that are usually not
+searched.
+
+example rules from my /etc/helios.conf...
+   static       § /home/shared/wallpaper § only search if requested
+   static       § /srv/website           § only search if requested
+
+.SH H) PRIVATE VERB
+.SS private (12)
+conditionally acts like an "avoid".  not normally necessary, but marks specific
+areas to be left out of public versions of the database.
+
+while the database respects privacy by only allowing users with clearance to
+see certain details, this is a failsafe.
+
+example rules from my /etc/helios.conf...
+.nf
+   private     § /root              § leave out of --public db versions
+   private     § /home/user         § leave out of --public db versions
+
+.SH I) MIME FILE
+each gathering of data, creates a table with statistics for counts
+and bytes for each mime category and extension.  this table is stored in the
+database as well as a text file for easy access.
+
+the mime file has three levels
+.nf
+   top   grand totals
+   mid   mime categories
+   bot   mime extensions
+
+the file captures the results of the latest gathering for every level --
+saving counts, sizes, and percentages.
+
+the results are quite eye-opening.  i was horrified by the magnitude of the
+intermediate gcc compilation files that i just left around without thinking.
+on one level i always knew, but real numbers were sobering.
+
+.SH J) MIME CATEGORIES
+there are fifteen (15) categories which match the values captured for each
+file and drive the mime filtering a user can accomplish on the command line.
+
+.nf
+   ---media---------------------------------------
+   a     audio files
+   v     video files
+   i     image files
+
+   ---work----------------------------------------
+   s     source language/code files
+   t     general text files
+   b     database files
+   c     encrypted and/or compressed files
+   p     propietary format files
+   x     executable files and libraries
+   d     directories
+
+   ---temporary-----------------------------------
+   j     intermediate files and transient junk
+   o     other transient
+   ?     mysteries
+
+   ---special-------------------------------------
+   !     private
+   e     empty space
+
+.SH K) MIME EXTENSIONS
+while not always literally extensions/suffixes, these are the identifiers
+for specific file types.  i currently use appoximately 400 of them, but
+honestly, 50% of them are very specific and another 25% are less common.
+
+most extensions are very literal and are exact suffixes...
+   mp3        mpeg layer 3 audio
+   mov        quicktime video
+   txt        general text file
+   xls        microsoft excel
+   c          c-language source
+   unit       koios unit test script
+
+some require some digging into the name (infixes) or location...
+   so         unix shared library
+   manual     man files ending in 12345678, plus 3a, ...
+
+some have no extentions
+   x_exec     executable files, as shown in permissions
+   x_debug    debug version of an executable
+
+some i differentiate for my own reasons
+   d_dir      normal directories
+   d_hidden   hidden directories
+   d_link     symbolic link to a directory
+
+

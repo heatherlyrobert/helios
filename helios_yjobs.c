@@ -55,7 +55,7 @@ helios_yjobs            (cchar a_req, cchar *a_data)
    case YJOBS_READ     :
       DEBUG_PROG    yLOG_note    ("Ô) called database read");
       /*> rc = CONF_pull    (my.file_conf);                                           <*/
-      if (rc >= 0)  rc = MIME_pull    (my.file_mime);
+      /*> if (rc >= 0)  rc = MIME_pull    (my.file_mime);                             <*/
       DB_read      (my.file_data, &c);
       /*> rc = poly_yjobs_read     ();                                                <*/
       break;
@@ -64,6 +64,7 @@ helios_yjobs            (cchar a_req, cchar *a_data)
       break;
    case YJOBS_GATHER   :
       DEBUG_PROG    yLOG_note    ("g) called full/world database gathering");
+      rc = MIME_standard   ();
       rc = DRIVE_inventory ();
       break;
    case YJOBS_AUDIT    :

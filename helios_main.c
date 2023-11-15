@@ -56,13 +56,15 @@ main               (int a_argc, char *a_argv [])
    DEBUG_PROG   yLOG_value    ("startup"   , rc);
    if (rc <  0) { PROG_shutdown (); return -2; }
    /*---(main)---------------------------*/
+   /*> printf ("helios driver\n");                                                    <*/
    rc = yJOBS_driver (P_ONELINE, helios_yjobs);
    DEBUG_PROG   yLOG_value    ("driver"    , rc);
+   /*> printf ("helios driver %d\n", rc);                                             <*/
    /*---(check for running)--------------*/
    IF_RUNNING {
       if (rc >= 0)  rc = ENTRY_start ();
       if (rc >= 0)  rc = RPTG_walker (WALK_ALL);
-      if (my.total > 0 && my.output != OUTPUT_COUNT)  RPTG_footer ();
+      if (my.total > 0 && my.layout != LAYOUT_COUNT)  RPTG_footer ();
    }
    /*---(complete)-----------------------*/
    PROG_shutdown ();

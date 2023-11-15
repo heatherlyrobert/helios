@@ -119,6 +119,7 @@ PROG_urgents            (int a_argc, char *a_argv [])
    char        rce         =  -10;
    char        rc          =    0;
    /*---(set mute)-----------------------*/
+   /*> printf ("helios starting\n");                                                  <*/
    yURG_all_off  ();
    /*---(start logger)-------------------*/
    rc = yURG_logger  (a_argc, a_argv);
@@ -169,6 +170,11 @@ PROG__init              (int a_argc, char *a_argv[])
    int         i           =    0;
    /*---(header)-------------------------*/
    DEBUG_PROG   yLOG_enter   (__FUNCTION__);
+   /*> printf ("helios init (%s)\n", a_argv [0]);                                     <*/
+   /*---(security)-----------------------*/
+   my.uid    = geteuid();
+   my.gid    = getegid();
+   DEBUG_PROG   yLOG_complex ("security"  , "%4do, %4dg", my.uid, my.gid);
    /*---(make heartbeat)-----------------*/
    yEXEC_heartbeat (getpid (), time (NULL), NULL, NULL, &(my.heartbeat));
    /*---(update database)----------------*/
@@ -182,8 +188,10 @@ PROG__init              (int a_argc, char *a_argv[])
    my.run_as   = IAM_HELIOS;
    my.run_mode = ACT_NONE;
    ystrlcpy (my.run_file, "", LEN_PATH);
+   if (my.updatedb == 'y')  ystrlcpy (my.progname, "helios", LEN_TITLE);
+   /*> printf ("helios init (%s)\n", my.progname);                                    <*/
    /*---(begin)--------------------------*/
-   rc = yJOBS_runas (a_argv [0], &(my.run_as), P_FOCUS, P_NICHE, P_SUBJECT, P_PURPOSE, P_NAMESAKE, P_PRONOUNCE, P_HERITAGE, P_BRIEFLY, P_IMAGERY, P_REASON, P_ONELINE, P_HOMEDIR, P_BASENAME, P_FULLPATH, P_SUFFIX, P_CONTENT, P_SYSTEM, P_LANGUAGE, P_COMPILER, P_CODESIZE, P_DEPSTDC, P_AUTHOR, P_CREATED, P_VERMAJOR, P_VERMINOR, P_VERNUM, P_VERTXT, NULL);
+   rc = yJOBS_runas (my.progname, &(my.run_as), P_FOCUS, P_NICHE, P_SUBJECT, P_PURPOSE, P_NAMESAKE, P_PRONOUNCE, P_HERITAGE, P_BRIEFLY, P_IMAGERY, P_REASON, P_ONELINE, P_HOMEDIR, P_BASENAME, P_FULLPATH, P_SUFFIX, P_CONTENT, P_SYSTEM, P_LANGUAGE, P_COMPILER, P_CODESIZE, P_DEPSTDC, P_AUTHOR, P_CREATED, P_VERMAJOR, P_VERMINOR, P_VERNUM, P_VERTXT, NULL);
    DEBUG_PROG  yLOG_value   ("runas"     , rc);
    --rce;  if (rc < 0) {
       DEBUG_PROG  yLOG_exitr   (__FUNCTION__, rce);
@@ -193,8 +201,8 @@ PROG__init              (int a_argc, char *a_argv[])
    rc = yPARSE_config  (YPARSE_MANUAL, NULL, YPARSE_ONETIME, YPARSE_FIELD);
    /*---(default modes)------------------*/
    my.mode         = MODE_SEARCH;
-   my.report       = RPT_MATCHES;
-   my.output       = OUTPUT_NORMAL;
+   my.report       = REPORT_MATCHES;
+   my.layout       = LAYOUT_DEFAULT;
    my.pub          = '-';
    my.headers      = '-';
    my.lineno       = '-';
@@ -274,14 +282,16 @@ PROG__args              (int a_argc, char *a_argv[])
    int         x_max       =    0;
    /*---(begin)--------------------------*/
    DEBUG_PROG   yLOG_enter   (__FUNCTION__);
+   /*> printf ("helios args\n");                                                      <*/
+   /*> printf ("helios run_mode (%c)\n", my.run_mode);                                <*/
    yURG_msg ('>', "command line arguments handling...");
    yURG_msg ('-', "total of %d arguments, including name", a_argc);
    /*---(check for no args)--------------*/
    DEBUG_PROG   yLOG_value   ("a_argc"    , a_argc);
-   if (a_argc == 1) {
-      DEBUG_PROG   yLOG_exit    (__FUNCTION__);
-      return 0;
-   }
+   /*> if (a_argc == 1) {                                                             <* 
+    *>    DEBUG_PROG   yLOG_exit    (__FUNCTION__);                                   <* 
+    *>    return 0;                                                                   <* 
+    *> }                                                                              <*/
    /*---(process)------------------------*/
    for (i = 1; i < a_argc; ++i) {
       /*---(prepare)---------------------*/
@@ -320,41 +330,43 @@ PROG__args              (int a_argc, char *a_argv[])
       else if (strcmp (a, "--mimefile"     ) == 0 && i + 1 < a_argc)   strncpy (my.file_mime, a_argv [++i], LEN_PATH);
       /*---(filters)---------------------*/
       else if (strcmp (a, "--public"       ) == 0)                     my.pub  = 'y';
-      else if (strcmp (a, "--types"        ) == 0 && i + 1 < a_argc)   RPTG_config_types_set (a_argv [++i]);
-      else if (strstr (ENTRY_OPTIONS    , a) != NULL)                  RPTG_config_types_add (a);
-      else if (strstr (ENTRY_NEGS       , a) != NULL)                  RPTG_config_types_sub (a);
-      else if (strcmp (a, "--mimes"        ) == 0 && i + 1 < a_argc)   RPTG_config_mimes_set (a_argv [++i]);
-      else if (strstr (MIME_OPTS        , a) != NULL)                  RPTG_config_mimes_add (a);
-      else if (strstr (MIME_NEGS        , a) != NULL)                  RPTG_config_mimes_sub (a);
+      else if (strcmp (a, "--types"        ) == 0 && i + 1 < a_argc)   FILTER_type_direct  (a_argv [++i]);
+      else if (strstr (ENTRY_OPTIONS    , a) != NULL)                  FILTER_type_pos     (a);
+      else if (strstr (ENTRY_NEGS       , a) != NULL)                  FILTER_type_neg     (a);
+      else if (strcmp (a, "--mimes"        ) == 0 && i + 1 < a_argc)   FILTER_mime_direct (a_argv [++i]);
+      else if (strstr (MIME_OPTS        , a) != NULL)                  FILTER_mime_pos     (a);
+      else if (strstr (MIME_NEGS        , a) != NULL)                  FILTER_mime_neg     (a);
       else if (strcmp (a, "--ext"          ) == 0 && i + 1 < a_argc) { snprintf (my.ext, LEN_HUND, " %s ", a_argv [++i]);  ystrldchg (my.ext, ',', ' ', LEN_HUND);  }
-      else if (strcmp (a, "--sizes"        ) == 0 && i + 1 < a_argc)   RPTG_config_sizes_set (a_argv [++i]);
-      else if (strstr (SIZES_OPTIONS    , a) != NULL)                  RPTG_config_sizes_add (a);
-      else if (strstr (SIZES_NEGS       , a) != NULL)                  RPTG_config_sizes_sub (a);
-      else if (strcmp (a, "--ages"         ) == 0 && i + 1 < a_argc)   RPTG_config_ages_set  (a_argv [++i]);
-      else if (strstr (AGES_OPTIONS     , a) != NULL)                  RPTG_config_ages_add  (a);
-      else if (strstr (AGES_NEGS        , a) != NULL)                  RPTG_config_ages_sub  (a);
-      else if (strcmp (a, "--ages"         ) == 0 && i + 1 < a_argc)   RPTG_config_ages_set  (a_argv [++i]);
-      else if (strcmp (a, "--naming"       ) == 0 && i + 1 < a_argc)   RPTG_config_ascii_set (a_argv [++i]);
-      else if (strstr (ASCII_OPTIONS    , a) != NULL)                  RPTG_config_ascii_add (a);
-      else if (strstr (ASCII_NEGS       , a) != NULL)                  RPTG_config_ascii_sub (a);
+      else if (strcmp (a, "--sizes"        ) == 0 && i + 1 < a_argc)   FILTER_size_direct  (a_argv [++i]);
+      else if (strstr (SIZES_OPTIONS    , a) != NULL)                  FILTER_size_pos     (a);
+      else if (strstr (SIZES_NEGS       , a) != NULL)                  FILTER_size_neg     (a);
+      else if (strcmp (a, "--ages"         ) == 0 && i + 1 < a_argc)   FILTER_age_direct   (a_argv [++i]);
+      else if (strstr (AGES_OPTIONS     , a) != NULL)                  FILTER_age_pos      (a);
+      else if (strstr (AGES_NEGS        , a) != NULL)                  FILTER_age_neg      (a);
+      else if (strcmp (a, "--naming"       ) == 0 && i + 1 < a_argc)   FILTER_ascii_direct (a_argv [++i]);
+      else if (strstr (ASCII_OPTIONS    , a) != NULL)                  FILTER_ascii_pos    (a);
+      else if (strstr (ASCII_NEGS       , a) != NULL)                  FILTER_ascii_neg    (a);
       else if (strcmp (a, "--super"        ) == 0)                     RPTG_config_super_on  ();
+      /*---(root can over-ride)----------*/
       else if (strcmp (a, "--uid"          ) == 0 && i + 1 < a_argc)   my.r_uid = atoi (a_argv [++i]);
       else if (strcmp (a, "--gid"          ) == 0 && i + 1 < a_argc)   my.r_gid = atoi (a_argv [++i]);
       /*---(output control)--------------*/
       else if (strcmp (a, "--headers"      ) == 0)                     my.headers  = 'y';
       else if (strcmp (a, "--HEADERS"      ) == 0)                     my.headers  = 'Y';
+      else if (strcmp (a, "--noheaders"    ) == 0)                     my.headers  = '-';
       else if (strcmp (a, "--lineno"       ) == 0)                     my.lineno   = 'y';
-      else if (strstr (OUTPUT_OPTIONS   , a) != NULL)                  RPTG_config_output    (a);
+      else if (strcmp (a, "--nolineno"     ) == 0)                     my.lineno   = '-';
+      else if (strstr (LAYOUT_OPTIONS   , a) != NULL)                  RPTG_col_layouts      (a);
       else if (strcmp (a, "--mimetree"     ) == 0)                     my.mimetree = 'y';
-      else if (strcmp (a, "--mimefind"     ) == 0)                   { my.mimetree = 'f'; RPTG_config_output    ("--silent"); }
-      else if (strcmp (a, "--mimeall"      ) == 0)                   { my.mime_all = 'y'; RPTG_config_output    ("--silent"); }
-      else if (strcmp (a, "--dirtree"      ) == 0)                   { my.dirtree  = 'y'; RPTG_config_output    ("--silent"); }
-      else if (strcmp (a, "--dirall"       ) == 0)                   { my.dir_all  = 'y'; RPTG_config_output    ("--silent"); }
+      else if (strcmp (a, "--mimefind"     ) == 0)                   { my.mimetree = 'f'; RPTG_col_layouts      ("--silent"); }
+      else if (strcmp (a, "--mimeall"      ) == 0)                   { my.mime_all = 'y'; RPTG_col_layouts      ("--silent"); }
+      else if (strcmp (a, "--dirtree"      ) == 0)                   { my.dirtree  = 'y'; RPTG_col_layouts      ("--silent"); }
+      else if (strcmp (a, "--dirall"       ) == 0)                   { my.dir_all  = 'y'; RPTG_col_layouts      ("--silent"); }
       else if (strcmp (a, "--dump"         ) == 0)                     my.dump     = 'y';
       else if (strcmp (a, "--count"        ) == 0 || strcmp (a, "-c") == 0)  my.count          = 'y';
       else if (strcmp (a, "--statistics"   ) == 0 || strcmp (a, "-S") == 0)  my.statistics     = 'y';
       /*---(output control)--------------*/
-      else if (strstr (COL_OPTIONS      , a) != NULL)                  RPTG_config_columns   (a);
+      else if (strstr (COL_OPTIONS      , a) != NULL)                  RPTG_col_singles    (a);
       /*---(processing control)----------*/
       else if (strcmp (a, "-u"             ) == 0)                     my.updatedb       = 'y';
       else if (strcmp (a, "--updatedb"     ) == 0)                     my.updatedb       = 'y';
@@ -367,7 +379,7 @@ PROG__args              (int a_argc, char *a_argv[])
       else if (strcmp (a, "--depth"        ) == 0 && i + 1 < a_argc)   my.maxlevel = atoi (a_argv[++i]);
       /*---(regex search)----------------*/
       else if (strcmp (a, "--all"          ) == 0 || strcmp (a, "-A") == 0)  strncpy (my.regex, ".", MAX_REGEX);
-      else if (a[0] != '-')    RPTG_regex_prep (a);
+      else if (a[0] != '-')    FILTER__regex (a);
       /*---(not understood)--------------*/
       else {
          printf  ("option <<%s>> not understood or implemented\n", a);
@@ -387,6 +399,15 @@ PROG__args              (int a_argc, char *a_argv[])
    if (my.maxlevel >  99)       my.maxlevel = MAX_LEVEL;
    if (my.limit    <= 0)        my.limit    = 999999;
    if (my.limit    >  999999)   my.limit    = 999999;
+   /*---(catch security over-rides)------*/
+   DEBUG_PROG   yLOG_complex ("security"  , "%4dro, %4drg", my.r_uid, my.r_gid);
+   --rce;  if (my.uid != 0) {
+      DEBUG_ARGS  yLOG_note    ("can only over-ride security as root");
+      my.r_uid = -1;
+      my.r_gid = -1;
+      DEBUG_PROG   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
    /*---(display urgents)----------------*/
    DEBUG_ARGS  yLOG_note    ("summarization of argument processing");
    DEBUG_ARGS  yLOG_value   ("entries"   , x_total);
@@ -418,9 +439,17 @@ PROG__args              (int a_argc, char *a_argv[])
    DEBUG_ARGS  yLOG_value   ("limit"     , my.limit);
    DEBUG_ARGS  yLOG_info    ("ext"       , my.ext);
    /*---(if no mode, its reporting)------*/
+   /*> printf ("helios run_mode (%c)\n", my.run_mode);                                <*/
    --rce;  if (my.run_mode == ACT_NONE) {
-      DEBUG_PROG  yLOG_note  ("no run mode selected, force reporting");
-      rc = yJOBS_argument (&i, "--normal", NULL, &(my.run_as), &(my.run_mode), my.run_file);
+      /*> printf ("helios run mode not set\n");                                       <*/
+      if (my.updatedb == 'y') {
+         DEBUG_PROG  yLOG_note  ("no run mode selected, but updatedb requested");
+         rc = yJOBS_argument (&i, "--gather", NULL, &(my.run_as), &(my.run_mode), my.run_file);
+         /*> printf ("helios changing to gather (%d)\n", rc);                         <*/
+      } else {
+         DEBUG_PROG  yLOG_note  ("no run mode selected, force reporting");
+         rc = yJOBS_argument (&i, "--normal", NULL, &(my.run_as), &(my.run_mode), my.run_file);
+      }
    }
    /*---(complete)-----------------------*/
    DEBUG_PROG   yLOG_exit    (__FUNCTION__);
@@ -431,10 +460,9 @@ char             /* [------] post-argument program initialization ------------*/
 PROG__begin             (void)
 {
    DEBUG_PROG   yLOG_enter   (__FUNCTION__);
+   /*> printf ("helios begin\n");                                                     <*/
    MIME_init   ();
    api_ysort_init ();
-   my.uid    = geteuid();
-   my.gid    = getegid();
    DRIVE_init   ();
    DEBUG_PROG   yLOG_exit    (__FUNCTION__);
    /*> yLOG_stage   ('m');                                                            <*/
@@ -532,7 +560,7 @@ PROG_driver             (void)
       rc = DB_read    (my.file_data, &c);
       if (rc >= 0)  rc = ENTRY_start ();
       if (rc >= 0)  rc = RPTG_walker (WALK_ALL);
-      if (my.total > 0 && my.output != OUTPUT_COUNT)  RPTG_footer ();
+      if (my.total > 0 && my.layout != LAYOUT_COUNT)  RPTG_footer ();
       MIME_report (my.file_mime);
       if      (my.mimetree == 'f')  MIME_tree    ();
       else if (my.mime_all == 'y')  MIME_tree    ();

@@ -381,10 +381,6 @@ DB__drive_write    (FILE *a_file)
       DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   /*---(write count)--------------------*/
-   DEBUG_OUTP   yLOG_value   ("g_ndrive"   , g_ndrive);
-   x_bytes = fwrite (&g_ndrive, sizeof (uchar), 1, a_file);
-   DEBUG_OUTP   yLOG_value   ("write"     , x_bytes);
    /*---(write drive list)---------------*/
    x_drive = h_drive;
    while (x_drive != NULL) {
@@ -400,13 +396,12 @@ DB__drive_write    (FILE *a_file)
 }
 
 char
-DB__drive_read     (FILE *a_file)
+DB__drive_read     (FILE *a_file, int n)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    char        rc          =    0;
    int         i           =    0;
-   uchar       n           =    0;
    int         x_bytes     =    0;
    tDRIVE      x_temp;
    tDRIVE     *x_drive     = NULL;
@@ -415,14 +410,6 @@ DB__drive_read     (FILE *a_file)
    /*---(defense)------------------------*/
    DEBUG_INPT   yLOG_point   ("a_file"    , a_file);
    --rce;  if (a_file == NULL) {
-      DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(get count)----------------------*/
-   x_bytes = fread  (&n, sizeof (uchar), 1, a_file);
-   DEBUG_INPT   yLOG_value   ("read"      , x_bytes);
-   DEBUG_INPT   yLOG_value   ("n"         , n);
-   --rce;  if (n < 0 || n > 30) {
       DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -698,8 +685,22 @@ DB_write           (char *a_name, int *a_count)
       return rce;
    }
    /*---(write header)-------------------*/
-   rc = DB__head_write  (x_db, P_BASENAME, P_VERNUM, 0, 0, g_ndrive, g_nptrs, my.heartbeat);
+   rc = DB__head_write  (x_db, P_BASENAME, P_VERNUM, g_nconf, g_nmime, g_ndrive, g_nptrs, my.heartbeat);
    DEBUG_OUTP   yLOG_value   ("header"    , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(write conf)---------------------*/
+   rc = CONF_db_write (x_db);
+   DEBUG_OUTP   yLOG_value   ("conf"      , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(write mime)---------------------*/
+   rc = MIME_db_write (x_db);
+   DEBUG_OUTP   yLOG_value   ("mime"      , rc);
    --rce;  if (rc < 0) {
       DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
@@ -735,9 +736,9 @@ DB_write           (char *a_name, int *a_count)
    }
    /*---(close)--------------------------*/
    x_end  = time (NULL);
-   printf ("# ran for %ld secs\n", x_end - my.runtime);
+   if (my.run_as != IAM_UHELIOS)   printf ("# ran for %ld secs\n", x_end - my.runtime);
    DB_commas (x_count, t);
-   printf ("# wrote %s recs\n", t);
+   if (my.run_as != IAM_UHELIOS)   printf ("# wrote %s recs\n", t);
    /*---(save back)----------------------*/
    if (a_count != NULL)  *a_count = x_count;
    /*---(complete)-----------------------*/
@@ -755,11 +756,17 @@ DB_read            (char *a_name, int *a_count)
    char        rc          =    0;
    FILE       *x_db        = NULL;          /* file pointer                   */
    tPTRS      *x_dir       = NULL;
+   char        x_name      [LEN_LABEL] = "";
+   char        x_ver       [LEN_TERSE] = "";
+   char        x_heart     [LEN_HUND]  = "";
+   int         x_nconf, x_nmime, x_ndrive, x_nentry;
    /*---(header)-------------------------*/
    DEBUG_INPT   yLOG_enter   (__FUNCTION__);
    /*---(purges)-------------------------*/
    rc = ENTRY__purge ();
    rc = DRIVE__purge ();
+   rc = CONF__purge ();
+   rc = MIME__purge ();
    /*---(open)---------------------------*/
    rc = DB__open  (a_name, 'r', &x_db);
    DEBUG_INPT   yLOG_value   ("open"      , rc);
@@ -769,15 +776,29 @@ DB_read            (char *a_name, int *a_count)
       return rce;
    }
    /*---(read header)--------------------*/
-   rc = DB__head_read   (x_db, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+   rc = DB__head_read   (x_db, x_name, x_ver, &x_nconf, &x_nmime, &x_ndrive, &x_nentry, x_heart);
    DEBUG_OUTP   yLOG_value   ("header"    , rc);
    --rce;  if (rc < 0) {
       DEBUG_OUTP   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   /*---(get conf)-----------------------*/
+   rc = CONF_db_read (x_db, x_nconf);
+   DEBUG_INPT   yLOG_complex ("conf"      , "%4drc, %dn", rc, x_nconf);
+   --rce;  if (rc < 0) {
+      DEBUG_INPT   yLOG_exit    (__FUNCTION__);
+      return rce;
+   }
+   /*---(get mime)-----------------------*/
+   rc = MIME_db_read (x_db, x_nmime);
+   DEBUG_INPT   yLOG_complex ("mime"      , "%4drc, %4de, %4da", rc, x_nmime, g_nmime);
+   --rce;  if (rc < 0) {
+      DEBUG_INPT   yLOG_exit    (__FUNCTION__);
+      return rce;
+   }
    /*---(get drives)---------------------*/
-   rc = DB__drive_read (x_db);
-   DEBUG_INPT   yLOG_complex ("drives"    , "%4drc, %dn", rc, g_ndrive);
+   rc = DB__drive_read (x_db, x_ndrive);
+   DEBUG_INPT   yLOG_complex ("drives"    , "%4drc, %4de, %4da", rc, x_ndrive, g_ndrive);
    --rce;  if (rc < 0) {
       DEBUG_INPT   yLOG_exit    (__FUNCTION__);
       return rce;

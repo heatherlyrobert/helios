@@ -50,7 +50,7 @@ PROG__unit_quiet     (void)
    rc = PROG_urgents   (x_argc, x_argv);
    rc = PROG_startup   (x_argc, x_argv);
    my.run_as = IAM_UHELIOS;
-   my.output = OUTPUT_SILENT;
+   my.layout = LAYOUT_SILENT;
    return 0;
 }
 
@@ -63,7 +63,7 @@ PROG__unit_mute      (void)
    rc = PROG_urgents   (x_argc, x_argv);
    rc = PROG_startup   (x_argc, x_argv);
    my.run_as = IAM_UHELIOS;
-   my.output = OUTPUT_SILENT;
+   my.layout = LAYOUT_SILENT;
    return 0;
 }
 
@@ -75,7 +75,7 @@ PROG__unit_loud      (void)
    char       *x_argv [20] = { "helios_unit", "@@kitchen", "@@args", "@@stats", "@@yparse", "@@YSORT" };
    rc = PROG_urgents   (x_argc, x_argv);
    rc = PROG_startup   (x_argc, x_argv);
-   my.output = OUTPUT_SILENT;
+   my.layout = LAYOUT_SILENT;
    return 0;
 }
 

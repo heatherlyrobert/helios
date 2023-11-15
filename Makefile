@@ -34,7 +34,7 @@ install_post       :
 	@sha1sum   /usr/bin/$(NAME_BASE)_update
 	@ln --force --physical /usr/bin/$(NAME_BASE)  /usr/bin/locate
 	@sha1sum   /usr/bin/locate
-	@ln --force --physical /usr/bin/$(NAME_BASE)  /usr/bin/updatedb
+	@ln --force --physical /usr/bin/$(NAME_BASE)_debug  /usr/bin/updatedb
 	@sha1sum   /usr/bin/updatedb
 	@ln --force --physical /usr/local/man/man1/$(NAME_BASE).1.bz2  /usr/local/man/man1/locate.1.bz2
 	@printf "installing manual ----------------------  /usr/local/man/man1/locate.1.bz2\n"

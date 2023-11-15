@@ -988,7 +988,7 @@ DRIVE_list              (void)
 /*====================------------------------------------====================*/
 static void  o___UNITTEST________o () { return; }
 
-char          unit_answer [LEN_FULL];
+char          unit_answer [LEN_RECD];
 
 char*        /*-> unit test accessor -----------------[ light  [us.B60.2A3.F2]*/ /*-[01.0000.00#.#]-*/ /*-[--.---.---.--]-*/
 DRIVE__unit             (char *a_question, int n)

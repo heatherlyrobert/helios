@@ -1427,22 +1427,22 @@ ENTRY__walker            (char a_trigger, tPTRS *a_dir, char *a_path, void *a_ca
    /*---(header)-------------------------*/
    DEBUG_DATA   yLOG_enter   (__FUNCTION__);
    DEBUG_DATA   yLOG_complex ("args"      , "%c, %2d, %s, %s", a_trigger, a_dir->data->lvl, a_dir->data->name, a_path);
-   /*---(check root as necessary)--------*/
-   if (a_dir == h_ptrs) {
-      rc = ENTRY__walk_handler (a_trigger, a_dir, NULL, a_path, x_full, a_callback);
-      DEBUG_DATA   yLOG_value   ("handler"   , rc);
-   } else {
-      ystrlbase (a_path, x_path, NULL, NULL, NULL);
-      l = strlen (x_path);
-      if (l > 1)  x_path [--l] = '\0';
-      rc = ENTRY__walk_handler (a_trigger, a_dir, NULL, x_path, x_full, a_callback);
-      DEBUG_DATA   yLOG_value   ("handler"   , rc);
-   }
    /*---(check if private)---------------*/
    x_priv = CONF_private (a_path);
    --rce;  if (x_priv < 0) {
       DEBUG_DATA   yLOG_exit    (__FUNCTION__);
       return 0;
+   }
+   /*---(check root as necessary)--------*/
+   if (a_dir == h_ptrs) {
+      rc = ENTRY__walk_handler (a_trigger, a_dir, NULL, a_path, x_full, a_callback);
+      DEBUG_DATA   yLOG_value   ("handler"   , rc);
+   /*> } else {                                                                       <*/
+      /*> ystrlbase (a_path, x_path, NULL, NULL, NULL);                                    <* 
+       *> l = strlen (x_path);                                                             <* 
+       *> if (l > 1)  x_path [--l] = '\0';                                                 <* 
+       *> rc = ENTRY__walk_handler (a_trigger, a_dir, NULL, x_path, x_full, a_callback);   <*/
+      /*> DEBUG_DATA   yLOG_value   ("handler"   , rc);                               <*/
    }
    /*---(return if found)----------------*/
    if (rc == 1) {
@@ -1460,7 +1460,7 @@ ENTRY__walker            (char a_trigger, tPTRS *a_dir, char *a_path, void *a_ca
          if (rc == 1) break;
          /*---(dive on dirs)-------------*/
          if (x_data->type == ENTRY_DIR && x_data->lvl < my.maxlevel) {
-            rc = RPTG_perms_dir (x_data->uid, x_data->own, x_data->gid, x_data->grp, x_data->oth);
+            rc = FILTER_by_dir  (x_data->uid, x_data->gid, x_data->own, x_data->grp, x_data->oth, NULL);
             if (rc > 0) {
                rc = ENTRY__walker (a_trigger, x_curr, x_full, a_callback);
                DEBUG_DATA   yLOG_value   ("walker"    , rc);

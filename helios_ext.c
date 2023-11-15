@@ -371,13 +371,12 @@ EXT__exec               (cchar a_name [LEN_HUND], tSTAT *a_stat, char **b_ext)
    /*---(quick-out)----------------------*/
    --rce;  if (b_ext == NULL)  return rce;
    /*---(check)--------------------------*/
-   if (*b_ext == NULL ||  *b_ext == EXT_OHIDDEN ||  *b_ext == EXT_RLINK) {
+   if (*b_ext == NULL ||  *b_ext == EXT_OHIDDEN) {
       if (  (a_stat->st_mode & S_IXUSR)  ||
             (a_stat->st_mode & S_IXGRP)  ||
             (a_stat->st_mode & S_IXOTH))  {
          DEBUG_ENVI   yLOG_note    ("switching to an executable entry");
-         if      (*b_ext == EXT_RLINK)    *b_ext  = EXT_ELINK;
-         else if (*b_ext == EXT_OHIDDEN)  *b_ext  = EXT_XHIDDEN;
+         if      (*b_ext == EXT_OHIDDEN)  *b_ext  = EXT_XHIDDEN;
          else {
             l = strlen (a_name);
             if (l >= 7 && strcmp ("_debug", a_name + l - 6) == 0) {
@@ -406,12 +405,17 @@ EXT__manual             (cchar a_name [LEN_HUND], char **b_ext)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
-   char        l           =    0;
+   int         l           =    0;
    /*---(quick-out)----------------------*/
    --rce;  if (b_ext == NULL)  return rce;
    if (*b_ext != NULL)         return 0;
    /*---(check for manuals)---------------*/
    l = strlen (a_name);
+   /*> DEBUG_RPTG   yLOG_value   ("l"         , l);                                   <*/
+   /*> if (l >= 7) {                                                                  <* 
+    *>    DEBUG_RPTG   yLOG_char    ("l-6"       , a_name [l - 6]);                   <* 
+    *>    DEBUG_RPTG   yLOG_info    ("l-6"       , a_name + l - 5);                   <* 
+    *> }                                                                              <*/
    if (l >= 3 && a_name [l - 2] == '.') {
       DEBUG_ENVI   yLOG_note    ("handling normal manual extension");
       if (strchr ("123456789", a_name [l - 1]) != NULL) {
@@ -421,22 +425,22 @@ EXT__manual             (cchar a_name [LEN_HUND], char **b_ext)
    }
    else if (l >= 7 && a_name [l - 6] == '.') {
       DEBUG_ENVI   yLOG_note    ("handling special manual extension I");
-      if (strcmp ("2type"   , a_name + l - 6) == 0) {
+      if (strcmp ("2type"   , a_name + l - 5) == 0) {
          *b_ext = EXT_MANUAL;
          return 1;
       }
-      if (strcmp ("3type"   , a_name + l - 6) == 0) {
+      if (strcmp ("3type"   , a_name + l - 5) == 0) {
          *b_ext = EXT_MANUAL;
          return 1;
       }
-      if (strcmp ("3head"   , a_name + l - 6) == 0) {
+      if (strcmp ("3head"   , a_name + l - 5) == 0) {
          *b_ext = EXT_MANUAL;
          return 1;
       }
    }
    else if (l >= 8 && a_name [l - 7] == '.') {
       DEBUG_ENVI   yLOG_note    ("handling special manual extension II");
-      if (strcmp ("3const"  , a_name + l - 7) == 0) {
+      if (strcmp ("3const"  , a_name + l - 6) == 0) {
          *b_ext = EXT_MANUAL;
          return 1;
       }
@@ -518,9 +522,28 @@ EXT__exec_two           (cchar a_full [LEN_PATH], cchar a_name [LEN_HUND], char 
    char        l           =    0;
    char        x_inst      =  '-';
    char        x_ext       [LEN_LABEL] = "";
+   tSTAT       x_st;
+   int         rci         = 0;             /* return code as integer         */
    /*---(quick-out)----------------------*/
    --rce;  if (b_ext == NULL)  return rce;
    if (*b_ext == NULL)         return 0;
+   /*---(check executable link)----------*/
+   if (*b_ext == EXT_RLINK) {
+      /*---(get the file information)-------*/
+      rci = stat (a_full, &x_st);
+      DEBUG_ENVI   yLOG_value   ("lstat"     , rci);
+      --rce; if (rci < 0) {
+         DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
+         return rce;
+      }
+      if (  (x_st.st_mode & S_IXUSR)  ||
+            (x_st.st_mode & S_IXGRP)  ||
+            (x_st.st_mode & S_IXOTH))  {
+         DEBUG_ENVI   yLOG_note    ("switching to an executable entry");
+         *b_ext  = EXT_ELINK;
+         return 1;
+      }
+   }
    /*---(prepare)-------------------------*/
    sprintf (x_ext, " %s ", *b_ext);
    /*---(libraries)-----------------------*/
@@ -589,10 +612,10 @@ EXT__cleanup            (cchar a_full [LEN_PATH], cchar a_name [LEN_HUND], char 
       DEBUG_ENVI   yLOG_note    ("configuration entry");
       *b_ext  = EXT_CONF;
       return 1;
-   } else if (l > 0 && l <= 7) {
-      DEBUG_ENVI   yLOG_note    ("other entry");
-      *b_ext  = EXT_UNKNOWN;
-      return 1;
+   /*> } else if (l > 0 && l <= 7) {                                                  <* 
+    *>    DEBUG_ENVI   yLOG_note    ("other entry");                                  <* 
+    *>    *b_ext  = EXT_UNKNOWN;                                                      <* 
+    *>    return 1;                                                                   <*/
    } else {
       DEBUG_ENVI   yLOG_note    ("unknown entry");
       *b_ext  = EXT_MYSTERY;
@@ -649,15 +672,14 @@ EXT_categorize          (cchar a_full [LEN_PATH], cchar a_name [LEN_HUND], tSTAT
    rc = EXT__unitc     (a_name, &x_ext);
    rc = EXT__libs_two  (a_full, a_name, a_stat, &x_ext);
    rc = EXT__exec_two  (a_full, a_name, &x_ext);
-   /*---(catch all)----------------------*/
-   if (x_ext == NULL)  x_ext = EXT_MYSTERY;
+   rc = EXT__cleanup   (a_full, a_name, &x_ext);
    /*---(save)---------------------------*/
    MIME_add_seen (x_ext, a_bytes, &x_cat);
    if (r_cat != NULL)  *r_cat = x_cat;
    if (r_ext != NULL)  ystrlcpy (r_ext, x_ext, LEN_TERSE);
    /*---(complete)-----------------------*/
    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
-   return rc;
+   return 0;
 }
 
 
