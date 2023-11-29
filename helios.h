@@ -44,8 +44,8 @@
 /*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "1.--, first major version in production"
 #define     P_VERMINOR  "1.2-, stablizing after too many changes"
-#define     P_VERNUM    "1.2d"
-#define     P_VERTXT    "huge improvements to transparency in filtering and reporting"
+#define     P_VERNUM    "1.2e"
+#define     P_VERTXT    "yPARSE_config updated for latest library change"
 /*········· ··········· ´·····························´········································*/
 #define     P_WARNING   "this does exactly what i want with ZERO thought to working for you"
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"

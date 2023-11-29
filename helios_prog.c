@@ -198,7 +198,7 @@ PROG__init              (int a_argc, char *a_argv[])
       return rce;
    }
    DEBUG_PROG  yLOG_char    ("run_as"    , my.run_as);
-   rc = yPARSE_config  (YPARSE_MANUAL, NULL, YPARSE_ONETIME, YPARSE_FIELD);
+   rc = yPARSE_config  (YPARSE_MANUAL, NULL, YPARSE_ONETIME, YPARSE_FIELD, YPARSE_FILL);
    /*---(default modes)------------------*/
    my.mode         = MODE_SEARCH;
    my.report       = REPORT_MATCHES;
