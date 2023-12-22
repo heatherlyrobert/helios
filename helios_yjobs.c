@@ -41,6 +41,34 @@
 static void  o___DRIVER__________o () { return; }
 
 char
+yjobs__stats            (void)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   char        t           [LEN_LABEL] = "";
+   /*---(header)-------------------------*/
+   DEBUG_PROG    yLOG_enter   (__FUNCTION__);
+   /*---(display)------------------------*/
+   printf ("#!/usr/bin/helios --stats\n");
+   printf ("db       å%sæ\n" , my.file_data);
+   printf ("name     å%sæ\n" , g_audit.name);
+   printf ("ver      å%sæ\n" , g_audit.vernum);
+   ystrl4main (g_audit.n_conf , t , 0, 'c', '-', LEN_LABEL);
+   printf ("confs    %-7.7s\n", t);
+   ystrl4main (g_audit.n_mime , t , 0, 'c', '-', LEN_LABEL);
+   printf ("mimes    %-7.7s\n", t);
+   ystrl4main (g_audit.n_drive, t , 0, 'c', '-', LEN_LABEL);
+   printf ("drives   %-7.7s\n", t);
+   ystrl4main (g_audit.n_entry, t , 0, 'c', '-', LEN_LABEL);
+   printf ("entries  %-7.7s\n", t);
+   printf ("heart    å%sæ\n" , g_audit.heart);
+   /*---(complete)-----------------------*/
+   DEBUG_PROG    yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+char
 helios_yjobs            (cchar a_req, cchar *a_data)
 {
    /*---(locals)-----------+-----+-----+-*/
@@ -61,6 +89,7 @@ helios_yjobs            (cchar a_req, cchar *a_data)
       break;
    case YJOBS_STATS    :
       DEBUG_PROG    yLOG_note    ("s) called database statistics");
+      yjobs__stats ();
       break;
    case YJOBS_GATHER   :
       DEBUG_PROG    yLOG_note    ("g) called full/world database gathering");

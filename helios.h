@@ -44,8 +44,8 @@
 /*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "1.--, first major version in production"
 #define     P_VERMINOR  "1.2-, stablizing after too many changes"
-#define     P_VERNUM    "1.2e"
-#define     P_VERTXT    "yPARSE_config updated for latest library change"
+#define     P_VERNUM    "1.2f"
+#define     P_VERTXT    "made --stats work with universal format"
 /*········· ··········· ´·····························´········································*/
 #define     P_WARNING   "this does exactly what i want with ZERO thought to working for you"
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
@@ -308,9 +308,10 @@ typedef unsigned short   ushort;
 typedef long long        llong;
 
 
-typedef     struct     cDRIVE    tDRIVE;
-typedef     struct     cPTRS     tPTRS;
-typedef     struct     cENTRY    tENTRY;
+typedef     struct      cDRIVE      tDRIVE;
+typedef     struct      cPTRS       tPTRS;
+typedef     struct      cENTRY      tENTRY;
+typedef     struct      cAUDIT      tAUDIT;
 
 
 
@@ -625,6 +626,17 @@ extern    tMIME       g_mime [MAX_MIME];
 extern    int         g_nmime;
 
 #define    MAX_LEVEL    99
+
+struct cAUDIT {
+   char        name        [LEN_LABEL];
+   char        vernum      [LEN_SHORT];
+   int         n_conf;
+   int         n_mime;
+   int         n_drive;
+   int         n_entry;
+   char        heart       [LEN_HUND];
+};
+extern      tAUDIT      g_audit;
 
 struct cGLOBAL {
    /*---(yJOBS)--------------------------*/

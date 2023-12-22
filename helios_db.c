@@ -762,6 +762,14 @@ DB_read            (char *a_name, int *a_count)
    int         x_nconf, x_nmime, x_ndrive, x_nentry;
    /*---(header)-------------------------*/
    DEBUG_INPT   yLOG_enter   (__FUNCTION__);
+   /*---(default)------------------------*/
+   ystrlcpy (g_audit.name  , ""     , LEN_LABEL);
+   ystrlcpy (g_audit.vernum, ""     , LEN_SHORT);
+   g_audit.n_conf   = 0;
+   g_audit.n_mime   = 0;
+   g_audit.n_drive  = 0;
+   g_audit.n_entry  = 0;
+   ystrlcpy (g_audit.heart , ""     , LEN_HUND);
    /*---(purges)-------------------------*/
    rc = ENTRY__purge ();
    rc = DRIVE__purge ();
@@ -816,6 +824,14 @@ DB_read            (char *a_name, int *a_count)
       DEBUG_INPT   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   /*---(save)---------------------------*/
+   ystrlcpy (g_audit.name  , x_name , LEN_LABEL);
+   ystrlcpy (g_audit.vernum, x_ver  , LEN_SHORT);
+   g_audit.n_conf   = x_nconf;
+   g_audit.n_mime   = x_nmime;
+   g_audit.n_drive  = x_ndrive;
+   g_audit.n_entry  = x_nentry;
+   ystrlcpy (g_audit.heart , x_heart, LEN_HUND);
    /*---(complete)-----------------------*/
    DEBUG_INPT   yLOG_exit    (__FUNCTION__);
    return 0;

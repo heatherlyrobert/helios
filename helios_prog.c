@@ -46,6 +46,7 @@
 
 
 tGLOBAL     my;
+tAUDIT      g_audit;
 
 
 
